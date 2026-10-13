@@ -8,7 +8,7 @@ import { useProfile } from '@/hooks/use-profile';
 
 /**
  * Onboarding as a state machine. Exactly one group of screens is reachable at a time:
- *   no name → name · no couple → couple-setup/join · couple but no partner → invite · paired → home
+ *   no name → name · no couple → couple-setup/join · couple but no partner → invite · paired → home/preferences
  */
 export default function AppLayout() {
   const profile = useProfile();
@@ -55,6 +55,7 @@ export default function AppLayout() {
       </Stack.Protected>
       <Stack.Protected guard={hasName && isPaired}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="preferences" />
       </Stack.Protected>
     </Stack>
   );

@@ -9,8 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.ezequias.dinnerroulette",
-      "usesAppleSignIn": true
+      "bundleIdentifier": "com.ezequias.dinnerroulette"
     },
     "android": {
       "adaptiveIcon": {
@@ -36,7 +35,6 @@
           "imageWidth": 76
         }
       ],
-      "expo-apple-authentication",
       "expo-localization"
     ],
     "experiments": {

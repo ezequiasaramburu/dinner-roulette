@@ -11,7 +11,9 @@ export type CoupleState = {
   timezone: string;
   /** "HH:MM" in the couple's timezone. */
   reveal_time: string;
-  partner: { id: string; display_name: string | null } | null;
+  /** The current user has finished choosing their food preferences. */
+  me_ready: boolean;
+  partner: { id: string; display_name: string | null; ready: boolean } | null;
 };
 
 /** The signed-in user's couple, or null if they haven't created/joined one. */
