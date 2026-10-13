@@ -61,22 +61,30 @@ export function useJoinCouple() {
 }
 
 export function useCancelCouple() {
+  const queryClient = useQueryClient();
   const invalidate = useInvalidateCouple();
   return useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc('cancel_couple');
       if (error) throw error;
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      // The couple's invites are deleted with it, so never show a cached code again.
+      queryClient.removeQueries({ queryKey: ['invite-code'] });
+      return invalidate();
+    },
   });
 }
 
-/** The owner's current invite code (created on first call, reused until used or expired). */
-export function useInviteCode(enabled: boolean) {
+/**
+ * The owner's current invite code (created on first call, reused until used or expired).
+ * Keyed by couple so a code can never outlive the couple it belongs to.
+ */
+export function useInviteCode(coupleId: string | undefined) {
   return useQuery({
-    queryKey: ['invite-code'],
-    enabled,
-    staleTime: Infinity,
+    queryKey: ['invite-code', coupleId],
+    enabled: !!coupleId,
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<string> => {
       const { data, error } = await supabase.rpc('create_invite');
       if (error) throw error;

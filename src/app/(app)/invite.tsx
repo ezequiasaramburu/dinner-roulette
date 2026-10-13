@@ -13,7 +13,7 @@ import { friendlyError } from '@/lib/errors';
 export default function Invite() {
   const theme = useTheme();
   const couple = useCouple();
-  const invite = useInviteCode(true);
+  const invite = useInviteCode(couple.data?.couple_id);
   const cancel = useCancelCouple();
 
   // Realtime moves us along instantly; polling covers a dropped socket.

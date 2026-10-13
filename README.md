@@ -21,7 +21,8 @@ Prerequisites: Node, Docker Desktop (running), Xcode for the iOS simulator.
 1. `npm install`
 2. `npm run db:start` starts Supabase in Docker and applies everything in `supabase/migrations`.
 3. `cp .env.example .env.local`, then paste `API_URL` and `ANON_KEY` from `npm run db:status -- -o env`.
-4. Build a dev client (native modules, so Expo Go won't work): `npx expo run:ios`
+4. Android emulator: nothing extra, the app maps `127.0.0.1` to the host automatically (`10.0.2.2`).
+5. Build a dev client (native modules, so Expo Go won't work): `npx expo run:ios`
 
 Local services once started:
 

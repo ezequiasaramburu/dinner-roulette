@@ -4,14 +4,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const rawUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!url || !anonKey) {
+if (!rawUrl || !anonKey) {
   throw new Error(
     'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. Copy .env.example to .env.local.',
   );
 }
+
+// Inside the Android emulator, localhost is the emulator itself; the host machine is 10.0.2.2.
+// This lets one .env.local (http://127.0.0.1:54321) work on both the iOS simulator and Android emulator.
+const url =
+  Platform.OS === 'android' ? rawUrl.replace(/\/\/(127\.0\.0\.1|localhost)\b/, '//10.0.2.2') : rawUrl;
 
 export const supabase = createClient(url, anonKey, {
   auth: {
