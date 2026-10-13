@@ -1,56 +1,57 @@
-# Welcome to your Expo app 👋
+# Dinner Roulette
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A couples app: swipe on dinner options together, and at reveal time you both find out what's cooking.
 
-## Get started
+Expo (SDK 57) · Expo Router · TypeScript · Supabase · TanStack Query · React Hook Form + Zod
 
-1. Install dependencies
+## Status
 
-   ```bash
-   npm install
-   ```
+- [x] Phase 0: project foundations
+- [x] Phase 1: auth (email OTP, Sign in with Apple) and name onboarding
+- [ ] Phase 2: paywall and entitlement (RevenueCat)
+- [ ] Phase 3: couple pairing
+- [ ] Phases 4–9: preferences, recipes, decks, swiping, reveal, launch polish
 
-2. Start the app
+## Setup (local, no cloud needed)
 
-   ```bash
-   npx expo start
-   ```
+Prerequisites: Node, Docker Desktop (running), Xcode for the iOS simulator.
 
-In the output, you'll find options to open the app in a
+1. `npm install`
+2. `npm run db:start` starts Supabase in Docker and applies everything in `supabase/migrations`.
+3. `cp .env.example .env.local`, then paste `API_URL` and `ANON_KEY` from `npm run db:status -- -o env`.
+4. Build a dev client (Sign in with Apple is native, so Expo Go won't work): `npx expo run:ios`
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Local services once started:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+| Service | URL |
+|---|---|
+| API | http://127.0.0.1:54321 |
+| Studio (DB browser) | http://127.0.0.1:54323 |
+| Mailpit (catches OTP emails) | http://127.0.0.1:54324 |
 
-## Get a fresh project
+Email sign-in works fully offline: the 6-digit code arrives in Mailpit, not a real inbox.
 
-When you're ready, run:
+Sign in with Apple is enabled in `supabase/config.toml` for the bundle id `com.ezequias.dinnerroulette`.
+It needs a real Apple Developer account and a real device or signed simulator build. Use email sign-in until then.
+
+Changing the schema: `npm run db:migration -- <name>`, edit the new file, then `npm run db:reset` to rebuild from scratch.
+
+## Scripts
 
 ```bash
-npm run reset-project
+npx expo start     # dev server
+npm run db:start   # local Supabase up (db:stop / db:reset / db:status)
+npx expo lint      # lint
+npx tsc --noEmit   # typecheck
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Structure
 
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+src/app/(auth)   signed-out screens (welcome, email code sign-in)
+src/app/(app)    signed-in screens (name onboarding, home)
+src/lib          supabase client, apple auth, zod schemas
+src/providers    auth session provider
+src/hooks        data hooks (profile)
+supabase/        SQL migrations
+```
