@@ -1,13 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 
-import { Button } from '@/components/button';
-import { Chip } from '@/components/chip';
-import { Screen } from '@/components/screen';
-import { ThemedText } from '@/components/themed-text';
+import { Accent, Button, Chip, Screen, Section, Text } from '@/components/ui';
+import { ALLERGENS, DIETS, DISLIKES, countryFlag } from '@/constants/food';
 import { Spacing } from '@/constants/theme';
-import { ALLERGENS, DIETS, DISLIKES } from '@/constants/food';
 import { useCouple } from '@/hooks/use-couple';
 import {
   EMPTY_PREFERENCES,
@@ -16,29 +13,37 @@ import {
   useSavePreferences,
   type Preferences,
 } from '@/hooks/use-preferences';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function PreferencesScreen() {
+  const theme = useTheme();
   const prefs = usePreferences();
   const cuisines = useCuisineOptions();
 
   if (prefs.isPending || cuisines.isPending) {
     return (
-      <Screen>
-        <ActivityIndicator style={{ marginTop: Spacing.six }} />
+      <Screen scroll={false} contentStyle={styles.center}>
+        <ActivityIndicator color={theme.primary} />
       </Screen>
     );
   }
   if (prefs.isError || cuisines.isError) {
     return (
-      <Screen>
-        <ThemedText>We couldn&apos;t load your preferences.</ThemedText>
-        <Button
-          title="Try again"
-          onPress={() => {
-            prefs.refetch();
-            cuisines.refetch();
-          }}
-        />
+      <Screen
+        scroll={false}
+        contentStyle={styles.center}
+        footer={
+          <Button
+            title="Try again"
+            onPress={() => {
+              prefs.refetch();
+              cuisines.refetch();
+            }}
+          />
+        }>
+        <Text variant="heading" align="center">
+          We couldn&apos;t load your preferences
+        </Text>
       </Screen>
     );
   }
@@ -72,11 +77,30 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
   }
 
   return (
-    <Screen>
-      <ThemedText type="subtitle">{isOnboarding ? 'What do you like to eat?' : 'Your preferences'}</ThemedText>
-      <ThemedText themeColor="textSecondary">
-        Only you set these. We&apos;ll combine them with your partner&apos;s to pick dinners you can both enjoy.
-      </ThemedText>
+    <Screen
+      footer={
+        <>
+          <Button title={isOnboarding ? 'Save and continue' : 'Save changes'} onPress={onSave} loading={save.isPending} />
+          {!isOnboarding ? <Button title="Cancel" variant="ghost" onPress={() => router.back()} /> : null}
+        </>
+      }>
+      <Text variant="overline" tone="primary" style={styles.top}>
+        Your taste
+      </Text>
+      <Text variant="title">
+        {isOnboarding ? (
+          <>
+            What do you like <Accent>to eat?</Accent>
+          </>
+        ) : (
+          <>
+            Your <Accent>preferences</Accent>
+          </>
+        )}
+      </Text>
+      <Text tone="secondary">
+        Only you set these. We combine them with your partner&apos;s to find dinners you&apos;ll both enjoy.
+      </Text>
 
       <Section title="Diet">
         {DIETS.map((o) => (
@@ -90,7 +114,10 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
         ))}
       </Section>
 
-      <Section title="Allergies" hint="We never show dishes with these. Always double-check the ingredient list.">
+      <Section
+        title="Allergies"
+        hint="We never show dishes with these. Always double-check the ingredient list."
+        count={prefs.allergens.length}>
         {ALLERGENS.map((o) => (
           <Chip
             key={o.id}
@@ -102,18 +129,22 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
         ))}
       </Section>
 
-      <Section title="Favourite cuisines" hint="Pick any, or none to be open to everything.">
+      <Section
+        title="Favourite cuisines"
+        hint="Pick any, or none to be open to everything."
+        count={prefs.cuisines.length}>
         {cuisineOptions.map((country) => (
           <Chip
             key={country}
             label={country}
+            emoji={countryFlag(country)}
             selected={prefs.cuisines.includes(country)}
             onPress={() => setPrefs({ ...prefs, cuisines: toggle(prefs.cuisines, country) })}
           />
         ))}
       </Section>
 
-      <Section title="Not for me" hint="Things you'd rather avoid.">
+      <Section title="Not for me" hint="Things you'd rather avoid." count={prefs.disliked.length}>
         {DISLIKES.map((o) => (
           <Chip
             key={o.id}
@@ -124,30 +155,11 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
           />
         ))}
       </Section>
-
-      <Button title={isOnboarding ? 'Save and continue' : 'Save'} onPress={onSave} loading={save.isPending} />
-      {!isOnboarding ? (
-        <Button title="Cancel" variant="secondary" onPress={() => router.back()} />
-      ) : null}
     </Screen>
   );
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      <ThemedText type="smallBold">{title}</ThemedText>
-      {hint ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {hint}
-        </ThemedText>
-      ) : null}
-      <View style={styles.chips}>{children}</View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  section: { gap: Spacing.two, marginTop: Spacing.two },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md },
+  top: { marginTop: Spacing.lg },
 });

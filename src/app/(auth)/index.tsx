@@ -1,34 +1,50 @@
 import { useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
-import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
-import { ThemedText } from '@/components/themed-text';
+import { Accent, Button, RouletteWheel, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 
 export default function Welcome() {
   const router = useRouter();
+  const { width, height } = useWindowDimensions();
+  const wheelSize = Math.min(width - Spacing.xl * 2, height * 0.36, 320);
 
   return (
-    <Screen>
-      <View style={styles.hero}>
-        <ThemedText style={styles.emoji}>🎰🍝</ThemedText>
-        <ThemedText type="title">Dinner Roulette</ThemedText>
-        <ThemedText themeColor="textSecondary">
-          Swipe on tonight&apos;s options together. At the reveal, you both find out what&apos;s for
-          dinner.
-        </ThemedText>
-      </View>
+    <Screen
+      scroll={false}
+      contentStyle={styles.content}
+      footer={
+        <>
+          <Button title="Continue with email" onPress={() => router.push('/email')} />
+          <Text variant="caption" tone="tertiary" align="center">
+            Your partner joins for free.
+          </Text>
+        </>
+      }>
+      <Animated.View entering={FadeIn.duration(900)} style={styles.wheel}>
+        <RouletteWheel size={wheelSize} />
+      </Animated.View>
 
-      <View style={styles.actions}>
-        <Button title="Continue with email" onPress={() => router.push('/email')} />
-      </View>
+      <Animated.View entering={FadeInDown.delay(250).duration(650)} style={styles.copy}>
+        <Text variant="overline" tone="primary">
+          Dinner Roulette
+        </Text>
+        <Text variant="display">
+          Decide dinner,{'\n'}
+          <Accent>together.</Accent>
+        </Text>
+        <Text tone="secondary" style={styles.sub}>
+          Two people, a few swipes, one answer. You both find out at the same moment, every evening.
+        </Text>
+      </Animated.View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: { flex: 1, justifyContent: 'center', gap: Spacing.three, paddingVertical: Spacing.six },
-  emoji: { fontSize: 56, lineHeight: 64 },
-  actions: { gap: Spacing.three },
+  content: { justifyContent: 'space-between', paddingTop: Spacing.xxl, paddingBottom: Spacing.lg },
+  wheel: { alignItems: 'center' },
+  copy: { gap: Spacing.md },
+  sub: { maxWidth: 420 },
 });

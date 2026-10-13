@@ -1,39 +1,50 @@
 import { Stack } from 'expo-router';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, StyleSheet } from 'react-native';
 
-import { Button } from '@/components/button';
-import { ThemedText } from '@/components/themed-text';
+import { Button, Screen, Text } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
 import { useProfile } from '@/hooks/use-profile';
+import { useTheme } from '@/hooks/use-theme';
 
 /**
  * Onboarding as a state machine. Exactly one group of screens is reachable at a time:
  *   no name → name · no couple → couple-setup/join · couple but no partner → invite · paired → home/preferences
  */
 export default function AppLayout() {
+  const theme = useTheme();
   const profile = useProfile();
   const couple = useCouple();
 
   if (profile.isPending || couple.isPending) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator />
-      </View>
+      <Screen scroll={false} contentStyle={styles.center}>
+        <ActivityIndicator color={theme.primary} />
+      </Screen>
     );
   }
 
   if (profile.isError || couple.isError) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 }}>
-        <ThemedText>We couldn&apos;t load your account.</ThemedText>
-        <Button
-          title="Try again"
-          onPress={() => {
-            profile.refetch();
-            couple.refetch();
-          }}
-        />
-      </View>
+      <Screen
+        scroll={false}
+        contentStyle={styles.center}
+        footer={
+          <Button
+            title="Try again"
+            onPress={() => {
+              profile.refetch();
+              couple.refetch();
+            }}
+          />
+        }>
+        <Text variant="heading" align="center">
+          We couldn&apos;t load your account
+        </Text>
+        <Text tone="secondary" align="center">
+          Check your connection and try again.
+        </Text>
+      </Screen>
     );
   }
 
@@ -42,7 +53,7 @@ export default function AppLayout() {
   const isPaired = !!couple.data?.partner;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.background } }}>
       <Stack.Protected guard={!hasName}>
         <Stack.Screen name="name" />
       </Stack.Protected>
@@ -60,3 +71,7 @@ export default function AppLayout() {
     </Stack>
   );
 }
+
+const styles = StyleSheet.create({
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md },
+});

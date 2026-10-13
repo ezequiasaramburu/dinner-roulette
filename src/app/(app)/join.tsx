@@ -1,14 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { z } from 'zod';
 
-import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
-import { TextField } from '@/components/text-field';
-import { ThemedText } from '@/components/themed-text';
+import { Accent, BackButton, Button, Screen, Text, TextField } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
 import { useJoinCouple } from '@/hooks/use-couple';
 import { friendlyError } from '@/lib/errors';
 import { usePendingInvite } from '@/lib/pending-invite';
@@ -23,7 +21,6 @@ const joinSchema = z.object({
 type Values = z.infer<typeof joinSchema>;
 
 export default function Join() {
-  const router = useRouter();
   const joinCouple = useJoinCouple();
   const pendingCode = usePendingInvite((s) => s.code);
   const clearPending = usePendingInvite((s) => s.clear);
@@ -52,34 +49,44 @@ export default function Join() {
   });
 
   return (
-    <Screen>
-      <Pressable onPress={() => router.back()} hitSlop={12}>
-        <ThemedText type="linkPrimary">‹ Back</ThemedText>
-      </Pressable>
-      <ThemedText type="subtitle">Enter your invite code</ThemedText>
-      <ThemedText themeColor="textSecondary">
-        Ask your partner for the 6-character code from their app. Joining is free.
-      </ThemedText>
-      <Controller
-        control={control}
-        name="code"
-        render={({ field }) => (
-          <TextField
-            label="Invite code"
-            value={field.value}
-            onChangeText={(t) => field.onChange(t.toUpperCase())}
-            onBlur={field.onBlur}
-            error={errors.code?.message}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            maxLength={6}
-            autoFocus
-            returnKeyType="go"
-            onSubmitEditing={submit}
+    <Screen footer={<Button title="Join" onPress={submit} loading={isSubmitting} />}>
+      <BackButton />
+      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+        <Text variant="title">
+          Enter your <Accent>invite code</Accent>
+        </Text>
+        <Text tone="secondary">
+          Ask your partner for the 6-character code from their app. Joining is free.
+        </Text>
+        <View style={styles.field}>
+          <Controller
+            control={control}
+            name="code"
+            render={({ field }) => (
+              <TextField
+                label="Invite code"
+                variant="code"
+                placeholder="······"
+                value={field.value}
+                onChangeText={(t) => field.onChange(t.toUpperCase())}
+                onBlur={field.onBlur}
+                error={errors.code?.message}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={6}
+                autoFocus
+                returnKeyType="go"
+                onSubmitEditing={submit}
+              />
+            )}
           />
-        )}
-      />
-      <Button title="Join" onPress={submit} loading={isSubmitting} />
+        </View>
+      </Animated.View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: { gap: Spacing.md, marginTop: Spacing.lg },
+  field: { marginTop: Spacing.lg },
+});

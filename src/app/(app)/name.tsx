@@ -1,11 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
+import { StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { z } from 'zod';
 
-import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
-import { TextField } from '@/components/text-field';
-import { ThemedText } from '@/components/themed-text';
+import { Accent, Button, Screen, Text, TextField } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
 import { useUpdateDisplayName } from '@/hooks/use-profile';
 import { nameSchema } from '@/lib/validation';
 
@@ -20,7 +20,7 @@ export default function Name() {
     formState: { errors, isSubmitting },
   } = useForm<Values>({ resolver: zodResolver(nameSchema), defaultValues: { name: '' } });
 
-  // Once the profile refetches, the guard in (app)/_layout moves us to the home screen.
+  // Once the profile refetches, the guard in (app)/_layout moves us to the next step.
   const submit = handleSubmit(async ({ name }) => {
     try {
       await updateName.mutateAsync(name);
@@ -30,28 +30,41 @@ export default function Name() {
   });
 
   return (
-    <Screen>
-      <ThemedText type="subtitle">What should we call you?</ThemedText>
-      <ThemedText themeColor="textSecondary">This is what your partner will see.</ThemedText>
-      <Controller
-        control={control}
-        name="name"
-        render={({ field }) => (
-          <TextField
-            label="Your name"
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            error={errors.name?.message}
-            autoComplete="given-name"
-            textContentType="givenName"
-            autoFocus
-            returnKeyType="done"
-            onSubmitEditing={submit}
+    <Screen footer={<Button title="Continue" onPress={submit} loading={isSubmitting} />}>
+      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+        <Text variant="overline" tone="primary">
+          Welcome
+        </Text>
+        <Text variant="title">
+          What should we <Accent>call you?</Accent>
+        </Text>
+        <Text tone="secondary">This is the name your partner will see.</Text>
+        <View style={styles.field}>
+          <Controller
+            control={control}
+            name="name"
+            render={({ field }) => (
+              <TextField
+                label="Your first name"
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.name?.message}
+                autoComplete="given-name"
+                textContentType="givenName"
+                autoFocus
+                returnKeyType="done"
+                onSubmitEditing={submit}
+              />
+            )}
           />
-        )}
-      />
-      <Button title="Continue" onPress={submit} loading={isSubmitting} />
+        </View>
+      </Animated.View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: { gap: Spacing.md, marginTop: Spacing.xxl },
+  field: { marginTop: Spacing.lg },
+});

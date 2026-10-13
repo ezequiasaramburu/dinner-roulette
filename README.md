@@ -58,7 +58,8 @@ src/app/(app)    signed-in screens (name, couple setup, invite, join, preference
 src/lib          supabase client, zod schemas, errors
 src/providers    auth session provider
 src/hooks        data hooks (profile, couple, preferences)
-src/constants    theme and food option ids (diets, allergens, dislikes)
+src/constants    design tokens (theme.ts) and food option ids (diets, allergens, dislikes)
+src/components/ui  the UI library: Text, Button, Card, Chip, TextField, Screen, Pill, Avatar, ...
 scripts/mealdb   TheMealDB importer + recipe tagging (unit tested)
 supabase/        SQL migrations, seed.sql (generated recipes), email templates
 ```
@@ -74,3 +75,19 @@ then `npm run db:reset`. Allergen tagging is keyword-based and intentionally err
 not a guarantee. The recipe screen must keep an "check the ingredient list" notice.
 
 Recipe data courtesy of [TheMealDB](https://www.themealdb.com).
+
+## Design system
+
+Warm editorial: paper and ink with a tomato accent, Fraunces (serif) for headlines and Inter for interface text.
+Light and dark palettes follow the phone's setting.
+
+- **Tokens** live in `src/constants/theme.ts` (colours, spacing, radius, fonts, elevation). Text/background pairs were
+  checked for WCAG AA contrast. One pairing to avoid: tomato text on `primarySoft` in light mode (4.4:1).
+- **Components** live in `src/components/ui` and are imported from `@/components/ui`. Build screens from these instead of
+  raw `react-native` `Text`/`Pressable` with ad-hoc styles, and read colours with `useTheme()`, never hard-coded hex values.
+- **Headlines:** `<Text variant="title">Decide <Accent>together.</Accent></Text>`; the italic tomato accent word is the brand's signature.
+- **Layout:** `<Screen footer={...}>` pins the primary action above the keyboard and handles safe areas and scrolling.
+- **Motion** is subtle and respects the system "reduce motion" setting (`FadeInDown` entrances, the slow roulette wheel).
+
+Splash colours are set in `app.json` and need a native rebuild (`npx expo prebuild --clean`) to take effect.
+The app icon is still the Expo placeholder.

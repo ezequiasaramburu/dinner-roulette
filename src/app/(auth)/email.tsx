@@ -2,13 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import type { z } from 'zod';
 
-import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
-import { TextField } from '@/components/text-field';
-import { ThemedText } from '@/components/themed-text';
+import { Accent, BackButton, Button, Screen, Text, TextField } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
 import { supabase } from '@/lib/supabase';
 import { codeSchema, emailSchema } from '@/lib/validation';
 
@@ -20,17 +19,14 @@ export default function EmailSignIn() {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
 
-  return (
-    <Screen>
-      <Pressable onPress={() => (email ? setEmail(null) : router.back())} hitSlop={12}>
-        <ThemedText type="linkPrimary">‹ Back</ThemedText>
-      </Pressable>
-      {email ? <CodeStep email={email} /> : <EmailStep onSent={setEmail} />}
-    </Screen>
+  return email ? (
+    <CodeStep email={email} onBack={() => setEmail(null)} />
+  ) : (
+    <EmailStep onSent={setEmail} onBack={() => router.back()} />
   );
 }
 
-function EmailStep({ onSent }: { onSent: (email: string) => void }) {
+function EmailStep({ onSent, onBack }: { onSent: (email: string) => void; onBack: () => void }) {
   const {
     control,
     handleSubmit,
@@ -48,37 +44,42 @@ function EmailStep({ onSent }: { onSent: (email: string) => void }) {
   });
 
   return (
-    <>
-      <ThemedText type="subtitle">What&apos;s your email?</ThemedText>
-      <ThemedText themeColor="textSecondary">
-        We&apos;ll send you a 6-digit code. No password needed.
-      </ThemedText>
-      <Controller
-        control={control}
-        name="email"
-        render={({ field }) => (
-          <TextField
-            label="Email"
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            error={errors.email?.message}
-            autoCapitalize="none"
-            autoComplete="email"
-            autoCorrect={false}
-            keyboardType="email-address"
-            textContentType="emailAddress"
-            returnKeyType="go"
-            onSubmitEditing={submit}
+    <Screen footer={<Button title="Send code" onPress={submit} loading={isSubmitting} />}>
+      <BackButton onPress={onBack} />
+      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+        <Text variant="title">
+          What&apos;s your <Accent>email?</Accent>
+        </Text>
+        <Text tone="secondary">We&apos;ll send you a 6-digit code. No password needed.</Text>
+        <View style={styles.field}>
+          <Controller
+            control={control}
+            name="email"
+            render={({ field }) => (
+              <TextField
+                label="Email"
+                placeholder="you@example.com"
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.email?.message}
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect={false}
+                keyboardType="email-address"
+                textContentType="emailAddress"
+                returnKeyType="go"
+                onSubmitEditing={submit}
+              />
+            )}
           />
-        )}
-      />
-      <Button title="Send code" onPress={submit} loading={isSubmitting} />
-    </>
+        </View>
+      </Animated.View>
+    </Screen>
   );
 }
 
-function CodeStep({ email }: { email: string }) {
+function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   const [resent, setResent] = useState(false);
   const {
     control,
@@ -100,33 +101,51 @@ function CodeStep({ email }: { email: string }) {
   }
 
   return (
-    <>
-      <ThemedText type="subtitle">Check your inbox</ThemedText>
-      <ThemedText themeColor="textSecondary">Enter the 6-digit code we sent to {email}.</ThemedText>
-      <Controller
-        control={control}
-        name="code"
-        render={({ field }) => (
-          <TextField
-            label="Code"
-            value={field.value}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            error={errors.code?.message}
-            keyboardType="number-pad"
-            autoComplete="one-time-code"
-            textContentType="oneTimeCode"
-            maxLength={6}
-            autoFocus
-            returnKeyType="go"
-            onSubmitEditing={submit}
+    <Screen
+      footer={
+        <>
+          <Button title="Verify" onPress={submit} loading={isSubmitting} />
+          <Button title={resent ? 'Code sent again ✓' : 'Resend code'} variant="ghost" onPress={resend} />
+        </>
+      }>
+      <BackButton onPress={onBack} />
+      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+        <Text variant="title">
+          Check your <Accent>inbox</Accent>
+        </Text>
+        <Text tone="secondary">
+          Enter the 6-digit code we sent to <Text variant="bodyStrong">{email}</Text>.
+        </Text>
+        <View style={styles.field}>
+          <Controller
+            control={control}
+            name="code"
+            render={({ field }) => (
+              <TextField
+                label="Code"
+                variant="code"
+                placeholder="······"
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                error={errors.code?.message}
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                textContentType="oneTimeCode"
+                maxLength={6}
+                autoFocus
+                returnKeyType="go"
+                onSubmitEditing={submit}
+              />
+            )}
           />
-        )}
-      />
-      <Button title="Verify" onPress={submit} loading={isSubmitting} />
-      <Pressable onPress={resend} hitSlop={12}>
-        <ThemedText type="linkPrimary">{resent ? 'Code sent again' : 'Resend code'}</ThemedText>
-      </Pressable>
-    </>
+        </View>
+      </Animated.View>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  stack: { gap: Spacing.md, marginTop: Spacing.lg },
+  field: { marginTop: Spacing.lg },
+});

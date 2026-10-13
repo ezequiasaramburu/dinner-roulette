@@ -1,17 +1,18 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Alert, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
-import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Accent, Card, Screen, Text } from '@/components/ui';
+import { Radius, Spacing } from '@/constants/theme';
 import { useCreateCouple } from '@/hooks/use-couple';
+import { useTheme } from '@/hooks/use-theme';
 import { friendlyError } from '@/lib/errors';
 import { usePendingInvite } from '@/lib/pending-invite';
 
 export default function CoupleSetup() {
   const router = useRouter();
+  const theme = useTheme();
   const createCouple = useCreateCouple();
   const pendingCode = usePendingInvite((s) => s.code);
 
@@ -21,6 +22,7 @@ export default function CoupleSetup() {
   }, [pendingCode, router]);
 
   async function onCreate() {
+    if (createCouple.isPending) return;
     try {
       await createCouple.mutateAsync();
     } catch (e) {
@@ -30,15 +32,58 @@ export default function CoupleSetup() {
 
   return (
     <Screen>
-      <View style={{ flex: 1, justifyContent: 'center', gap: Spacing.three }}>
-        <ThemedText type="subtitle">Who&apos;s joining you for dinner?</ThemedText>
-        <ThemedText themeColor="textSecondary">
-          Dinner Roulette works for two. One of you starts the couple and invites the other with a
-          code.
-        </ThemedText>
-      </View>
-      <Button title="Invite my partner" onPress={onCreate} loading={createCouple.isPending} />
-      <Button title="I have an invite code" variant="secondary" onPress={() => router.push('/join')} />
+      <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
+        <Text variant="overline" tone="primary">
+          Better together
+        </Text>
+        <Text variant="title">
+          Who&apos;s joining you <Accent>for dinner?</Accent>
+        </Text>
+        <Text tone="secondary">
+          Dinner Roulette is made for two. One of you starts the couple and invites the other with a code.
+        </Text>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.options}>
+        <Card onPress={onCreate} accessibilityLabel="Start a couple and invite your partner">
+          <View style={styles.option}>
+            <View style={[styles.badge, { backgroundColor: theme.primarySoft }]}>
+              <Text style={styles.badgeEmoji}>💌</Text>
+            </View>
+            <View style={styles.optionText}>
+              <Text variant="heading">Start a couple</Text>
+              <Text variant="caption" tone="secondary">
+                Create your couple and invite your partner with a code.
+              </Text>
+            </View>
+            {createCouple.isPending ? <ActivityIndicator color={theme.primary} /> : <Text tone="tertiary">›</Text>}
+          </View>
+        </Card>
+
+        <Card onPress={() => router.push('/join')} accessibilityLabel="I have an invite code">
+          <View style={styles.option}>
+            <View style={[styles.badge, { backgroundColor: theme.successSoft }]}>
+              <Text style={styles.badgeEmoji}>🎟️</Text>
+            </View>
+            <View style={styles.optionText}>
+              <Text variant="heading">Join with a code</Text>
+              <Text variant="caption" tone="secondary">
+                Your partner already started. Join them for free.
+              </Text>
+            </View>
+            <Text tone="tertiary">›</Text>
+          </View>
+        </Card>
+      </Animated.View>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  header: { gap: Spacing.md, marginTop: Spacing.xxl },
+  options: { gap: Spacing.lg, marginTop: Spacing.xl },
+  option: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
+  optionText: { flex: 1, gap: Spacing.xs },
+  badge: { width: 52, height: 52, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
+  badgeEmoji: { fontSize: 26, lineHeight: 32 },
+});
