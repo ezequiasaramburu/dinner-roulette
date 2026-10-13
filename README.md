@@ -8,8 +8,8 @@ Expo (SDK 57) · Expo Router · TypeScript · Supabase · TanStack Query · Reac
 
 - [x] Phase 0: project foundations
 - [x] Phase 1: auth (email OTP, Sign in with Apple) and name onboarding
-- [ ] Phase 2: paywall and entitlement (RevenueCat)
-- [ ] Phase 3: couple pairing
+- [ ] Phase 2: paywall and entitlement (RevenueCat), deferred until the MVP is done
+- [x] Phase 3: couple pairing (invite code/link, join, realtime)
 - [ ] Phases 4–9: preferences, recipes, decks, swiping, reveal, launch polish
 
 ## Setup (local, no cloud needed)
@@ -49,7 +49,7 @@ npx tsc --noEmit   # typecheck
 
 ```
 src/app/(auth)   signed-out screens (welcome, email code sign-in)
-src/app/(app)    signed-in screens (name onboarding, home)
+src/app/(app)    signed-in screens (name, couple setup, invite, join, home)
 src/lib          supabase client, apple auth, zod schemas
 src/providers    auth session provider
 src/hooks        data hooks (profile)
