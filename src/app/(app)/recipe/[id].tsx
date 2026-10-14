@@ -7,7 +7,10 @@ import { BackButton, Button, Card, Pill, Screen, Text } from '@/components/ui';
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useReveal } from '@/hooks/use-reveal';
+import { CommunityActions } from '@/components/dish/community-actions';
+import { CommunityBadge } from '@/components/dish/community-badge';
 import { DishImage } from '@/components/dish/dish-image';
+import { useCouple } from '@/hooks/use-couple';
 import { useTheme } from '@/hooks/use-theme';
 
 /** The full recipe for one revealed dish: ingredients to tick off, numbered steps, and the source's video. */
@@ -15,6 +18,7 @@ export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
   const reveal = useReveal(true);
+  const { data: couple } = useCouple();
   const [have, setHave] = useState<Set<number>>(new Set());
 
   const recipe = reveal.data?.status === 'revealed' ? reveal.data.dishes.find((d) => d.id === id) : undefined;
@@ -51,6 +55,7 @@ export default function RecipeScreen() {
             {countryFlag(recipe.country)}  {recipe.country}
           </Text>
           <Text variant="title">{recipe.title}</Text>
+          <CommunityBadge dish={recipe} partnerName={couple?.partner?.display_name} />
           <View style={styles.tags}>
             <Pill label={dishTypeLabel(recipe.dish_type)} tone="neutral" dot={false} />
             {recipe.diet_flags.includes('vegan') ? (
@@ -146,6 +151,8 @@ export default function RecipeScreen() {
             ) : null}
           </View>
         ) : null}
+
+        <CommunityActions dish={recipe} />
       </Animated.View>
     </Screen>
   );

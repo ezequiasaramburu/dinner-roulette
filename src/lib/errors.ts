@@ -14,6 +14,9 @@ const MESSAGES: Record<string, string> = {
   terms_required: 'Please confirm the terms to share a recipe.',
   too_many_recipes: 'You\'ve shared 5 recipes today. Try again tomorrow.',
   too_many_pending: 'You already have 10 recipes waiting for review. We\'ll get to them soon.',
+  cannot_block_partner: 'That recipe is your partner\'s, so it can\'t be hidden. Just swipe left on it.',
+  cannot_block_yourself: 'That\'s your own recipe.',
+  cannot_report_own_recipe: 'That\'s your own recipe.',
   recipe_not_found: 'That recipe is no longer available.',
   not_authenticated: 'Please sign in again.',
 };

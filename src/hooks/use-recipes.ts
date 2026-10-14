@@ -79,3 +79,73 @@ export function useDeleteRecipe() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-recipes'] }),
   });
 }
+
+export type ReportReason = 'offensive' | 'spam' | 'copied' | 'unsafe' | 'other';
+
+/** Everything dinner-related that a hidden recipe may be showing in. */
+function useRefreshDinner() {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ['feed'] });
+    queryClient.invalidateQueries({ queryKey: ['reveal'] });
+  };
+}
+
+export function useReportRecipe() {
+  const refresh = useRefreshDinner();
+  return useMutation({
+    mutationFn: async ({ recipeId, reason, note }: { recipeId: string; reason: ReportReason; note?: string }) => {
+      const { error } = await supabase.rpc('report_recipe', {
+        p_recipe_id: recipeId,
+        p_reason: reason,
+        p_note: note?.trim() || null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: refresh,
+  });
+}
+
+/** Hide everything by this recipe's author, for the whole couple. */
+export function useBlockAuthor() {
+  const refresh = useRefreshDinner();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (recipeId: string) => {
+      const { error } = await supabase.rpc('block_author', { p_recipe_id: recipeId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refresh();
+      queryClient.invalidateQueries({ queryKey: ['blocked-count'] });
+    },
+  });
+}
+
+export function useBlockedCount() {
+  const { session } = useAuth();
+  return useQuery({
+    queryKey: ['blocked-count', session?.user.id],
+    enabled: !!session,
+    queryFn: async (): Promise<number> => {
+      const { data, error } = await supabase.rpc('blocked_authors_count');
+      if (error) throw error;
+      return data as number;
+    },
+  });
+}
+
+export function useClearBlocks() {
+  const refresh = useRefreshDinner();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('clear_blocks');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      refresh();
+      queryClient.invalidateQueries({ queryKey: ['blocked-count'] });
+    },
+  });
+}

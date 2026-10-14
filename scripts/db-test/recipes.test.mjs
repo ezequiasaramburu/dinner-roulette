@@ -358,6 +358,76 @@ describe('reporting a recipe', () => {
   });
 });
 
+describe('hiding takes effect at once', () => {
+  async function queueWith(user, recipeId) {
+    await queue(user);
+    await db.query('update public.daily_decks set recipe_ids = array[$1::uuid] || recipe_ids where true', [recipeId]);
+  }
+  const firstDish = async (user) => (await rpc(user, 'select public.get_swipe_feed() as f'))[0].f.dishes[0]?.id;
+
+  test('a report or a block removes the dish from a queue that is already built', async () => {
+    const { owner, partner } = await couple('vegan');
+    const author = await newUser('Chef');
+    const reported = await submit(author, { title: 'Report me' });
+    const blocked = await submit(author, { title: 'Block me' });
+    await approve(reported);
+    await approve(blocked);
+
+    await queueWith(owner, reported);
+    assert.equal(await firstDish(owner), reported);
+    await rpc(partner, "select public.report_recipe($1, 'spam')", [reported]);
+    assert.notEqual(await firstDish(owner), reported);
+
+    await queueWith(owner, blocked);
+    assert.equal(await firstDish(owner), blocked);
+    await rpc(owner, 'select public.block_author($1)', [blocked]);
+    assert.notEqual(await firstDish(owner), blocked);
+  });
+
+  test('a recipe sent back to review leaves queues straight away', async () => {
+    const { owner } = await couple('vegan');
+    const author = await newUser('Chef');
+    const id = await submit(author);
+    await approve(id);
+    await queueWith(owner, id);
+    assert.equal(await firstDish(owner), id);
+    await db.query("update public.recipes set status = 'pending' where id = $1", [id]);
+    assert.notEqual(await firstDish(owner), id);
+  });
+
+  test('dishes say who wrote them', async () => {
+    const { owner, partner } = await couple('vegan');
+    const stranger = await newUser('Chef');
+    const mine = await submit(owner, { title: 'Mine' });
+    const theirs = await submit(partner, { title: 'Theirs' });
+    const other = await submit(stranger, { title: 'Other' });
+    const imported = (await db.query('select id from public.recipes where author_id is null limit 1')).rows[0].id;
+    const who = async (id) => {
+      // dish_json is internal; call it with the viewer's identity set, as the feed functions do.
+      await db.query("select set_config('request.jwt.claim.sub', $1, false)", [owner]);
+      const d = (await db.query('select public.dish_json($1::uuid[]) as d', [[id]])).rows[0].d[0];
+      await db.query("select set_config('request.jwt.claim.sub', '', false)");
+      return [d.community, d.authored_by];
+    };
+    assert.deepEqual(await who(mine), [true, 'me']);
+    assert.deepEqual(await who(theirs), [true, 'partner']);
+    assert.deepEqual(await who(other), [true, null]);
+    assert.deepEqual(await who(imported), [false, null]);
+  });
+
+  test('Settings can count and clear the authors I hid', async () => {
+    const reader = await newUser('Reader');
+    const author = await newUser('Chef');
+    const id = await submit(author);
+    await approve(id);
+    assert.equal((await rpc(reader, 'select public.blocked_authors_count() as n'))[0].n, 0);
+    await rpc(reader, 'select public.block_author($1)', [id]);
+    assert.equal((await rpc(reader, 'select public.blocked_authors_count() as n'))[0].n, 1);
+    await rpc(reader, 'select public.clear_blocks()');
+    assert.equal((await rpc(reader, 'select public.blocked_authors_count() as n'))[0].n, 0);
+  });
+});
+
 describe('deleting an account', () => {
   test('removes the recipes the person wrote', async () => {
     const a = await newUser('Chef');

@@ -21,6 +21,7 @@ import {
   type CoupleSettings,
 } from "@/hooks/use-couple";
 import { useAccountActions } from "@/hooks/use-account";
+import { useBlockedCount, useClearBlocks } from "@/hooks/use-recipes";
 import { useReminders } from "@/hooks/use-reveal-reminder";
 import { useTheme } from "@/hooks/use-theme";
 import { timeInZoneToLocal } from "@/lib/zoned-time";
@@ -31,6 +32,8 @@ export default function Settings() {
   const { permission, enabled, request, setEnabled } = useReminders();
   const update = useUpdateCoupleSettings();
   const router = useRouter();
+  const blocked = useBlockedCount();
+  const clearBlocks = useClearBlocks();
   const { confirmDelete, deleting } = useAccountActions(couple?.partner?.display_name, couple?.role === 'owner');
   const instant = couple?.reveal_mode === "instant";
   const goal = couple?.match_goal ?? DEFAULT_MATCH_GOAL;
@@ -187,6 +190,40 @@ export default function Settings() {
                 />
               </>
             ) : null}
+          </Card>
+        ) : null}
+
+        {blocked.data ? (
+          <Card>
+            <Text variant="overline" tone="tertiary">
+              Hidden authors
+            </Text>
+            <Text variant="heading" style={styles.cardTitle}>
+              {blocked.data === 1 ? "You've hidden 1 author" : `You've hidden ${blocked.data} authors`}
+            </Text>
+            <Text variant="caption" tone="secondary">
+              Their recipes don&apos;t show up for you or your partner. Showing them again brings back their recipes
+              from your next queue.
+            </Text>
+            <View style={styles.stepper}>
+              <Button
+                title="Show them again"
+                variant="secondary"
+                loading={clearBlocks.isPending}
+                onPress={() =>
+                  Alert.alert("Show hidden authors again?", "Their recipes can appear in your dinner queue again.", [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Show them",
+                      onPress: () =>
+                        clearBlocks.mutate(undefined, {
+                          onError: () => Alert.alert("Couldn't do that", "Please try again."),
+                        }),
+                    },
+                  ])
+                }
+              />
+            </View>
           </Card>
         ) : null}
 

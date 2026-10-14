@@ -3,7 +3,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Text } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
+import { CommunityActions } from '@/components/dish/community-actions';
+import { CommunityBadge } from '@/components/dish/community-badge';
 import { DishImage } from '@/components/dish/dish-image';
+import { useCouple } from '@/hooks/use-couple';
 import type { Dish } from '@/hooks/use-swipe-feed';
 import { useTheme } from '@/hooks/use-theme';
 import { ingredientList } from '@/lib/main-ingredients';
@@ -12,6 +15,7 @@ import { ingredientList } from '@/lib/main-ingredients';
 export function IngredientsSheet({ dish, onClose }: { dish: Dish | null; onClose: () => void }) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { data: couple } = useCouple();
 
   return (
     <Modal transparent visible={!!dish} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -33,6 +37,7 @@ export function IngredientsSheet({ dish, onClose }: { dish: Dish | null; onClose
                 <Text variant="heading" numberOfLines={2}>
                   {dish.title}
                 </Text>
+                <CommunityBadge dish={dish} partnerName={couple?.partner?.display_name} />
               </View>
             </View>
             <ScrollView style={styles.list} showsVerticalScrollIndicator={false}>
@@ -47,6 +52,7 @@ export function IngredientsSheet({ dish, onClose }: { dish: Dish | null; onClose
               Amounts and steps come with the reveal.
             </Text>
             <Button title="Back to swiping" variant="secondary" onPress={onClose} />
+            <CommunityActions dish={dish} onDone={onClose} />
           </View>
         ) : null}
       </View>

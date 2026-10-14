@@ -3,7 +3,9 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Pill, Text } from '@/components/ui';
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
+import { CommunityBadge } from '@/components/dish/community-badge';
 import { DishImage } from '@/components/dish/dish-image';
+import { useCouple } from '@/hooks/use-couple';
 import type { Dish } from '@/hooks/use-swipe-feed';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 import { ingredientLine, ingredientList, mainIngredients } from '@/lib/main-ingredients';
@@ -14,6 +16,7 @@ const DIET_LABEL: Record<string, string> = { vegan: 'Vegan', vegetarian: 'Vegeta
 export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<ViewStyle> }) {
   const theme = useTheme();
   const scheme = useScheme();
+  const { data: couple } = useCouple();
 
   const diet = ['vegan', 'vegetarian', 'pescatarian'].find((d) => recipe.diet_flags.includes(d));
   const contains = recipe.allergens.map(allergenLabel);
@@ -42,6 +45,7 @@ export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<Vi
             {more > 0 ? <Text variant="caption" tone="primary">{`  +${more} more`}</Text> : null}
           </Text>
         ) : null}
+        <CommunityBadge dish={recipe} partnerName={couple?.partner?.display_name} />
         <View style={styles.tags}>
           <Pill label={dishTypeLabel(recipe.dish_type)} tone="neutral" dot={false} />
           {diet ? <Pill label={DIET_LABEL[diet]} tone="success" dot={false} /> : null}

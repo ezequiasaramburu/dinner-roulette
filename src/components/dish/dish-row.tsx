@@ -4,13 +4,16 @@ import { Pill, Text } from '@/components/ui';
 import { countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
 import type { Recipe } from '@/hooks/use-reveal';
+import { CommunityBadge } from '@/components/dish/community-badge';
 import { DishImage } from '@/components/dish/dish-image';
+import { useCouple } from '@/hooks/use-couple';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 /** A revealed dish as a tappable card: photo on top, name and cuisine below. Opens the full recipe. */
 export function DishRow({ recipe, onPress }: { recipe: Recipe; onPress: () => void }) {
   const theme = useTheme();
   const scheme = useScheme();
+  const { data: couple } = useCouple();
 
   return (
     <Pressable
@@ -29,6 +32,7 @@ export function DishRow({ recipe, onPress }: { recipe: Recipe; onPress: () => vo
           {countryFlag(recipe.country)}  {recipe.country}
         </Text>
         <Text variant="heading">{recipe.title}</Text>
+        <CommunityBadge dish={recipe} partnerName={couple?.partner?.display_name} />
         <View style={styles.meta}>
           <Pill label={dishTypeLabel(recipe.dish_type)} tone="neutral" dot={false} />
           <Text variant="label" tone="primary">

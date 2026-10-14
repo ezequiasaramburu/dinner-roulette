@@ -22,6 +22,8 @@ export type Dish = {
   ingredient_names: string[];
   /** Written by a person in the app rather than imported. */
   community: boolean;
+  /** For community recipes: written by me, by my partner, or by someone else (null). */
+  authored_by: 'me' | 'partner' | null;
 };
 
 /**
