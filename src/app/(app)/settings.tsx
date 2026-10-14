@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { Alert, Linking, StyleSheet, Switch, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
@@ -19,6 +20,7 @@ import {
   useUpdateCoupleSettings,
   type CoupleSettings,
 } from "@/hooks/use-couple";
+import { useDeleteAccount } from "@/hooks/use-account";
 import { useReminders } from "@/hooks/use-reveal-reminder";
 import { useTheme } from "@/hooks/use-theme";
 import { timeInZoneToLocal } from "@/lib/zoned-time";
@@ -28,6 +30,8 @@ export default function Settings() {
   const theme = useTheme();
   const { permission, enabled, request, setEnabled } = useReminders();
   const update = useUpdateCoupleSettings();
+  const router = useRouter();
+  const deleteAccount = useDeleteAccount();
   const instant = couple?.reveal_mode === "instant";
   const goal = couple?.match_goal ?? DEFAULT_MATCH_GOAL;
 
@@ -46,6 +50,33 @@ export default function Settings() {
     update.mutate(settings, {
       onError: () => Alert.alert("Couldn't save that", "Please try again."),
     });
+  }
+
+  function confirmDelete() {
+    const partner = couple?.partner?.display_name;
+    const isOwner = couple?.role === "owner";
+    Alert.alert(
+      "Delete your account?",
+      `This permanently deletes your account, food preferences and swipes. It can't be undone.${
+        partner
+          ? isOwner
+            ? ` Your couple with ${partner} ends, and ${partner} will need to start or join a new one.`
+            : ` ${partner} keeps the couple and can invite someone new.`
+          : ""
+      }`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: () =>
+            deleteAccount.mutate(undefined, {
+              onError: () =>
+                Alert.alert("Couldn't delete your account", "Please try again."),
+            }),
+        },
+      ],
+    );
   }
 
   return (
@@ -185,6 +216,30 @@ export default function Settings() {
             ) : null}
           </Card>
         ) : null}
+
+        <Card>
+          <Text variant="overline" tone="tertiary">
+            Account
+          </Text>
+          <View style={styles.options}>
+            <Button
+              title="Terms of Use"
+              variant="secondary"
+              onPress={() => router.push("/legal/terms")}
+            />
+            <Button
+              title="Privacy Policy"
+              variant="secondary"
+              onPress={() => router.push("/legal/privacy")}
+            />
+            <Button
+              title="Delete my account"
+              variant="ghost"
+              loading={deleteAccount.isPending}
+              onPress={confirmDelete}
+            />
+          </View>
+        </Card>
       </Animated.View>
     </Screen>
   );

@@ -3,6 +3,7 @@ const MESSAGES: Record<string, string> = {
   already_in_couple: "You're already part of a couple.",
   couple_full: 'That couple already has two people.',
   not_couple_owner: 'Only the person who created the couple can do that.',
+  too_many_attempts: 'Too many wrong codes. Please wait a few minutes and try again.',
   not_authenticated: 'Please sign in again.',
 };
 

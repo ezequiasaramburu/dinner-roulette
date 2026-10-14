@@ -198,3 +198,16 @@ The reveal is stamped on the day's deck (`daily_decks.revealed_at`, `0015_reveal
 anyone looks after the reveal time, and right before the reveal time or mode is changed. Once stamped it never goes
 back: moving the reveal time later afterwards only affects tomorrow, and swiping stays closed. To test a reveal by
 editing `couples.reveal_time`, remember a stamped deck stays revealed; use a fresh day or clear `revealed_at`.
+
+## Accounts, invite codes and legal
+
+- **Invite code rate limit:** `join_couple` counts wrong codes per user in `join_attempts`. Five wrong codes in 15 minutes
+  raises `too_many_attempts`; a correct join clears the count. A wrong code returns `null` (not an error), because an
+  error would roll the attempt back; the app turns that into "invalid code".
+- **Deleting an account:** Settings → Delete my account calls `delete_account()`, which deletes the `auth.users` row; every
+  table cascades from it. If the owner (the payer) leaves, the couple is dissolved: the partner keeps their account and
+  preferences and can start or join another couple. If the partner leaves, the owner keeps the couple and can invite again.
+  Once subscriptions exist, deleting must also tell the user to cancel in the App Store / Google Play.
+- **Terms and Privacy:** draft text in `src/constants/legal.ts`, shown at `/legal/terms` and `/legal/privacy` (reachable
+  signed out too). Fill in the operator name and support email and get it reviewed before submitting to the stores; the
+  stores also need the privacy policy at a public URL (the landing page).

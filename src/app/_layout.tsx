@@ -32,6 +32,7 @@ function RootNavigator() {
       <Stack.Protected guard={!!session}>
         <Stack.Screen name="(app)" />
       </Stack.Protected>
+      <Stack.Screen name="legal/[doc]" options={{ animation: 'slide_from_right' }} />
     </Stack>
   );
 }

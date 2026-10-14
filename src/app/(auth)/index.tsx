@@ -20,6 +20,17 @@ export default function Welcome() {
           <Text variant="caption" tone="tertiary" align="center">
             Your partner joins for free.
           </Text>
+          <Text variant="caption" tone="tertiary" align="center">
+            By continuing you agree to our{' '}
+            <Text variant="caption" tone="secondary" onPress={() => router.push('/legal/terms')}>
+              Terms
+            </Text>{' '}
+            and{' '}
+            <Text variant="caption" tone="secondary" onPress={() => router.push('/legal/privacy')}>
+              Privacy Policy
+            </Text>
+            .
+          </Text>
         </>
       }>
       <Animated.View entering={FadeIn.duration(900)} style={styles.wheel}>

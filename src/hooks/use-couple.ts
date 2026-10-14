@@ -59,8 +59,10 @@ export function useJoinCouple() {
   const invalidate = useInvalidateCouple();
   return useMutation({
     mutationFn: async (code: string) => {
-      const { error } = await supabase.rpc('join_couple', { p_code: code });
+      const { data, error } = await supabase.rpc('join_couple', { p_code: code });
       if (error) throw error;
+      // A wrong code comes back as null (not an error) so the server can count the attempt.
+      if (!data) throw new Error('invalid_code');
     },
     onSuccess: invalidate,
   });
