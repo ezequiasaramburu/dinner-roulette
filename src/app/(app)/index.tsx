@@ -232,28 +232,27 @@ export default function Home() {
         )}
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-        <Card>
-          <View style={styles.coupleRow}>
-            <View style={styles.avatars}>
-              <Avatar name={me} size={52} colorIndex={0} />
-              <View style={styles.second}>
-                <Avatar name={partner} size={52} colorIndex={1} />
+      {/* Only useful while we wait for the partner; once you're both set there is nothing to say. */}
+      {!partnerReady ? (
+        <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+          <Card>
+            <View style={styles.coupleRow}>
+              <View style={styles.avatars}>
+                <Avatar name={me} size={52} colorIndex={0} />
+                <View style={styles.second}>
+                  <Avatar name={partner} size={52} colorIndex={1} />
+                </View>
+              </View>
+              <View style={styles.coupleText}>
+                <Text variant="bodyStrong">
+                  {me} &amp; {partner}
+                </Text>
+                <Pill label={`Waiting for ${partner}`} tone="warning" pulse />
               </View>
             </View>
-            <View style={styles.coupleText}>
-              <Text variant="bodyStrong">
-                {me} &amp; {partner}
-              </Text>
-              {partnerReady ? (
-                <Pill label="You're both set" tone="success" />
-              ) : (
-                <Pill label={`Waiting for ${partner}`} tone="warning" pulse />
-              )}
-            </View>
-          </View>
-        </Card>
-      </Animated.View>
+          </Card>
+        </Animated.View>
+      ) : null}
 
       <Animated.View entering={FadeInDown.delay(300).duration(500)}>
         <Card tone="muted" padding="lg">
