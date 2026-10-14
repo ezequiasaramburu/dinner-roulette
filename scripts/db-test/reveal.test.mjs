@@ -67,7 +67,7 @@ describe('reveal', () => {
     }
   });
 
-  test('both partners see the same reveal, and it is frozen: swipes after the reveal belong to tomorrow', async () => {
+  test('both partners see the same reveal, and it is frozen: swiping is closed once it has happened', async () => {
     const { a, b, couple } = await makeCouple();
     const f = await feed(a);
     await swipe(a, f.deck_id, f.dishes[0].id, true);
@@ -76,12 +76,13 @@ describe('reveal', () => {
     const first = await reveal(a);
     assert.deepEqual((await reveal(b)).dishes, first.dishes);
 
-    const tomorrow = await feed(a);
-    assert.equal(tomorrow.for_today, false);
-    await swipe(a, tomorrow.deck_id, tomorrow.dishes[0].id, true);
-    await swipe(b, tomorrow.deck_id, tomorrow.dishes[0].id, true);
+    for (const u of [a, b]) {
+      const after = await feed(u);
+      assert.equal(after.status, 'closed');
+      assert.equal(after.deck_id, f.deck_id);
+      await assert.rejects(swipe(u, f.deck_id, f.dishes[1].id, true), /deck_closed/);
+    }
     assert.deepEqual((await reveal(a)).dishes, first.dishes);
-    await assert.rejects(swipe(a, f.deck_id, f.dishes[1].id, true), /deck_closed/);
   });
 
   test('no shared like: the closest dishes (liked by one of you) are offered, up to the match goal', async () => {
@@ -151,7 +152,6 @@ describe('instant reveal', () => {
   test('the reveal opens the moment the goal is reached, for both partners, whatever the reveal time says', async () => {
     const { a, b } = await makeCouple({ mode: 'instant', reveal: '00:00' }); // a set time that passed long ago
     const f = await feed(a);
-    assert.equal(f.for_today, true, 'swipes count toward today');
     const [d1, d2, d3] = f.dishes.map((d) => d.id);
     await swipe(a, f.deck_id, d1, true);
     await swipe(b, f.deck_id, d1, true);
@@ -308,5 +308,59 @@ describe('diet corrections in the catalog', () => {
     assert.ok(!(await pool('vegan')).has('Egg Drop Soup'));
     assert.ok(!(await pool('none', ['eggs'])).has('Egg Drop Soup'));
     assert.ok(!(await pool('vegan')).has('Ful Medames'));
+  });
+});
+
+describe('a revealed dinner stays revealed', () => {
+  const settings = (u, ...args) => call(u, 'select public.update_couple_settings($1, $2, $3) as r', args);
+
+  async function matchedCouple() {
+    const { a, b, couple } = await makeCouple({ goal: 1 });
+    const f = await feed(a);
+    await swipe(a, f.deck_id, f.dishes[0].id, true);
+    await swipe(b, f.deck_id, f.dishes[0].id, true);
+    return { a, b, couple, f };
+  }
+
+  test('moving the reveal time later after the reveal neither takes it back nor reopens swiping', async () => {
+    const { a, b, couple, f } = await matchedCouple();
+    await openReveal(couple);
+    const first = await reveal(a); // someone looks: it is stamped
+    assert.equal(first.status, 'revealed');
+
+    await settings(b, null, null, '23:59'); // the reveal time is now far in the future again
+    for (const u of [a, b]) {
+      const r = await reveal(u);
+      assert.equal(r.status, 'revealed');
+      assert.deepEqual(r.dishes, first.dishes);
+      assert.equal((await feed(u)).status, 'closed');
+      await assert.rejects(swipe(u, f.deck_id, f.dishes[1].id, true), /deck_closed/);
+    }
+  });
+
+  test('even if nobody had looked yet when the time was moved, the passed reveal counts', async () => {
+    const { a, b, couple, f } = await matchedCouple();
+    await openReveal(couple); // passed, but nobody has opened the app since
+    await settings(a, null, null, '23:59');
+    assert.equal((await reveal(b)).status, 'revealed');
+    assert.equal((await feed(b)).status, 'closed');
+    await assert.rejects(swipe(b, f.deck_id, f.dishes[1].id, true), /deck_closed/);
+  });
+
+  test('a time change made before the reveal still works normally', async () => {
+    const { a, couple } = await matchedCouple(); // reveal 23:59:59, still ahead
+    await settings(a, null, null, '23:00');
+    assert.equal((await reveal(a)).status, 'pending');
+    await openReveal(couple);
+    assert.equal((await reveal(a)).status, 'revealed');
+  });
+
+  test('"seen" works for a reveal whose time was moved afterwards', async () => {
+    const { a, couple, f } = await matchedCouple();
+    await openReveal(couple);
+    await reveal(a);
+    await settings(a, null, null, '23:59');
+    await seen(a, f.deck_id);
+    assert.equal((await reveal(a)).seen, true);
   });
 });

@@ -28,6 +28,13 @@
     "plugins": [
       "expo-router",
       [
+        "expo-notifications",
+        {
+          "color": "#B93D26",
+          "defaultChannel": "reveal"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#FAF5EC",
@@ -38,7 +45,8 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

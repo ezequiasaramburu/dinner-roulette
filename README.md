@@ -14,7 +14,7 @@ Expo (SDK 57) · Expo Router · TypeScript · Supabase · TanStack Query · Reac
 - [x] Phase 5: recipe catalog (473 dinners imported from TheMealDB)
 - [x] Phase 6: daily deck builder (server-side filters, ranking, variety, no-repeat window)
 - [x] Phase 7: swiping (endless queue, match goal, gesture card stack, settings)
-- [~] Phase 8: reveal (done: reveal result, reveal screen, full recipe; to do: daily notification)
+- [x] Phase 8: reveal (reveal result and screen, full recipe, instant mode, reveal-time picker, daily reminder). Push from the server (partner matched, nudges) is still to do: needs the Apple developer account for iOS
 - [ ] Phase 9: launch polish
 
 ## Setup (local, no cloud needed)
@@ -117,9 +117,10 @@ family (`dish_type`) from its title. Add to the blocklist whenever a bad dish sh
 
 ## Swiping and matches
 
-There is no daily quota and no "N left". Each couple has **one ranked queue per dinner cycle** (a cycle runs from one
-reveal to the next, so swiping after tonight's reveal counts toward tomorrow). Both partners walk the same queue in the
-same order at their own pace, a few swipes at a time, whenever they like.
+There is no daily quota and no "N left". Each couple has **one ranked queue per day** (the couple's local date). Both partners
+walk the same queue in the same order at their own pace, a few swipes at a time, whenever they like. Swiping is open from
+midnight until the dinner is revealed (the reveal time, or the moment the goal is reached in instant mode); after that it
+is closed for both until the next day (`0014_swiping_closes_at_reveal.sql`).
 
 A **match** is a dish both partners liked. The couple's **match goal** (default 2, settable 1 to 5 in Settings, by either
 partner) is how many matches get revealed together at the reveal time. When the goal is reached, swiping ends for both
@@ -179,3 +180,21 @@ term is matched against a recipe's ingredient names when the deck is built (whol
 cleans what is typed (lower-case, letters/digits/spaces/hyphens, 3 to 40 characters, at most 20 per list). Terms are
 private to their owner, like the rest of the preferences. Because it works on ingredient names at query time, it covers
 recipes added later without any tagging.
+
+### Reveal time and the daily reminder
+
+In scheduled mode either partner picks the reveal time in Settings (`update_couple_settings(..., reveal_time)`). Each
+phone then schedules one repeating local notification (`expo-notifications`, `src/hooks/use-reveal-reminder.ts`), so no
+server is involved: the time is fixed and known ahead. The reveal time is on the couple's clock, so it is converted to
+this phone's clock for today (`src/lib/zoned-time.ts`, tested with `npm test`, including daylight-saving days) and
+rescheduled whenever the app comes to the foreground, the settings change, or the mode switches (instant mode has no
+reminder). Permission is asked from a button, never on first launch; the on/off switch for the reminder is per phone.
+`expo-notifications` and the time picker are native modules, so the first run after pulling this needs a rebuild
+(`npx expo run:ios` / `run:android`).
+
+### A revealed dinner stays revealed
+
+The reveal is stamped on the day's deck (`daily_decks.revealed_at`, `0015_revealed_stays_revealed.sql`) the first time
+anyone looks after the reveal time, and right before the reveal time or mode is changed. Once stamped it never goes
+back: moving the reveal time later afterwards only affects tomorrow, and swiping stays closed. To test a reveal by
+editing `couples.reveal_time`, remember a stamped deck stays revealed; use a fresh day or clear `revealed_at`.

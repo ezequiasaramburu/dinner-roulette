@@ -10,6 +10,7 @@ import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
 import { thumbnail, useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useDismissNotice, useNotices } from '@/hooks/use-notices';
 import { useProfile } from '@/hooks/use-profile';
+import { useReminders } from '@/hooks/use-reveal-reminder';
 import { useReveal } from '@/hooks/use-reveal';
 import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
@@ -33,6 +34,7 @@ export default function Home() {
   const feed = useSwipeFeed(bothReady);
   const reveal = useReveal(bothReady);
   const notices = useNotices(bothReady);
+  const { permission, request: requestReminders } = useReminders();
   const dismissNotice = useDismissNotice();
   const refetchReveal = reveal.refetch;
   const revealAt = reveal.data?.reveal_at;
@@ -94,7 +96,6 @@ export default function Home() {
   const partner = couple?.partner?.display_name ?? 'Your partner';
   const instant = couple?.reveal_mode === 'instant';
   const findOut = instant ? 'as soon as you match' : `what matched at ${couple?.reveal_time ?? 'the reveal'}`;
-  const forToday = feed.data?.for_today ?? true;
 
   return (
     <Screen
@@ -180,7 +181,7 @@ export default function Home() {
         {feed.data && feed.data.status === 'ready' ? (
           <Card tone="accent" padding="lg">
             <Text variant="overline" tone="tertiary">
-              {forToday ? 'Tonight' : 'For tomorrow'}
+              Tonight
             </Text>
             <View style={styles.thumbs}>
               {feed.data.dishes.slice(0, 5).map((dish, i) => (
@@ -201,9 +202,19 @@ export default function Home() {
                 />
               ))}
             </View>
-            <Text variant="bodyStrong">{forToday ? "Find tonight's dinner" : "Find tomorrow's dinner"}</Text>
+            <Text variant="bodyStrong">Find tonight&apos;s dinner</Text>
             <Text variant="caption" tone="secondary">
               Swipe a few dishes whenever you have a minute, as often as you like. You&apos;ll both find out {findOut}.
+            </Text>
+          </Card>
+        ) : feed.data?.status === 'closed' ? (
+          <Card tone="accent" padding="lg">
+            <Pill label="Dinner is sorted" tone="success" dot={false} />
+            <Text variant="bodyStrong" style={styles.sortedTitle}>
+              Swiping is closed for today
+            </Text>
+            <Text variant="caption" tone="secondary">
+              Today&apos;s dinner has been revealed. New dishes open tomorrow.
             </Text>
           </Card>
         ) : feed.data ? (
@@ -299,6 +310,14 @@ export default function Home() {
               </Text>
             </View>
           )}
+          {!instant && permission === 'undetermined' ? (
+            <Button
+              title={`Remind me at ${couple?.reveal_time}`}
+              variant="secondary"
+              onPress={requestReminders}
+              style={styles.remind}
+            />
+          ) : null}
         </Card>
       </Animated.View>
 
@@ -378,6 +397,7 @@ const styles = StyleSheet.create({
   revealMystery: { alignItems: 'center', justifyContent: 'center' },
   chevron: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   chevronText: { fontFamily: Fonts.medium, fontSize: 26, lineHeight: 30, marginTop: -2, marginLeft: 2 },
+  remind: { marginTop: Spacing.lg },
   noticeText: { marginTop: Spacing.xs, marginBottom: Spacing.md },
   sortedTitle: { marginTop: Spacing.md },
 });

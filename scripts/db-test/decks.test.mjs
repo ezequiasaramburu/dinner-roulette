@@ -233,7 +233,8 @@ describe('swipe feed', () => {
   const mineSwipes = (user) => asUser(db, user, async () => (await db.query('select recipe_id, liked from public.swipes')).rows);
 
   let n = 0;
-  async function makeCouple({ tz = 'Pacific/Auckland', reveal = '17:00', prefsA = prefs(), prefsB = prefs() } = {}) {
+  // reveal '23:59:59' = still ahead today, so these tests do not depend on what time they run.
+  async function makeCouple({ tz = 'Pacific/Auckland', reveal = '23:59:59', prefsA = prefs(), prefsB = prefs() } = {}) {
     n++;
     const a = await addUser(db, `fa${n}@test.dev`);
     const b = await addUser(db, `fb${n}@test.dev`);
@@ -263,8 +264,7 @@ describe('swipe feed', () => {
     assert.equal(f.status, 'ready');
     assert.equal(f.dishes.length, 6);
     assert.equal(f.has_swiped, false);
-    assert.equal(typeof f.for_today, 'boolean');
-    assert.deepEqual(Object.keys(f).sort(), ['cycle_date', 'deck_id', 'dishes', 'for_today', 'has_swiped', 'status']);
+    assert.deepEqual(Object.keys(f).sort(), ['cycle_date', 'deck_id', 'dishes', 'has_swiped', 'status']);
     for (const d of f.dishes) {
       assert.equal(d.ingredients, undefined);
       assert.equal(d.steps, undefined);
@@ -371,15 +371,30 @@ describe('swipe feed', () => {
     assert.equal(rows[0].liked, false);
   });
 
-  test('a cycle runs reveal to reveal: after the reveal time, swipes count toward tomorrow', async () => {
-    const { a, couple } = await makeCouple({ reveal: '23:59:59' }); // reveal is still ahead today
-    const before = await feed(a);
-    assert.equal(before.for_today, true);
-    await db.query("update couples set reveal_time = '00:00' where id = $1", [couple]); // reveal has passed today
-    const after = await feed(a);
-    assert.equal(after.for_today, false);
-    assert.notEqual(after.deck_id, before.deck_id);
-    assert.ok(after.cycle_date > before.cycle_date);
+  test('swiping closes for both when the reveal time passes, and reopens with the next day', async () => {
+    const { a, b, couple } = await makeCouple({ reveal: '23:59:59' }); // reveal is still ahead today
+    const f = await feed(a);
+    assert.equal(f.status, 'ready');
+    const [d1, d2] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, true);
+
+    await db.query("update couples set reveal_time = '00:00' where id = $1", [couple]); // the reveal has passed
+    for (const u of [a, b]) {
+      const closed = await feed(u);
+      assert.equal(closed.status, 'closed');
+      assert.deepEqual(closed.dishes, []);
+      assert.equal(closed.deck_id, f.deck_id, 'still today\'s deck: nothing rolls over to tomorrow');
+    }
+    await assert.rejects(swipe(a, f.deck_id, d2, true), /deck_closed/);
+    await assert.rejects(swipe(b, f.deck_id, d2, true), /deck_closed/);
+    await assert.rejects(undo(a, f.deck_id), /deck_closed/);
+
+    // The next day starts: a fresh queue, open again (before that day's reveal).
+    await db.query('update daily_decks set deck_date = deck_date - 1 where couple_id = $1', [couple]);
+    await db.query("update couples set reveal_time = '23:59:59' where id = $1", [couple]);
+    const next = await feed(a);
+    assert.equal(next.status, 'ready');
+    assert.notEqual(next.deck_id, f.deck_id);
   });
 
   test('a small pool ends gracefully with "exhausted" after every fitting dish was swiped', async () => {

@@ -5,6 +5,7 @@ import { Button, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
 import { useProfile } from '@/hooks/use-profile';
+import { useRevealReminderSync } from '@/hooks/use-reveal-reminder';
 import { useTheme } from '@/hooks/use-theme';
 
 /**
@@ -15,6 +16,7 @@ export default function AppLayout() {
   const theme = useTheme();
   const profile = useProfile();
   const couple = useCouple();
+  useRevealReminderSync(couple.data);
 
   if (profile.isPending || couple.isPending) {
     return (

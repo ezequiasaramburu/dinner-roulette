@@ -1,21 +1,50 @@
-import { Alert, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Alert, Linking, StyleSheet, Switch, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
-import { Accent, BackButton, Card, OptionCard, Screen, Stepper, Text } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
-import { useCouple, useUpdateCoupleSettings, type CoupleSettings } from '@/hooks/use-couple';
-import { useProfile } from '@/hooks/use-profile';
+import {
+  Accent,
+  BackButton,
+  Button,
+  Card,
+  OptionCard,
+  Screen,
+  Stepper,
+  Text,
+  TimeField,
+} from "@/components/ui";
+import { DEFAULT_MATCH_GOAL } from "@/constants/food";
+import { Spacing } from "@/constants/theme";
+import {
+  useCouple,
+  useUpdateCoupleSettings,
+  type CoupleSettings,
+} from "@/hooks/use-couple";
+import { useReminders } from "@/hooks/use-reveal-reminder";
+import { useTheme } from "@/hooks/use-theme";
+import { timeInZoneToLocal } from "@/lib/zoned-time";
 
 export default function Settings() {
   const { data: couple } = useCouple();
-  const { data: profile } = useProfile();
+  const theme = useTheme();
+  const { permission, enabled, request, setEnabled } = useReminders();
   const update = useUpdateCoupleSettings();
-  const instant = couple?.reveal_mode === 'instant';
-  const goal = couple?.match_goal ?? 2;
+  const instant = couple?.reveal_mode === "instant";
+  const goal = couple?.match_goal ?? DEFAULT_MATCH_GOAL;
+
+  // The reveal time is on the couple's clock; show what it is on this phone when the two differ.
+  const localTime = couple
+    ? (() => {
+        const { hour, minute } = timeInZoneToLocal(
+          couple.reveal_time,
+          couple.timezone,
+        );
+        return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+      })()
+    : null;
 
   function save(settings: CoupleSettings) {
     update.mutate(settings, {
-      onError: () => Alert.alert("Couldn't save that", 'Please try again.'),
+      onError: () => Alert.alert("Couldn't save that", "Please try again."),
     });
   }
 
@@ -35,12 +64,22 @@ export default function Settings() {
             Matches per day
           </Text>
           <Text variant="caption" tone="secondary">
-            You keep swiping until you&apos;ve both liked this many of the same dishes. They&apos;re revealed together
-            {instant ? ' as soon as you reach it' : ` at ${couple?.reveal_time ?? 'the reveal'}`}, so you&apos;ll have{' '}
-            {goal === 1 ? 'one dish' : `${goal} options`} to cook. Either of you can change this.
+            You keep swiping until you&apos;ve both liked this many of the same
+            dishes. They&apos;re revealed together
+            {instant
+              ? " as soon as you reach it"
+              : ` at ${couple?.reveal_time ?? "the reveal"}`}
+            , so you&apos;ll have {goal === 1 ? "one dish" : `${goal} options`}{" "}
+            to cook. Either of you can change this.
           </Text>
           <View style={styles.stepper}>
-            <Stepper label="Matches per day" value={goal} min={1} max={5} onChange={(n) => save({ matchGoal: n })} />
+            <Stepper
+              label="Matches per day"
+              value={goal}
+              min={1}
+              max={5}
+              onChange={(n) => save({ matchGoal: n })}
+            />
           </View>
         </Card>
 
@@ -53,28 +92,97 @@ export default function Settings() {
               title="At a set time"
               description="Keep swiping whenever you like. You both find out at the same time each day."
               selected={!instant}
-              onPress={() => save({ revealMode: 'scheduled' })}
+              onPress={() => save({ revealMode: "scheduled" })}
             />
             <OptionCard
               title="As soon as you match"
               description="The moment you've reached your matches, you both find out. Swiping reopens tomorrow."
               selected={instant}
-              onPress={() => save({ revealMode: 'instant' })}
+              onPress={() => save({ revealMode: "instant" })}
             />
           </View>
         </Card>
 
-        {!instant ? (
-          <Card tone="muted" padding="lg">
+        {!instant && couple ? (
+          <Card>
             <Text variant="overline" tone="tertiary">
               Daily reveal
             </Text>
-            <Text variant="bodyStrong" style={styles.cardTitle}>
-              {couple?.reveal_time} · {couple?.timezone?.replace('_', ' ')}
+            <Text variant="heading" style={styles.cardTitle}>
+              What time do you find out?
             </Text>
             <Text variant="caption" tone="secondary">
-              Signed in as {profile?.display_name}. Choosing your own reveal time is coming soon.
+              You both find out at the same moment, on the clock of{" "}
+              {couple.timezone.replace("_", " ")}. Either of you can change it.
             </Text>
+            <View style={styles.stepper}>
+              <TimeField
+                accessibilityLabel="Reveal time"
+                value={couple.reveal_time}
+                onChange={(revealTime) => save({ revealTime })}
+              />
+            </View>
+            {localTime && localTime !== couple.reveal_time ? (
+              <Text variant="caption" tone="secondary" style={styles.localNote}>
+                That&apos;s {localTime} on this phone&apos;s clock.
+              </Text>
+            ) : null}
+
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+            {permission === "granted" ? (
+              <View style={styles.switchRow}>
+                <View style={styles.switchText}>
+                  <Text variant="bodyStrong">Remind me on this phone</Text>
+                  <Text variant="caption" tone="secondary">
+                    A notification when the reveal is ready.
+                  </Text>
+                </View>
+                <Switch
+                  accessibilityLabel="Remind me on this phone"
+                  value={enabled}
+                  onValueChange={setEnabled}
+                  trackColor={{
+                    true: theme.primary,
+                    false: theme.borderStrong,
+                  }}
+                />
+              </View>
+            ) : permission === "denied" ? (
+              <>
+                <Text variant="bodyStrong">Reminders are off</Text>
+                <Text
+                  variant="caption"
+                  tone="secondary"
+                  style={styles.localNote}
+                >
+                  Notifications are blocked for Dinner Roulette. Allow them in
+                  your phone&apos;s settings to get a reminder.
+                </Text>
+                <Button
+                  title="Open settings"
+                  variant="secondary"
+                  onPress={() => Linking.openSettings()}
+                />
+              </>
+            ) : permission === "undetermined" ? (
+              <>
+                <Text variant="bodyStrong">Get a reminder</Text>
+                <Text
+                  variant="caption"
+                  tone="secondary"
+                  style={styles.localNote}
+                >
+                  We&apos;ll send one notification at the reveal time, nothing
+                  else.
+                </Text>
+                <Button
+                  title="Turn on reminders"
+                  variant="secondary"
+                  onPress={request}
+                />
+              </>
+            ) : null}
           </Card>
         ) : null}
       </Animated.View>
@@ -86,5 +194,9 @@ const styles = StyleSheet.create({
   stack: { gap: Spacing.lg, marginTop: Spacing.lg },
   cardTitle: { marginTop: Spacing.xs, marginBottom: Spacing.sm },
   options: { gap: Spacing.sm, marginTop: Spacing.md },
-  stepper: { marginTop: Spacing.lg, alignItems: 'flex-start' },
+  stepper: { marginTop: Spacing.lg, alignItems: "flex-start" },
+  localNote: { marginTop: Spacing.sm, marginBottom: Spacing.md },
+  divider: { height: StyleSheet.hairlineWidth, marginVertical: Spacing.lg },
+  switchRow: { flexDirection: "row", alignItems: "center", gap: Spacing.lg },
+  switchText: { flex: 1, gap: 2 },
 });

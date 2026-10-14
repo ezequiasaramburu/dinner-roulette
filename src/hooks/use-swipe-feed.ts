@@ -23,15 +23,14 @@ export type Dish = {
  * The couple's endless queue for the current dinner cycle, seen from my side.
  *  - ready: swipe the dishes below (the next few, in order)
  *  - goal_reached: the couple has enough matches, swiping is over until the reveal
+ *  - closed: the dinner has been revealed, swiping reopens tomorrow
  *  - exhausted: I've been through every dish that fits us both
  * There are deliberately no counts here: no "N left", no partner progress.
  */
 export type SwipeFeed = {
   deck_id: string;
   cycle_date: string;
-  /** False once tonight's reveal has passed: swipes now count toward tomorrow. */
-  for_today: boolean;
-  status: 'ready' | 'goal_reached' | 'exhausted';
+  status: 'ready' | 'goal_reached' | 'closed' | 'exhausted';
   has_swiped: boolean;
   dishes: Dish[];
 };
@@ -90,7 +89,11 @@ export function useRecordSwipe() {
 
   return useMutation({
     mutationFn: async ({ deckId, dish, liked }: SwipeVars): Promise<{ status: 'ready' | 'goal_reached' }> => {
-      const { data, error } = await supabase.rpc('record_swipe', { p_deck_id: deckId, p_recipe_id: dish.id, p_liked: liked });
+      const { data, error } = await supabase.rpc('record_swipe', {
+        p_deck_id: deckId,
+        p_recipe_id: dish.id,
+        p_liked: liked,
+      });
       if (error) throw error;
       return data as { status: 'ready' | 'goal_reached' };
     },
@@ -98,8 +101,9 @@ export function useRecordSwipe() {
       session.swiped.add(dish.id);
       session.history.push({ dish, liked });
       useUndoAvailable.getState().sync();
-      queryClient.setQueryData<SwipeFeed>(key, (f) =>
-        f && { ...f, has_swiped: true, dishes: f.dishes.filter((d) => d.id !== dish.id) },
+      queryClient.setQueryData<SwipeFeed>(
+        key,
+        (f) => f && { ...f, has_swiped: true, dishes: f.dishes.filter((d) => d.id !== dish.id) },
       );
     },
     onSuccess: (result) => {

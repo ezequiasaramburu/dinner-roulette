@@ -71,7 +71,10 @@ export default function Swipe() {
 
   if (feed.isError || !data) {
     return (
-      <Screen scroll={false} contentStyle={styles.center} footer={<Button title="Try again" onPress={() => feed.refetch()} />}>
+      <Screen
+        scroll={false}
+        contentStyle={styles.center}
+        footer={<Button title="Try again" onPress={() => feed.refetch()} />}>
         <Text variant="heading" align="center">
           We couldn&apos;t load your dishes
         </Text>
@@ -83,19 +86,27 @@ export default function Swipe() {
 
   if (data.status !== 'ready') {
     const sorted = data.status === 'goal_reached';
+    const closed = data.status === 'closed';
     return (
-      <Screen scroll={false} contentStyle={styles.screen} footer={<Button title="Back home" onPress={() => router.back()} />}>
+      <Screen
+        scroll={false}
+        contentStyle={styles.screen}
+        footer={<Button title="Back home" onPress={() => router.back()} />}>
         <View style={styles.header}>
           <BackButton />
         </View>
         <Animated.View entering={FadeInDown.duration(500)} style={styles.endBody}>
           <Text variant="overline" tone="primary">
-            {sorted ? 'Matched' : 'That’s everything'}
+            {sorted ? 'Matched' : closed ? 'Revealed' : 'That’s everything'}
           </Text>
           <Text variant="title">
             {sorted ? (
               <>
                 Dinner is <Accent>sorted.</Accent>
+              </>
+            ) : closed ? (
+              <>
+                Swiping is <Accent>closed.</Accent>
               </>
             ) : (
               <>
@@ -106,7 +117,9 @@ export default function Swipe() {
           <Text tone="secondary">
             {sorted
               ? `You both liked enough of the same dishes. We'll show you what matched at ${revealTime}.`
-              : `You've been through every dish that fits you both. We'll work with what you liked and reveal at ${revealTime}.`}
+              : closed
+                ? "Today's dinner has been revealed. New dishes open tomorrow."
+                : `You've been through every dish that fits you both. We'll work with what you liked and reveal at ${revealTime}.`}
           </Text>
         </Animated.View>
       </Screen>
@@ -118,7 +131,7 @@ export default function Swipe() {
       <View style={styles.header}>
         <BackButton />
         <Text variant="overline" tone="tertiary" align="center" style={styles.headerTitle}>
-          {data.for_today ? 'Tonight' : 'For tomorrow'}
+          Tonight
         </Text>
         <View style={styles.headerSpacer} />
       </View>
@@ -135,11 +148,30 @@ export default function Swipe() {
 
       <View style={styles.actions}>
         <View style={styles.actionSide}>
-          <RoundButton label="Undo last swipe" glyph="↺" size={52} disabled={!canUndo || undo.isPending} onPress={onUndo} />
+          <RoundButton
+            label="Undo last swipe"
+            glyph="↺"
+            size={52}
+            disabled={!canUndo || undo.isPending}
+            onPress={onUndo}
+          />
         </View>
         <View style={styles.actionMain}>
-          <RoundButton label="Pass" glyph="✕" size={76} disabled={!dishes.length} onPress={() => deckRef.current?.swipe(false)} />
-          <RoundButton label="Yum" glyph="♥" size={76} filled disabled={!dishes.length} onPress={() => deckRef.current?.swipe(true)} />
+          <RoundButton
+            label="Pass"
+            glyph="✕"
+            size={76}
+            disabled={!dishes.length}
+            onPress={() => deckRef.current?.swipe(false)}
+          />
+          <RoundButton
+            label="Yum"
+            glyph="♥"
+            size={76}
+            filled
+            disabled={!dishes.length}
+            onPress={() => deckRef.current?.swipe(true)}
+          />
         </View>
         <View style={styles.actionSide} />
       </View>
@@ -181,7 +213,13 @@ function RoundButton({
         disabled && { opacity: 0.35 },
         pressed && { transform: [{ scale: 0.94 }] },
       ]}>
-      <Text style={{ fontFamily: Fonts.medium, fontSize: size * 0.4, lineHeight: size * 0.5, color: filled ? theme.onPrimary : theme.text }}>
+      <Text
+        style={{
+          fontFamily: Fonts.medium,
+          fontSize: size * 0.4,
+          lineHeight: size * 0.5,
+          color: filled ? theme.onPrimary : theme.text,
+        }}>
         {glyph}
       </Text>
     </Pressable>

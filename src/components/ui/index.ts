@@ -13,6 +13,7 @@ export { Screen } from './screen';
 export { Section } from './section';
 export { MenuItem, SideMenu } from './side-menu';
 export { Stepper } from './stepper';
+export { TimeField } from './time-field';
 export { Accent, Text } from './text';
 export { TermsField } from './terms-field';
 export { TextField } from './text-field';
