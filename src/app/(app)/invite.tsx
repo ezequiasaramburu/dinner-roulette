@@ -3,9 +3,11 @@ import { useEffect } from 'react';
 import { Alert, Share, StyleSheet } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { PartnerLeftNotice } from '@/components/notice-card';
 import { Accent, Button, Card, CodeTiles, Pill, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useCancelCouple, useCouple, useCoupleRealtime, useInviteCode, useRegenerateInvite } from '@/hooks/use-couple';
+import { useNotices } from '@/hooks/use-notices';
 import { friendlyError } from '@/lib/errors';
 
 export default function Invite() {
@@ -13,6 +15,8 @@ export default function Invite() {
   const invite = useInviteCode(couple.data?.couple_id);
   const cancel = useCancelCouple();
   const regenerate = useRegenerateInvite(couple.data?.couple_id);
+  const notices = useNotices(true);
+  const left = notices.data?.filter((n) => n.kind === 'partner_left') ?? [];
 
   // Realtime moves us along instantly; polling covers a dropped socket.
   useCoupleRealtime(couple.data?.couple_id);
@@ -68,6 +72,9 @@ export default function Invite() {
           <Button title="Start over" variant="ghost" onPress={onCancel} loading={cancel.isPending} />
         </>
       }>
+      {left.map((n) => (
+        <PartnerLeftNotice key={n.id} notice={n} />
+      ))}
       <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
         <Text variant="overline" tone="primary">
           Almost there

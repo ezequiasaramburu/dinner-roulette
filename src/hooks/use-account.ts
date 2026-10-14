@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
+import { Alert } from 'react-native';
 
 import { supabase } from '@/lib/supabase';
 
@@ -16,4 +17,43 @@ export function useDeleteAccount() {
       queryClient.clear();
     },
   });
+}
+
+/**
+ * Sign out and delete-account with their confirmations, for any screen that offers them.
+ * `partner` and `isOwner` only change what the delete dialog says will happen to the other person.
+ */
+export function useAccountActions(partner?: string | null, isOwner?: boolean) {
+  const deleteAccount = useDeleteAccount();
+
+  async function signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) Alert.alert('Could not sign out', error.message);
+  }
+
+  function confirmDelete() {
+    Alert.alert(
+      'Delete your account?',
+      `This permanently deletes your account, food preferences and swipes. It can't be undone.${
+        partner
+          ? isOwner
+            ? ` Your couple with ${partner} ends, and ${partner} will need to start or join a new one.`
+            : ` ${partner} keeps the couple and can invite someone new.`
+          : ''
+      }`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: () =>
+            deleteAccount.mutate(undefined, {
+              onError: () => Alert.alert("Couldn't delete your account", 'Please try again.'),
+            }),
+        },
+      ],
+    );
+  }
+
+  return { signOut, confirmDelete, deleting: deleteAccount.isPending };
 }

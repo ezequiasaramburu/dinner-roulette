@@ -119,7 +119,7 @@ export default function Home() {
         </Text>
       </Animated.View>
 
-      {notices.data?.map((notice) => (
+      {notices.data?.filter((n) => n.kind === 'match_goal_changed').map((notice) => (
         <Animated.View key={notice.id} entering={FadeInDown.duration(400)}>
           <Card tone="muted" padding="lg">
             <Text variant="bodyStrong">

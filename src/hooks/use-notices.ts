@@ -7,9 +7,11 @@ import { useAuth } from '@/providers/auth-provider';
 /** A short message my partner's action left for me. Only I can read it; dismissing it removes it. */
 export type Notice = {
   id: string;
-  kind: 'match_goal_changed';
+  kind: 'match_goal_changed' | 'couple_ended' | 'partner_left';
   from_value: number | null;
   to_value: number | null;
+  /** The partner's name, for notices about them leaving. */
+  from_name: string | null;
   created_at: string;
 };
 
@@ -36,7 +38,11 @@ export function useNotices(enabled: boolean) {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'notices', filter: `recipient_id=eq.${userId}` },
-        () => queryClient.invalidateQueries({ queryKey: ['notices'] }),
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['notices'] });
+          // A partner leaving changes the couple itself, so look at that too.
+          queryClient.invalidateQueries({ queryKey: ['couple'] });
+        },
       )
       .subscribe();
     return () => {

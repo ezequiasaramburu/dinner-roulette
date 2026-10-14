@@ -133,6 +133,22 @@ describe('deleting an account', () => {
     await rpc(partner, 'select public.create_couple($1)', ['UTC']);
   });
 
+  test('the person left behind gets a notice saying why', async () => {
+    const { owner, partner } = await pair('del-e@test.dev', 'del-f@test.dev');
+    await db.query("update public.profiles set display_name = 'Olive' where id = $1", [owner]);
+    await db.query("update public.profiles set display_name = 'Pat' where id = $1", [partner]);
+
+    await rpc(owner, 'select public.delete_account()');
+    let n = await rpc(partner, 'select kind, from_name from public.notices');
+    assert.deepEqual(n.rows, [{ kind: 'couple_ended', from_name: 'Olive' }]);
+
+    const pair2 = await pair('del-g@test.dev', 'del-h@test.dev');
+    await db.query("update public.profiles set display_name = 'Quinn' where id = $1", [pair2.partner]);
+    await rpc(pair2.partner, 'select public.delete_account()');
+    n = await rpc(pair2.owner, 'select kind, from_name from public.notices');
+    assert.deepEqual(n.rows, [{ kind: 'partner_left', from_name: 'Quinn' }]);
+  });
+
   test('a person without a couple can delete too, and anonymous callers cannot', async () => {
     const solo = await addUser(db, 'del-solo@test.dev');
     await rpc(solo, 'select public.delete_account()');

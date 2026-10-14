@@ -3,9 +3,12 @@ import { useEffect } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { AccountActions } from '@/components/account-actions';
+import { PartnerLeftNotice } from '@/components/notice-card';
 import { Accent, Card, Screen, Text } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
 import { useCreateCouple } from '@/hooks/use-couple';
+import { useNotices } from '@/hooks/use-notices';
 import { useTheme } from '@/hooks/use-theme';
 import { friendlyError } from '@/lib/errors';
 import { usePendingInvite } from '@/lib/pending-invite';
@@ -15,6 +18,8 @@ export default function CoupleSetup() {
   const theme = useTheme();
   const createCouple = useCreateCouple();
   const pendingCode = usePendingInvite((s) => s.code);
+  const notices = useNotices(true);
+  const ended = notices.data?.filter((n) => n.kind === 'couple_ended') ?? [];
 
   // Opened an invite link: skip straight to joining.
   useEffect(() => {
@@ -32,6 +37,9 @@ export default function CoupleSetup() {
 
   return (
     <Screen>
+      {ended.map((n) => (
+        <PartnerLeftNotice key={n.id} notice={n} />
+      ))}
       <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
         <Text variant="overline" tone="primary">
           Better together
@@ -75,6 +83,8 @@ export default function CoupleSetup() {
           </View>
         </Card>
       </Animated.View>
+
+      <AccountActions />
     </Screen>
   );
 }
