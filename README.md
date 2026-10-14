@@ -64,7 +64,7 @@ src/providers    auth session provider
 src/hooks        data hooks (profile, couple, preferences, deck + swipes)
 src/constants    design tokens (theme.ts) and food option ids (diets, allergens, dislikes)
 src/components/dish  DishCard and the gesture-driven SwipeDeck
-src/components/ui  the UI library: Text, Button, Card, Chip, TextField, Screen, Pill, Avatar, ...
+src/components/ui  the UI library: Text, Button, Card, Chip, TextField, Screen, Pill, Avatar, SideMenu, ...
 scripts/mealdb   TheMealDB importer + recipe tagging (unit tested)
 supabase/        SQL migrations, seed.sql (generated recipes), email templates
 ```

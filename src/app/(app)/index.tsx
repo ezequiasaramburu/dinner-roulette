@@ -1,15 +1,16 @@
 import { Image } from 'expo-image';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { Accent, Avatar, Button, Card, Pill, Screen, Text } from '@/components/ui';
+import { Accent, Avatar, Button, Card, MenuButton, MenuItem, Pill, Screen, SideMenu, Text } from '@/components/ui';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
 import { thumbnail, useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useProfile } from '@/hooks/use-profile';
 import { useTheme } from '@/hooks/use-theme';
+import { supabase } from '@/lib/supabase';
 
 function greeting(hour: number) {
   if (hour < 5) return 'Late night';
@@ -23,6 +24,7 @@ export default function Home() {
   const theme = useTheme();
   const { data: profile } = useProfile();
   const { data: couple, refetch } = useCouple();
+  const [menuOpen, setMenuOpen] = useState(false);
   const partnerReady = !!couple?.partner?.ready;
   const feed = useSwipeFeed(partnerReady && !!couple?.me_ready);
 
@@ -44,6 +46,17 @@ export default function Home() {
     }, [status, refetchFeed]),
   );
 
+  function go(path: '/preferences' | '/settings') {
+    setMenuOpen(false);
+    router.push(path);
+  }
+
+  async function signOut() {
+    setMenuOpen(false);
+    const { error } = await supabase.auth.signOut();
+    if (error) Alert.alert('Could not sign out', error.message);
+  }
+
   // Everyone chooses their food preferences before seeing the home screen.
   if (couple && !couple.me_ready) return <Redirect href="/preferences" />;
 
@@ -55,13 +68,12 @@ export default function Home() {
   return (
     <Screen
       footer={
-        <>
-          {status === 'ready' ? (
-            <Button title={feed.data?.has_swiped ? 'Keep swiping' : 'Start swiping'} onPress={() => router.push('/swipe')} />
-          ) : null}
-          <Button title="Settings" variant={status === 'ready' ? 'ghost' : 'secondary'} onPress={() => router.push('/settings')} />
-        </>
+        status === 'ready' ? (
+          <Button title={feed.data?.has_swiped ? 'Keep swiping' : 'Start swiping'} onPress={() => router.push('/swipe')} />
+        ) : undefined
       }>
+      <MenuButton onPress={() => setMenuOpen(true)} />
+
       <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
         <Text variant="overline" tone="primary">
           {greeting(new Date().getHours())}
@@ -169,12 +181,34 @@ export default function Home() {
           </View>
         </Card>
       </Animated.View>
+
+      <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)}>
+        <View style={styles.menuHeader}>
+          <Avatar name={me} size={56} colorIndex={0} />
+          <View style={styles.menuHeaderText}>
+            <Text variant="heading">{me}</Text>
+            <Text variant="caption" tone="secondary">
+              with {partner}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.menuItems}>
+          <MenuItem emoji="🥗" label="Food preferences" caption="Diet, allergies and tastes" onPress={() => go('/preferences')} />
+          <MenuItem emoji="⚙️" label="Settings" caption="Matches per day and reveal time" onPress={() => go('/settings')} />
+        </View>
+        <View style={styles.menuSpacer} />
+        <MenuItem emoji="👋" label="Sign out" onPress={signOut} />
+      </SideMenu>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { gap: Spacing.sm, marginTop: Spacing.sm },
+  header: { gap: Spacing.sm },
+  menuHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg, paddingHorizontal: Spacing.md, paddingBottom: Spacing.xl },
+  menuHeaderText: { flex: 1, gap: 2 },
+  menuItems: { gap: Spacing.xs },
+  menuSpacer: { flex: 1 },
   coupleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   avatars: { flexDirection: 'row', alignItems: 'center' },
   second: { marginLeft: -14 },
