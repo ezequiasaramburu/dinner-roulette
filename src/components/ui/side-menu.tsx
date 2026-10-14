@@ -144,5 +144,5 @@ const styles = StyleSheet.create({
   badgeEmoji: { fontSize: 22, lineHeight: 28 },
   itemText: { flex: 1, gap: 2 },
   chevron: { fontSize: 24, lineHeight: 26 },
-  label: { paddingHorizontal: Spacing.md, marginBottom: Spacing.xs },
+  label: { paddingHorizontal: Spacing.md, marginTop: Spacing.sm, marginBottom: Spacing.xs },
 });

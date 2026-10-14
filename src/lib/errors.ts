@@ -5,6 +5,16 @@ const MESSAGES: Record<string, string> = {
   not_couple_owner: 'Only the person who created the couple can do that.',
   too_many_attempts: 'Too many wrong codes. Please wait a few minutes and try again.',
   too_many_invites: 'You\'ve asked for a lot of codes. Try again in a while, or use the one you have.',
+  invalid_title: 'Give your recipe a title of 3 to 80 characters.',
+  invalid_country: 'Choose a country from the list.',
+  invalid_ingredients: 'Add 3 to 30 ingredients, each with a name.',
+  invalid_steps: 'Add 1 to 25 steps, each with a few words.',
+  links_not_allowed: 'Links aren\'t allowed in recipes. Write it in your own words.',
+  invalid_image: 'That photo could not be used. Try another one.',
+  terms_required: 'Please confirm the terms to share a recipe.',
+  too_many_recipes: 'You\'ve shared 5 recipes today. Try again tomorrow.',
+  too_many_pending: 'You already have 10 recipes waiting for review. We\'ll get to them soon.',
+  recipe_not_found: 'That recipe is no longer available.',
   not_authenticated: 'Please sign in again.',
 };
 

@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
@@ -8,7 +7,7 @@ import { BackButton, Button, Card, Pill, Screen, Text } from '@/components/ui';
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useReveal } from '@/hooks/use-reveal';
-import { thumbnail } from '@/hooks/use-swipe-feed';
+import { DishImage } from '@/components/dish/dish-image';
 import { useTheme } from '@/hooks/use-theme';
 
 /** The full recipe for one revealed dish: ingredients to tick off, numbered steps, and the source's video. */
@@ -46,13 +45,7 @@ export default function RecipeScreen() {
       <BackButton />
 
       <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
-        <Image
-          source={thumbnail(recipe.image_url, 'large')}
-          accessibilityLabel={recipe.title}
-          contentFit="cover"
-          transition={250}
-          style={[styles.image, { backgroundColor: theme.surfaceMuted }]}
-        />
+        <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.image} />
         <View style={styles.header}>
           <Text variant="overline" tone="primary">
             {countryFlag(recipe.country)}  {recipe.country}

@@ -1,11 +1,10 @@
-import { Image } from 'expo-image';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Pill, Text } from '@/components/ui';
 import { countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
 import type { Recipe } from '@/hooks/use-reveal';
-import { thumbnail } from '@/hooks/use-swipe-feed';
+import { DishImage } from '@/components/dish/dish-image';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 /** A revealed dish as a tappable card: photo on top, name and cuisine below. Opens the full recipe. */
@@ -24,13 +23,7 @@ export function DishRow({ recipe, onPress }: { recipe: Recipe; onPress: () => vo
         elevation(scheme, 2),
         pressed && { opacity: 0.92 },
       ]}>
-      <Image
-        source={thumbnail(recipe.image_url, 'large')}
-        accessibilityLabel={recipe.title}
-        contentFit="cover"
-        transition={250}
-        style={[styles.image, { backgroundColor: theme.surfaceMuted }]}
-      />
+      <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.image} />
       <View style={styles.body}>
         <Text variant="overline" tone="primary">
           {countryFlag(recipe.country)}  {recipe.country}

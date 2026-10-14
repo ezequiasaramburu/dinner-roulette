@@ -4,6 +4,7 @@ export { BackButton } from './back-button';
 export { Button } from './button';
 export { Card } from './card';
 export { Chip } from './chip';
+export { CountryField } from './country-field';
 export { CodeTiles } from './code-tiles';
 export { MenuButton } from './menu-button';
 export { OptionCard } from './option-card';

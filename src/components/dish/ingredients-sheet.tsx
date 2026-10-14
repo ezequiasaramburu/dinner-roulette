@@ -1,10 +1,10 @@
-import { Image } from 'expo-image';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button, Text } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
-import { thumbnail, type Dish } from '@/hooks/use-swipe-feed';
+import { DishImage } from '@/components/dish/dish-image';
+import type { Dish } from '@/hooks/use-swipe-feed';
 import { useTheme } from '@/hooks/use-theme';
 import { ingredientList } from '@/lib/main-ingredients';
 
@@ -25,11 +25,7 @@ export function IngredientsSheet({ dish, onClose }: { dish: Dish | null; onClose
             ]}>
             <View style={[styles.grabber, { backgroundColor: theme.borderStrong }]} />
             <View style={styles.header}>
-              <Image
-                source={thumbnail(dish.image_url, 'small')}
-                contentFit="cover"
-                style={[styles.thumb, { backgroundColor: theme.surfaceMuted }]}
-              />
+              <DishImage url={dish.image_url} size="small" label={dish.title} style={styles.thumb} />
               <View style={styles.headerText}>
                 <Text variant="overline" tone="primary">
                   What&apos;s in it

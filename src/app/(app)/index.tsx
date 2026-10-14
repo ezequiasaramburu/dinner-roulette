@@ -1,5 +1,4 @@
 import Constants from 'expo-constants';
-import { Image } from 'expo-image';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -8,7 +7,8 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Accent, Avatar, Button, Card, MenuButton, MenuItem, MenuLabel, Pill, Screen, SideMenu, Text } from '@/components/ui';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
-import { thumbnail, useSwipeFeed } from '@/hooks/use-swipe-feed';
+import { DishImage } from '@/components/dish/dish-image';
+import { useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useDismissNotice, useNotices } from '@/hooks/use-notices';
 import { useProfile } from '@/hooks/use-profile';
 import { useReminders } from '@/hooks/use-reveal-reminder';
@@ -79,7 +79,7 @@ export default function Home() {
     }, [bothReady, refetchReveal]),
   );
 
-  function go(path: '/preferences' | '/settings' | '/legal/terms' | '/legal/privacy') {
+  function go(path: '/preferences' | '/settings' | '/recipes' | '/add-recipe' | '/legal/terms' | '/legal/privacy') {
     setMenuOpen(false);
     router.push(path);
   }
@@ -144,12 +144,7 @@ export default function Home() {
             style={{ borderColor: theme.primary, borderWidth: 1.5 }}>
             <View style={styles.revealRowCard}>
               {revealed.seen && revealed.dishes[0] ? (
-                <Image
-                  source={thumbnail(revealed.dishes[0].image_url)}
-                  contentFit="cover"
-                  transition={250}
-                  style={[styles.revealThumb, { backgroundColor: theme.surfaceMuted }]}
-                />
+                <DishImage url={revealed.dishes[0].image_url} label={revealed.dishes[0].title} style={styles.revealThumb} />
               ) : (
                 <View style={[styles.revealThumb, styles.revealMystery, { backgroundColor: theme.primarySoft }]}>
                   <Text style={styles.soonEmoji}>🎁</Text>
@@ -186,18 +181,13 @@ export default function Home() {
             </Text>
             <View style={styles.thumbs}>
               {feed.data.dishes.slice(0, 5).map((dish, i) => (
-                <Image
+                <DishImage
                   key={dish.id}
-                  source={thumbnail(dish.image_url)}
-                  accessibilityLabel={dish.title}
-                  contentFit="cover"
-                  transition={250}
+                  url={dish.image_url}
+                  label={dish.title}
                   style={[
                     styles.thumb,
-                    {
-                      borderColor: theme.surface,
-                      backgroundColor: theme.surfaceMuted,
-                    },
+                    { borderColor: theme.surface },
                     i > 0 && styles.thumbOverlap,
                   ]}
                 />
@@ -370,6 +360,22 @@ export default function Home() {
           />
         </View>
 
+        <MenuLabel>Recipes</MenuLabel>
+        <View style={styles.menuItems}>
+          <MenuItem
+            emoji="✍️"
+            label="Add a recipe"
+            caption="Share a dish with everyone"
+            onPress={() => go('/add-recipe')}
+          />
+          <MenuItem
+            emoji="📖"
+            label="Your recipes"
+            caption="See where each one is in review"
+            onPress={() => go('/recipes')}
+          />
+        </View>
+
         <View style={styles.menuSpacer} />
 
         <View style={[styles.menuFooter, { borderTopColor: theme.border }]}>
@@ -406,7 +412,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: Radius.lg,
     paddingVertical: Spacing.md,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
   },
   menuStat: { flex: 1, alignItems: 'center', gap: 2 },
   menuStatDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch' },

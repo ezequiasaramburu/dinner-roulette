@@ -6,6 +6,8 @@ import { useAuth } from '@/providers/auth-provider';
 export type Profile = {
   id: string;
   display_name: string | null;
+  /** Set once the person has accepted the terms for sharing recipes. */
+  terms_accepted_at: string | null;
 };
 
 export function useProfile() {
@@ -18,7 +20,7 @@ export function useProfile() {
     queryFn: async (): Promise<Profile> => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, display_name')
+        .select('id, display_name, terms_accepted_at')
         .eq('id', userId!)
         .single();
       if (error) {

@@ -1,10 +1,10 @@
-import { Image } from 'expo-image';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Pill, Text } from '@/components/ui';
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
-import { thumbnail, type Dish } from '@/hooks/use-swipe-feed';
+import { DishImage } from '@/components/dish/dish-image';
+import type { Dish } from '@/hooks/use-swipe-feed';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 import { ingredientLine, ingredientList, mainIngredients } from '@/lib/main-ingredients';
 
@@ -28,13 +28,7 @@ export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<Vi
         elevation(scheme, 2),
         style,
       ]}>
-      <Image
-        source={thumbnail(recipe.image_url, 'large')}
-        accessibilityLabel={recipe.title}
-        contentFit="cover"
-        transition={200}
-        style={[styles.image, { backgroundColor: theme.surfaceMuted }]}
-      />
+      <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.image} />
       <View style={styles.body}>
         <Text variant="overline" tone="primary">
           {countryFlag(recipe.country)}  {recipe.country}

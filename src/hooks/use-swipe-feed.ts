@@ -8,7 +8,8 @@ import { useAuth } from '@/providers/auth-provider';
 export type Dish = {
   id: string;
   title: string;
-  image_url: string;
+  /** null for community recipes shared without a photo. */
+  image_url: string | null;
   country: string;
   category: string;
   dish_type: string;
@@ -19,6 +20,8 @@ export type Dish = {
   swaps: { from: string; to: string }[];
   /** Ingredient names only (no amounts), as stored. The card shows the main few; a tap shows all. */
   ingredient_names: string[];
+  /** Written by a person in the app rather than imported. */
+  community: boolean;
 };
 
 /**
@@ -37,9 +40,10 @@ export type SwipeFeed = {
   dishes: Dish[];
 };
 
-/** TheMealDB serves resized thumbnails by appending a size to the image URL. */
-export function thumbnail(url: string, size: 'small' | 'medium' | 'large' = 'medium') {
-  return `${url}/${size}`;
+/** TheMealDB serves resized thumbnails by appending a size to the image URL; photos from people are used as they are. */
+export function thumbnail(url: string | null, size: 'small' | 'medium' | 'large' = 'medium') {
+  if (!url) return null;
+  return url.includes('themealdb.com') ? `${url}/${size}` : url;
 }
 
 /**

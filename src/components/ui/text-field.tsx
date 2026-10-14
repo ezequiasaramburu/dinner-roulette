@@ -8,20 +8,24 @@ import { useTheme } from '@/hooks/use-theme';
 type Props = TextInputProps & {
   label: string;
   error?: string;
+  /** Keep the label for screen readers but don't show it (for rows in a list that share one heading). */
+  hideLabel?: boolean;
   /** "code" is a large, centred, letter-spaced field for one-time codes. */
   variant?: 'default' | 'code';
 };
 
-export function TextField({ label, error, variant = 'default', style, onFocus, onBlur, ...rest }: Props) {
+export function TextField({ label, error, hideLabel, variant = 'default', style, onFocus, onBlur, ...rest }: Props) {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
   const isCode = variant === 'code';
 
   return (
     <View style={styles.wrap}>
-      <Text variant="label" tone="secondary">
-        {label}
-      </Text>
+      {hideLabel ? null : (
+        <Text variant="label" tone="secondary">
+          {label}
+        </Text>
+      )}
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={theme.textTertiary}

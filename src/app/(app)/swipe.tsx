@@ -38,7 +38,8 @@ export default function Swipe() {
   // Warm the next photos so cards never appear blank.
   useEffect(() => {
     const urls = dishes.slice(0, 4).map((d) => thumbnail(d.image_url, 'large'));
-    if (urls.length) Image.prefetch(urls);
+    const photos = urls.filter((u): u is string => !!u);
+    if (photos.length) Image.prefetch(photos);
   }, [dishes]);
 
   // Instant reveal: the moment the goal is reached the dinner is open, so go straight to the spinning wheel.
