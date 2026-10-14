@@ -12,7 +12,8 @@ Expo (SDK 57) · Expo Router · TypeScript · Supabase · TanStack Query · Reac
 - [x] Phase 3: couple pairing (invite code/link, join, realtime)
 - [x] Phase 4: food preferences (diet, allergies, cuisines, dislikes)
 - [x] Phase 5: recipe catalog (473 dinners imported from TheMealDB)
-- [ ] Phases 6–9: daily decks, swiping, matching and reveal, launch polish
+- [x] Phase 6: daily deck builder (server-side filters, ranking, variety, no-repeat window)
+- [ ] Phases 7–9: swiping, matching and reveal, launch polish
 
 ## Setup (local, no cloud needed)
 
@@ -48,6 +49,8 @@ npm run db:start   # local Supabase up (db:stop / db:reset / db:status)
 npx expo lint      # lint
 npx tsc --noEmit   # typecheck
 npm test           # recipe normalizer tests
+npm run test:db    # database + deck tests (in-process Postgres, no Docker needed)
+npm run decks:review          # print decks for realistic couples to judge quality by eye
 ```
 
 ## Structure
@@ -91,3 +94,20 @@ Light and dark palettes follow the phone's setting.
 
 Splash colours are set in `app.json` and need a native rebuild (`npx expo prebuild --clean`) to take effect.
 The app icon is still the Expo placeholder.
+
+## How decks are built
+
+`public.build_deck` (see `supabase/migrations/0005_decks.sql`) picks 12 dishes per couple per local day, the same for both
+partners. It is created on the first `get_or_create_today_deck()` call of the day.
+
+| Tier | Filters | Behaviour |
+|---|---|---|
+| Hard | diet (the stricter of the two), allergens (union), meats and specific ingredients either dislikes | Never relaxed. A very restrictive couple gets a shorter deck, not a wrong one. |
+| Soft | onions, tomatoes, chili (each is in more than 25% of the catalog) | Used last, behind even repeated dishes. |
+| Boost | cuisines | Both like: highest. One likes: next. Never a restriction. |
+| Variety | max 3 per country, 3 per category, 2 per dish family | Relaxed only if the pool can't fill 12. |
+| History | nothing served in the last 30 days | If the pool runs dry, the oldest dishes return first. |
+
+The dislike rules live in the `dislike_rules` table (regex over ingredient names). The catalog is curated by
+`scripts/mealdb/exclude.mjs` (sauces, sides, desserts, duplicates and fast-food clones are removed) and each dish gets a
+family (`dish_type`) from its title. Add to the blocklist whenever a bad dish shows up in a deck.

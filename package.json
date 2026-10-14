@@ -40,6 +40,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.9",
     "@types/react": "~19.2.2",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~57.0.2",
@@ -59,7 +60,9 @@
     "db:reset": "supabase db reset",
     "db:migration": "supabase migration new",
     "test": "node --test scripts/mealdb/normalize.test.mjs",
-    "recipes:import": "node scripts/mealdb/import.mjs"
+    "recipes:import": "node scripts/mealdb/import.mjs",
+    "test:db": "node --test scripts/db-test/decks.test.mjs",
+    "decks:review": "node scripts/db-test/review-decks.mjs"
   },
   "private": true
 }

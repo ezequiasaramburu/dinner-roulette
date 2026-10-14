@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { dietFlags, normalizeMeal, parseSteps, tagAllergens } from './normalize.mjs';
+import { dietFlags, dishFamily, normalizeMeal, parseSteps, tagAllergens } from './normalize.mjs';
 
 const allergens = (...names) => tagAllergens(names.map((n) => n.toLowerCase()));
 
@@ -54,4 +54,31 @@ test('skips non-dinner and unusable meals', () => {
   assert.equal(normalizeMeal({ ...base, strCategory: 'Pasta' }).country, 'Italy');
   // Unknown seafood ingredients still get flagged for fish and shellfish allergies.
   assert.deepEqual(normalizeMeal({ ...base, strCategory: 'Seafood', strIngredient1: 'mystery' }).allergens, ['fish', 'shellfish']);
+});
+
+test('vegan butter, plant milks and vegan mayo are not dairy or eggs', () => {
+  assert.deepEqual(allergens('Vegan Butter', 'Soya Milk', 'Oat Milk', 'Vegan Mayonnaise', 'Dairy-free Cheese'), ['soy']); // soya milk is soy, but nothing here is dairy or egg
+  assert.deepEqual(allergens('Butter', 'Egg'), ['dairy', 'eggs']);
+});
+
+test('dish families group look-alike dishes', () => {
+  const fam = (t, c = 'Vegetarian') => dishFamily(t, c);
+  assert.equal(fam('Rice and Beans'), 'rice');
+  assert.equal(fam('Jamaican Rice and Peas'), 'rice');
+  assert.equal(fam('Jamaican Instant Pot Rice and Beans'), 'rice');
+  assert.equal(fam('Spaghetti Bolognese', 'Beef'), 'pasta');
+  assert.equal(fam('Chicken Fajita Mac and Cheese', 'Chicken'), 'pasta');
+  assert.equal(fam('Shrimp With Snow Peas', 'Seafood'), 'stirfry');
+  assert.equal(fam("Poulet Roti a l'Algerienne (Algerian Roast Chicken)", 'Chicken'), 'grilled');
+  assert.equal(fam('Chicken and Potato Roti', 'Chicken'), 'handheld');
+  assert.equal(fam('Thai pumpkin soup'), 'soup');
+  assert.equal(fam('Beef and Mustard Pie', 'Beef'), 'pie');
+  assert.equal(fam('Mystery Dish', 'Chicken'), 'meat');
+  assert.equal(fam('Mystery Dish', 'Seafood'), 'seafood');
+});
+
+test("goat's and sheep's dairy still count as dairy (the word \"oat\" hides inside \"goats\")", () => {
+  assert.deepEqual(allergens('Goats Cheese'), ['dairy']);
+  assert.deepEqual(allergens("Goat's Milk", 'Goat Yoghurt'), ['dairy']);
+  assert.deepEqual(allergens('Oat Milk', 'Rice Milk', 'Coconut Cream'), []);
 });

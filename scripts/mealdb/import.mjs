@@ -7,10 +7,11 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { EXCLUDED } from './exclude.mjs';
 import { normalizeMeal } from './normalize.mjs';
 
 const COLUMNS = {
-  source_id: 'text', title: 'text', category: 'text', country: 'text', tags: 'text[]',
+  source_id: 'text', title: 'text', category: 'text', dish_type: 'text', country: 'text', tags: 'text[]',
   image_url: 'text', youtube_url: 'text', source_url: 'text', ingredients: 'jsonb', steps: 'jsonb',
   ingredient_names: 'text[]', allergens: 'text[]', diet_flags: 'text[]',
 };
@@ -29,7 +30,14 @@ async function fetchAll() {
 const inputIdx = process.argv.indexOf('--input');
 const raw = inputIdx > -1 ? JSON.parse(readFileSync(process.argv[inputIdx + 1], 'utf8')) : await fetchAll();
 
-const recipes = raw.map(normalizeMeal).filter(Boolean).sort((a, b) => Number(a.source_id) - Number(b.source_id));
+const known = new Set(raw.map((m) => m.idMeal));
+const unknown = [...EXCLUDED.keys()].filter((id) => !known.has(id));
+if (unknown.length) throw new Error(`exclude.mjs lists ids that are not in the catalog: ${unknown.join(', ')}`);
+
+const recipes = raw
+  .filter((meal) => !EXCLUDED.has(meal.idMeal))
+  .map(normalizeMeal)
+  .filter(Boolean).sort((a, b) => Number(a.source_id) - Number(b.source_id));
 if (recipes.length < 100) throw new Error(`Only ${recipes.length} usable recipes; refusing to write seed.sql`);
 
 const json = JSON.stringify(recipes);
@@ -48,4 +56,4 @@ on conflict (source_id) do update set ${updates};
 `;
 
 writeFileSync(fileURLToPath(new URL('../../supabase/seed.sql', import.meta.url)), sql);
-console.log(`Wrote ${recipes.length} of ${raw.length} meals to supabase/seed.sql (${(sql.length / 1e6).toFixed(1)} MB)`);
+console.log(`Wrote ${recipes.length} of ${raw.length} meals to supabase/seed.sql (${(sql.length / 1e6).toFixed(1)} MB), ${EXCLUDED.size} editorially excluded`);

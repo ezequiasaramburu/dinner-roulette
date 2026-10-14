@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
@@ -6,6 +7,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Accent, Avatar, Button, Card, Pill, Screen, Text } from '@/components/ui';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
+import { thumbnail, useTodayDeck } from '@/hooks/use-deck';
 import { useProfile } from '@/hooks/use-profile';
 import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +26,7 @@ export default function Home() {
   const { data: profile } = useProfile();
   const { data: couple, refetch } = useCouple();
   const partnerReady = !!couple?.partner?.ready;
+  const deck = useTodayDeck(partnerReady && !!couple?.me_ready);
 
   // We can't see the partner's preferences (by design), so poll for their "ready" flag.
   useEffect(() => {
@@ -106,17 +109,56 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(300).duration(500)}>
-        <Card tone="accent" padding="lg">
-          <View style={styles.soonRow}>
-            <Text style={styles.soonEmoji}>🍽️</Text>
-            <View style={styles.soonText}>
-              <Text variant="bodyStrong">Tonight&apos;s options are on their way</Text>
-              <Text variant="caption" tone="secondary">
-                Your daily swipe deck is the next thing we&apos;re adding.
-              </Text>
+        {deck.data ? (
+          <Card tone="accent" padding="lg">
+            <Text variant="overline" tone="tertiary">
+              Tonight&apos;s deck
+            </Text>
+            <View style={styles.thumbs}>
+              {deck.data.recipes.slice(0, 5).map((recipe, i) => (
+                <Image
+                  key={recipe.id}
+                  source={thumbnail(recipe.image_url)}
+                  accessibilityLabel={recipe.title}
+                  contentFit="cover"
+                  transition={250}
+                  style={[styles.thumb, { borderColor: theme.surface, backgroundColor: theme.surfaceMuted }, i > 0 && styles.thumbOverlap]}
+                />
+              ))}
+              {deck.data.recipes.length > 5 ? (
+                <View style={[styles.thumb, styles.thumbOverlap, styles.more, { borderColor: theme.surface, backgroundColor: theme.surface }]}>
+                  <Text variant="label">+{deck.data.recipes.length - 5}</Text>
+                </View>
+              ) : null}
             </View>
-          </View>
-        </Card>
+            <Text variant="bodyStrong">
+              {deck.data.recipes.length} dishes picked for the two of you
+            </Text>
+            <Text variant="caption" tone="secondary">
+              {deck.data.recipes.length < 12
+                ? `Only ${deck.data.recipes.length} dishes fit both your preferences today.`
+                : deck.data.repeat_count > 0
+                  ? 'A few favourites are back because your preferences narrow the menu.'
+                  : 'Swiping opens in the next update. Same dishes for both of you.'}
+            </Text>
+          </Card>
+        ) : (
+          <Card tone="accent" padding="lg">
+            <View style={styles.soonRow}>
+              <Text style={styles.soonEmoji}>🍽️</Text>
+              <View style={styles.soonText}>
+                <Text variant="bodyStrong">
+                  {partnerReady ? "Picking tonight's dishes…" : "Tonight's options are on their way"}
+                </Text>
+                <Text variant="caption" tone="secondary">
+                  {deck.isError
+                    ? "We couldn't load tonight's deck. Pull down to try again soon."
+                    : 'Your daily swipe deck starts once you are both set.'}
+                </Text>
+              </View>
+            </View>
+          </Card>
+        )}
       </Animated.View>
     </Screen>
   );
@@ -135,4 +177,8 @@ const styles = StyleSheet.create({
   soonRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   soonEmoji: { fontSize: 30, lineHeight: 36 },
   soonText: { flex: 1, gap: 2 },
+  thumbs: { flexDirection: 'row', alignItems: 'center', marginVertical: Spacing.md },
+  thumb: { width: 56, height: 56, borderRadius: 28, borderWidth: 3 },
+  thumbOverlap: { marginLeft: -14 },
+  more: { alignItems: 'center', justifyContent: 'center' },
 });
