@@ -13,7 +13,8 @@ Expo (SDK 57) · Expo Router · TypeScript · Supabase · TanStack Query · Reac
 - [x] Phase 4: food preferences (diet, allergies, cuisines, dislikes)
 - [x] Phase 5: recipe catalog (473 dinners imported from TheMealDB)
 - [x] Phase 6: daily deck builder (server-side filters, ranking, variety, no-repeat window)
-- [ ] Phases 7–9: swiping, matching and reveal, launch polish
+- [x] Phase 7: swipe screen (gesture card stack, like/pass, undo, partner progress)
+- [ ] Phases 8–9: matching and reveal, launch polish
 
 ## Setup (local, no cloud needed)
 
@@ -60,8 +61,9 @@ src/app/(auth)   signed-out screens (welcome, email code sign-in)
 src/app/(app)    signed-in screens (name, couple setup, invite, join, preferences, home)
 src/lib          supabase client, zod schemas, errors
 src/providers    auth session provider
-src/hooks        data hooks (profile, couple, preferences)
+src/hooks        data hooks (profile, couple, preferences, deck + swipes)
 src/constants    design tokens (theme.ts) and food option ids (diets, allergens, dislikes)
+src/components/dish  DishCard and the gesture-driven SwipeDeck
 src/components/ui  the UI library: Text, Button, Card, Chip, TextField, Screen, Pill, Avatar, ...
 scripts/mealdb   TheMealDB importer + recipe tagging (unit tested)
 supabase/        SQL migrations, seed.sql (generated recipes), email templates
@@ -111,3 +113,14 @@ partners. It is created on the first `get_or_create_today_deck()` call of the da
 The dislike rules live in the `dislike_rules` table (regex over ingredient names). The catalog is curated by
 `scripts/mealdb/exclude.mjs` (sauces, sides, desserts, duplicates and fast-food clones are removed) and each dish gets a
 family (`dish_type`) from its title. Add to the blocklist whenever a bad dish shows up in a deck.
+
+## Swiping
+
+Each person swipes the 12 dishes of the day (right = yum, left = pass; buttons and undo are there too). Choices are stored
+by `record_swipe` / `undo_last_swipe` (see `supabase/migrations/0006_swipes.sql`), which check that the deck belongs to the
+caller's couple and is still today's. Row-level security means you can only read **your own** swipes. The deck payload
+carries your swipes plus how *many* dishes your partner has swiped, never which ones, so the match stays a surprise
+until the reveal.
+
+Gotcha for SQL changes: the Supabase API role runs with `pg_safeupdate`, which rejects any `UPDATE`/`DELETE` without a
+`WHERE`. `npm run test:db` scans the migrations for that, but always try new functions through the real API too.

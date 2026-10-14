@@ -58,3 +58,14 @@ export function countryFlag(country: string): string {
   if (!code) return '🍽️';
   return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
 }
+
+const DISH_TYPE_LABELS: Record<string, string> = {
+  soup: 'Soup', salad: 'Salad', pasta: 'Pasta', noodles: 'Noodles', handheld: 'Handheld', pie: 'Pie & pastry',
+  dumplings: 'Dumplings', curry: 'Curry', rice: 'Rice dish', stew: 'Stew', fried: 'Crispy & fried',
+  grilled: 'Roast & grill', stirfry: 'Stir-fry', egg: 'Eggs', meatballs: 'Meatballs', legumes: 'Beans & lentils',
+  meat: 'Meat', seafood: 'Seafood', veg: 'Vegetable',
+};
+
+export const dishTypeLabel = (type: string) => DISH_TYPE_LABELS[type] ?? 'Dinner';
+
+export const allergenLabel = (id: string) => ALLERGENS.find((a) => a.id === id)?.label ?? id;

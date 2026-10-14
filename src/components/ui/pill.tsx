@@ -11,9 +11,11 @@ type Props = {
   tone?: 'success' | 'warning' | 'neutral';
   /** Gently pulse the dot, for "waiting" states. */
   pulse?: boolean;
+  /** Show the leading status dot (default). Turn off for plain tags. */
+  dot?: boolean;
 };
 
-export function Pill({ label, tone = 'neutral', pulse }: Props) {
+export function Pill({ label, tone = 'neutral', pulse, dot = true }: Props) {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const opacity = useSharedValue(1);
@@ -36,7 +38,7 @@ export function Pill({ label, tone = 'neutral', pulse }: Props) {
 
   return (
     <View style={[styles.pill, { backgroundColor: bg }]}>
-      <Animated.View style={[styles.dot, { backgroundColor: fg }, dotStyle]} />
+      {dot ? <Animated.View style={[styles.dot, { backgroundColor: fg }, dotStyle]} /> : null}
       <Text variant="label" style={{ color: fg }}>
         {label}
       </Text>

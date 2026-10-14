@@ -298,3 +298,108 @@ describe('get_or_create_today_deck', () => {
     await assert.rejects(asUser(db, a, () => db.query("insert into daily_decks (couple_id, deck_date, recipe_ids, pool_size) values ($1, current_date + 5, '{}', 0)", [couple])), /row-level security|permission denied/);
   });
 });
+
+describe('swipes', () => {
+  let a, b, c, d2, couple, deck, otherCouple, otherDeck;
+
+  const callDeck = (user) => asUser(db, user, async () => (await db.query('select public.get_or_create_today_deck() as deck')).rows[0].deck);
+  const swipe = (user, deckId, recipeId, liked) =>
+    asUser(db, user, () => db.query('select public.record_swipe($1, $2, $3)', [deckId, recipeId, liked]));
+  const undo = (user, deckId) => asUser(db, user, async () => (await db.query('select public.undo_last_swipe($1) as r', [deckId])).rows[0].r);
+  const mine = (user) => asUser(db, user, async () => (await db.query('select recipe_id, liked from public.swipes')).rows);
+
+  before(async () => {
+    a = await addUser(db, 'sw-a@test.dev');
+    b = await addUser(db, 'sw-b@test.dev');
+    c = await addUser(db, 'sw-c@test.dev');
+    d2 = await addUser(db, 'sw-d@test.dev');
+    couple = (await db.query("insert into couples (owner_id, timezone) values ($1, 'Europe/Rome') returning id", [a])).rows[0].id;
+    await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [couple, a, b]);
+    otherCouple = (await db.query("insert into couples (owner_id, timezone) values ($1, 'Europe/Rome') returning id", [c])).rows[0].id;
+    await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [otherCouple, c, d2]);
+    for (const u of [a, b, c, d2]) await db.query("insert into preferences (user_id, diet) values ($1, 'none')", [u]);
+    deck = await callDeck(a);
+    otherDeck = await callDeck(c);
+  });
+
+  test('a fresh deck has no swipes yet', async () => {
+    assert.deepEqual(deck.my_swipes, {});
+    assert.equal(deck.partner_swiped, 0);
+  });
+
+  test('swiping stores the choice; the payload shows my swipes and only the COUNT of my partner\'s', async () => {
+    const [r1, r2, r3] = deck.recipes.map((r) => r.id);
+    await swipe(a, deck.deck_id, r1, true);
+    await swipe(a, deck.deck_id, r2, false);
+    await swipe(b, deck.deck_id, r3, true);
+
+    const forA = await callDeck(a);
+    assert.deepEqual(forA.my_swipes, { [r1]: true, [r2]: false });
+    assert.equal(forA.partner_swiped, 1);
+    assert.ok(!JSON.stringify(forA).includes(`"${r3}":`), "the partner's choices must not leak");
+
+    const forB = await callDeck(b);
+    assert.deepEqual(forB.my_swipes, { [r3]: true });
+    assert.equal(forB.partner_swiped, 2);
+  });
+
+  test("row level security: you can read only your own swipes", async () => {
+    const rows = await mine(a);
+    assert.equal(rows.length, 2);
+    const outsider = await mine(c);
+    assert.equal(outsider.length, 0);
+    // With RLS and no delete policy this either errors or matches zero rows; either way nothing is deleted.
+    try {
+      await asUser(db, a, () => db.query('delete from public.swipes where true'));
+    } catch {
+      /* denied is fine */
+    }
+    assert.equal((await mine(a)).length, 2);
+  });
+
+  test('changing your mind overwrites the swipe instead of duplicating it', async () => {
+    const r1 = deck.recipes[0].id;
+    await swipe(a, deck.deck_id, r1, false);
+    const rows = (await mine(a)).filter((r) => r.recipe_id === r1);
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].liked, false);
+  });
+
+  test('undo removes the most recent swipe and reports which dish it was', async () => {
+    const r4 = deck.recipes[3].id;
+    await swipe(a, deck.deck_id, r4, true);
+    assert.equal(await undo(a, deck.deck_id), r4);
+    assert.ok(!(await mine(a)).some((r) => r.recipe_id === r4));
+    // Partner's swipes are untouched.
+    assert.equal((await mine(b)).length, 1);
+  });
+
+  test('undo with nothing to undo is harmless', async () => {
+    assert.equal(await undo(d2, otherDeck.deck_id), null);
+  });
+
+  test('you cannot swipe a dish that is not in the deck', async () => {
+    const outside = recipes.find((r) => !deck.recipes.some((x) => x.id === r.id)).id;
+    await assert.rejects(swipe(a, deck.deck_id, outside, true), /recipe_not_in_deck/);
+  });
+
+  test("you cannot swipe on, or undo in, another couple's deck", async () => {
+    await assert.rejects(swipe(a, otherDeck.deck_id, otherDeck.recipes[0].id, true), /deck_not_found/);
+    await assert.rejects(undo(a, otherDeck.deck_id), /deck_not_found/);
+    await assert.rejects(swipe(a, '00000000-0000-0000-0000-000000000000', deck.recipes[0].id, true), /deck_not_found/);
+  });
+
+  test('a deck from a previous day is closed', async () => {
+    await db.query("update daily_decks set deck_date = deck_date - 1 where id = $1", [otherDeck.deck_id]);
+    await assert.rejects(swipe(c, otherDeck.deck_id, otherDeck.recipes[0].id, true), /deck_closed/);
+    await assert.rejects(undo(c, otherDeck.deck_id), /deck_closed/);
+  });
+
+  test('clients cannot write swipes directly or call the guard', async () => {
+    await assert.rejects(
+      asUser(db, a, () => db.query('insert into public.swipes (deck_id, user_id, recipe_id, liked) values ($1, $2, $3, true)', [deck.deck_id, a, deck.recipes[5].id])),
+      /row-level security|permission denied/,
+    );
+    await assert.rejects(asUser(db, a, () => db.query('select public.swipe_guard($1)', [deck.deck_id])), /permission denied/);
+  });
+});

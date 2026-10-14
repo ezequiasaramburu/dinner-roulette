@@ -67,6 +67,7 @@ export default function AppLayout() {
       <Stack.Protected guard={hasName && isPaired}>
         <Stack.Screen name="index" />
         <Stack.Screen name="preferences" />
+        <Stack.Screen name="swipe" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
     </Stack>
   );

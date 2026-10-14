@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { Redirect, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { Redirect, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
@@ -19,7 +19,6 @@ function greeting(hour: number) {
   return 'Good evening';
 }
 
-// Placeholder home. Next up: the daily deck and swiping.
 export default function Home() {
   const router = useRouter();
   const theme = useTheme();
@@ -35,6 +34,18 @@ export default function Home() {
     return () => clearInterval(id);
   }, [couple?.me_ready, partnerReady, refetch]);
 
+  // While the home screen is showing, keep the partner's swipe count fresh.
+  const refetchDeck = deck.refetch;
+  const partnerSwiped = deck.data?.partner_swiped ?? 0;
+  const deckSize = deck.data?.recipes.length ?? 0;
+  useFocusEffect(
+    useCallback(() => {
+      if (!deckSize || partnerSwiped >= deckSize) return;
+      const id = setInterval(() => refetchDeck(), 20_000);
+      return () => clearInterval(id);
+    }, [deckSize, partnerSwiped, refetchDeck]),
+  );
+
   async function signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) Alert.alert('Could not sign out', error.message);
@@ -45,13 +56,28 @@ export default function Home() {
 
   const me = profile?.display_name ?? 'You';
   const partner = couple?.partner?.display_name ?? 'Your partner';
+  const mySwiped = deck.data ? Object.keys(deck.data.my_swipes).length : 0;
+  const allSwiped = !!deck.data && mySwiped >= deck.data.recipes.length;
+
+  const swipeLabel = !deck.data
+    ? ''
+    : mySwiped === 0
+      ? 'Start swiping'
+      : allSwiped
+        ? 'Review your picks'
+        : `Keep swiping · ${deck.data.recipes.length - mySwiped} left`;
 
   return (
     <Screen
       footer={
         <>
-          <Button title="Edit my preferences" variant="secondary" onPress={() => router.push('/preferences')} />
-          <Button title="Sign out" variant="ghost" onPress={signOut} />
+          {deck.data ? (
+            <Button title={swipeLabel} variant={allSwiped ? 'secondary' : 'primary'} onPress={() => router.push('/swipe')} />
+          ) : null}
+          <View style={styles.linkRow}>
+            <Button title="Preferences" variant="ghost" style={styles.link} onPress={() => router.push('/preferences')} />
+            <Button title="Sign out" variant="ghost" style={styles.link} onPress={signOut} />
+          </View>
         </>
       }>
       <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
@@ -64,51 +90,6 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-        <Card>
-          <View style={styles.coupleRow}>
-            <View style={styles.avatars}>
-              <Avatar name={me} size={60} colorIndex={0} />
-              <View style={styles.second}>
-                <Avatar name={partner} size={60} colorIndex={1} />
-              </View>
-            </View>
-            <View style={styles.coupleText}>
-              <Text variant="heading">
-                {me} &amp; {partner}
-              </Text>
-              {partnerReady ? (
-                <Pill label="You're both set" tone="success" />
-              ) : (
-                <Pill label={`Waiting for ${partner}`} tone="warning" pulse />
-              )}
-            </View>
-          </View>
-          {!partnerReady ? (
-            <Text variant="caption" tone="secondary" style={styles.note}>
-              We&apos;ll start as soon as {partner} chooses their food preferences.
-            </Text>
-          ) : null}
-        </Card>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-        <Card tone="muted">
-          <Text variant="overline" tone="tertiary">
-            Daily reveal
-          </Text>
-          <View style={styles.revealRow}>
-            <Text style={[styles.time, { color: theme.text }]}>{couple?.reveal_time}</Text>
-            <Text variant="caption" tone="secondary" style={styles.tz}>
-              {couple?.timezone?.replace('_', ' ')}
-            </Text>
-          </View>
-          <Text variant="caption" tone="secondary">
-            That&apos;s when you both find out what&apos;s for dinner.
-          </Text>
-        </Card>
-      </Animated.View>
-
-      <Animated.View entering={FadeInDown.delay(300).duration(500)}>
         {deck.data ? (
           <Card tone="accent" padding="lg">
             <Text variant="overline" tone="tertiary">
@@ -131,49 +112,102 @@ export default function Home() {
                 </View>
               ) : null}
             </View>
-            <Text variant="bodyStrong">
-              {deck.data.recipes.length} dishes picked for the two of you
-            </Text>
+            <Text variant="bodyStrong">{deck.data.recipes.length} dishes picked for the two of you</Text>
             <Text variant="caption" tone="secondary">
               {deck.data.recipes.length < 12
                 ? `Only ${deck.data.recipes.length} dishes fit both your preferences today.`
                 : deck.data.repeat_count > 0
                   ? 'A few favourites are back because your preferences narrow the menu.'
-                  : 'Swiping opens in the next update. Same dishes for both of you.'}
+                  : 'Swipe right on what you fancy. Your picks stay hidden until the reveal.'}
             </Text>
+            <View style={styles.progressRow}>
+              <Pill
+                label={allSwiped ? 'You are done' : `You: ${mySwiped} of ${deck.data.recipes.length}`}
+                tone={allSwiped ? 'success' : 'neutral'}
+                dot={false}
+              />
+              <Pill
+                label={
+                  deck.data.partner_swiped >= deck.data.recipes.length
+                    ? `${partner} is done`
+                    : `${partner}: ${deck.data.partner_swiped} of ${deck.data.recipes.length}`
+                }
+                tone={deck.data.partner_swiped >= deck.data.recipes.length ? 'success' : 'neutral'}
+                dot={false}
+              />
+            </View>
           </Card>
         ) : (
           <Card tone="accent" padding="lg">
             <View style={styles.soonRow}>
               <Text style={styles.soonEmoji}>🍽️</Text>
               <View style={styles.soonText}>
-                <Text variant="bodyStrong">
-                  {partnerReady ? "Picking tonight's dishes…" : "Tonight's options are on their way"}
-                </Text>
+                <Text variant="bodyStrong">{partnerReady ? "Picking tonight's dishes…" : "Tonight's options are on their way"}</Text>
                 <Text variant="caption" tone="secondary">
                   {deck.isError
                     ? "We couldn't load tonight's deck. Pull down to try again soon."
-                    : 'Your daily swipe deck starts once you are both set.'}
+                    : partnerReady
+                      ? 'Hang on a second.'
+                      : `We'll start as soon as ${partner} chooses their food preferences.`}
                 </Text>
               </View>
             </View>
           </Card>
         )}
       </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+        <Card>
+          <View style={styles.coupleRow}>
+            <View style={styles.avatars}>
+              <Avatar name={me} size={52} colorIndex={0} />
+              <View style={styles.second}>
+                <Avatar name={partner} size={52} colorIndex={1} />
+              </View>
+            </View>
+            <View style={styles.coupleText}>
+              <Text variant="bodyStrong">
+                {me} &amp; {partner}
+              </Text>
+              {partnerReady ? (
+                <Pill label="You're both set" tone="success" />
+              ) : (
+                <Pill label={`Waiting for ${partner}`} tone="warning" pulse />
+              )}
+            </View>
+          </View>
+        </Card>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+        <Card tone="muted" padding="lg">
+          <View style={styles.revealRow}>
+            <View>
+              <Text variant="overline" tone="tertiary">
+                Daily reveal
+              </Text>
+              <Text style={[styles.time, { color: theme.text }]}>{couple?.reveal_time}</Text>
+            </View>
+            <Text variant="caption" tone="secondary" style={styles.tz}>
+              {couple?.timezone?.replace('_', ' ')}
+              {'\n'}You both find out what&apos;s for dinner.
+            </Text>
+          </View>
+        </Card>
+      </Animated.View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: { gap: Spacing.sm, marginTop: Spacing.lg },
+  header: { gap: Spacing.sm, marginTop: Spacing.sm },
   coupleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   avatars: { flexDirection: 'row', alignItems: 'center' },
-  second: { marginLeft: -16 },
+  second: { marginLeft: -14 },
   coupleText: { flex: 1, gap: Spacing.sm },
-  note: { marginTop: Spacing.lg },
-  revealRow: { flexDirection: 'row', alignItems: 'baseline', gap: Spacing.md, marginVertical: Spacing.sm },
-  time: { fontFamily: Fonts.display, fontSize: 56, lineHeight: 62, letterSpacing: -1.5 },
-  tz: { flexShrink: 1 },
+  revealRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: Spacing.lg },
+  time: { fontFamily: Fonts.display, fontSize: 44, lineHeight: 50, letterSpacing: -1 },
+  tz: { flex: 1, textAlign: 'right', paddingBottom: 6 },
   soonRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   soonEmoji: { fontSize: 30, lineHeight: 36 },
   soonText: { flex: 1, gap: 2 },
@@ -181,4 +215,7 @@ const styles = StyleSheet.create({
   thumb: { width: 56, height: 56, borderRadius: 28, borderWidth: 3 },
   thumbOverlap: { marginLeft: -14 },
   more: { alignItems: 'center', justifyContent: 'center' },
+  progressRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.md },
+  linkRow: { flexDirection: 'row', gap: Spacing.sm },
+  link: { flex: 1 },
 });
