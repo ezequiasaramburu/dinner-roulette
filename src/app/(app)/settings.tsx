@@ -120,16 +120,16 @@ export default function Settings() {
           </Text>
           <View style={styles.options}>
             <OptionCard
-              title="At a set time"
-              description="Keep swiping whenever you like. You both find out at the same time each day."
-              selected={!instant}
-              onPress={() => save({ revealMode: "scheduled" })}
-            />
-            <OptionCard
               title="As soon as you match"
               description="The moment you've reached your matches, you both find out. Swiping reopens tomorrow."
               selected={instant}
               onPress={() => save({ revealMode: "instant" })}
+            />
+            <OptionCard
+              title="At a set time"
+              description="Keep swiping whenever you like. You both find out at the same time each day, and swiping reopens after midnight."
+              selected={!instant}
+              onPress={() => save({ revealMode: "scheduled" })}
             />
           </View>
         </Card>

@@ -158,6 +158,7 @@ put it back afterwards.
 ### Reveal mode
 
 A couple picks how they find out (Settings, either partner): `scheduled` (at the reveal time, as above) or `instant`
+(the default for new couples: with a set time, a couple that signs up after that time can't swipe until midnight)
 (`supabase/migrations/0009_reveal_mode.sql`). In instant mode swipes always count toward today, the reveal opens the
 moment the match goal is reached (`daily_decks.revealed_at`, so it sticks even if the goal changes), and swiping stays
 closed until tomorrow. There are no fallbacks: a day that doesn't reach the goal reveals nothing. An open app hears

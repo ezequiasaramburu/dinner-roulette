@@ -21,7 +21,12 @@ export function useProfile() {
         .select('id, display_name')
         .eq('id', userId!)
         .single();
-      if (error) throw error;
+      if (error) {
+        // No profile row means this account no longer exists (deleted here or on another phone) but the phone still
+        // holds its login. Drop the login so the welcome screen shows instead of an error nobody can get out of.
+        if (error.code === 'PGRST116') await supabase.auth.signOut({ scope: 'local' });
+        throw error;
+      }
       return data;
     },
   });

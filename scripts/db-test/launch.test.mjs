@@ -58,6 +58,15 @@ describe('invite code rate limit', () => {
   });
 });
 
+describe('new couples', () => {
+  test('reveal as soon as they match by default', async () => {
+    const owner = await addUser(db, 'default-mode@test.dev');
+    await rpc(owner, 'select public.create_couple($1)', ['UTC']);
+    const state = await rpc(owner, 'select public.get_couple_state() as s');
+    assert.equal(state.rows[0].s.reveal_mode, 'instant');
+  });
+});
+
 describe('getting a new invite code', () => {
   test('the old code stops working and the new one works', async () => {
     const owner = await addUser(db, 'new-a@test.dev');

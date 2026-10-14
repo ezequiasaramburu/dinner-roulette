@@ -238,7 +238,7 @@ describe('swipe feed', () => {
     n++;
     const a = await addUser(db, `fa${n}@test.dev`);
     const b = await addUser(db, `fb${n}@test.dev`);
-    const couple = (await db.query('insert into couples (owner_id, timezone, reveal_time) values ($1, $2, $3) returning id', [a, tz, reveal])).rows[0].id;
+    const couple = (await db.query("insert into couples (owner_id, timezone, reveal_time, reveal_mode) values ($1, $2, $3, 'scheduled') returning id", [a, tz, reveal])).rows[0].id;
     await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [couple, a, b]);
     for (const [u, p] of [[a, prefsA], [b, prefsB]]) {
       await db.query('insert into preferences (user_id, diet, allergens, cuisines, disliked) values ($1, $2, $3, $4, $5)', [u, p.diet, p.allergens, p.cuisines, p.disliked]);
