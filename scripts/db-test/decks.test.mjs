@@ -264,7 +264,7 @@ describe('swipe feed', () => {
     assert.equal(f.status, 'ready');
     assert.equal(f.dishes.length, 6);
     assert.equal(f.has_swiped, false);
-    assert.deepEqual(Object.keys(f).sort(), ['cycle_date', 'deck_id', 'dishes', 'has_swiped', 'status']);
+    assert.deepEqual(Object.keys(f).sort(), ['cycle_date', 'deck_id', 'dishes', 'has_swiped', 'round', 'status']);
     for (const d of f.dishes) {
       assert.equal(d.ingredients, undefined);
       assert.equal(d.steps, undefined);

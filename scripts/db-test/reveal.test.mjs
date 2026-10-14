@@ -193,13 +193,188 @@ describe('instant reveal', () => {
     assert.equal((await reveal(a)).status, 'revealed');
   });
 
-  test('instant mode has no fallback: a partial day gives nothing, and "seen" waits for the reveal', async () => {
+  const revealNow = (u) => call(u, 'select public.reveal_now() as r');
+  const swipeEverything = (user, deck, liked = false) =>
+    db.query(
+      'insert into swipes (deck_id, user_id, recipe_id, liked) select $1, $2, rid, $3 from daily_decks d, unnest(d.recipe_ids) rid where d.id = $1 on conflict do nothing',
+      [deck, user, liked],
+    );
+
+  test('a partial day stays pending, and "seen" waits for the reveal', async () => {
     const { a, b } = await makeCouple({ mode: 'instant' });
     const f = await feed(a);
     await swipe(a, f.deck_id, f.dishes[0].id, true);
     assert.equal((await reveal(b)).status, 'pending');
     await seen(b, f.deck_id);
     assert.equal((await db.query('select count(*)::int n from reveal_views where deck_id = $1', [f.deck_id])).rows[0].n, 0);
+  });
+
+  test('"Reveal with what we have" opens it for both, with the closest dishes', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant' });
+    const f = await feed(a);
+    const [d1, d2] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(b, f.deck_id, d2, false);
+    await revealNow(b);
+    for (const u of [a, b]) {
+      const r = await reveal(u);
+      assert.equal(r.status, 'revealed');
+      assert.equal(r.kind, 'closest');
+      assert.deepEqual(r.dishes.map((d) => d.id), [d1]);
+    }
+    assert.equal((await feed(a)).status, 'goal_reached');
+  });
+
+  test('with nothing liked it picks the best fit from the queue', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant' });
+    const f = await feed(a);
+    await swipe(a, f.deck_id, f.dishes[0].id, false);
+    await revealNow(a);
+    const r = await reveal(b);
+    assert.equal(r.kind, 'surprise');
+    assert.equal(r.dishes.length, 1);
+  });
+
+  test('it needs at least one swipe, instant mode, and does nothing twice', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant' });
+    await assert.rejects(revealNow(a), /nothing_swiped/);
+    const f = await feed(a);
+    await swipe(a, f.deck_id, f.dishes[0].id, true);
+    await revealNow(a);
+    const first = (await reveal(a)).reveal_at;
+    await revealNow(b).catch(() => {});
+    assert.equal((await reveal(a)).reveal_at, first);
+    const sched = await makeCouple();
+    await assert.rejects(revealNow(sched.a), /not_instant/);
+  });
+
+  test('when both have been through every dish, the reveal opens by itself', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant', goal: 5 });
+    const f = await feed(a);
+    await swipeEverything(a, f.deck_id, false);
+    assert.equal((await reveal(b)).status, 'pending', 'one of us finishing is not enough');
+    await db.query('update swipes set liked = true where deck_id = $1 and user_id = $2 and recipe_id = $3', [f.deck_id, a, f.dishes[0].id]);
+    await swipeEverything(b, f.deck_id, false);
+    const r = await reveal(a);
+    assert.equal(r.status, 'revealed');
+    assert.equal(r.kind, 'closest');
+  });
+});
+
+describe('swipe again', () => {
+  const revealNow = (u) => call(u, 'select public.reveal_now() as r');
+  const again = (u) => call(u, 'select public.swipe_again() as r');
+
+  // Nobody matches: a likes d1, b passes d2, then the dinner is revealed with the closest dish.
+  async function noMatch(opts = {}) {
+    const c = await makeCouple({ mode: 'instant', goal: 1, ...opts });
+    const f = await feed(c.a);
+    const [d1, d2] = f.dishes.map((d) => d.id);
+    await swipe(c.a, f.deck_id, d1, true);
+    await swipe(c.b, f.deck_id, d2, false);
+    if (opts.mode === 'scheduled') await openReveal(c.couple);
+    else await revealNow(c.b);
+    return { ...c, deck: f.deck_id, d1, d2 };
+  }
+
+  test('after a reveal where nobody matched, a new set from the rest of the queue is offered, once', async () => {
+    const { a, b, deck, d1 } = await noMatch();
+    const first = await reveal(a);
+    assert.deepEqual([first.kind, first.round, first.can_swipe_again], ['closest', 1, true]);
+
+    await again(b);
+    for (const u of [a, b]) {
+      assert.equal((await reveal(u)).status, 'pending', 'the first result is gone for both');
+      const f = await feed(u);
+      assert.equal(f.status, 'ready');
+      assert.equal(f.round, 2);
+      assert.ok(!f.dishes.some((d) => d.id === d1), 'what was just shown is not offered again');
+    }
+
+    const f = await feed(a);
+    assert.equal(f.has_swiped, false, 'round one swipes do not count in round two');
+    await assert.rejects(revealNow(a), /nothing_swiped/);
+    const d3 = f.dishes[0].id;
+    await swipe(a, deck, d3, true);
+    assert.equal((await feed(a)).has_swiped, true);
+    assert.equal((await swipe(b, deck, d3, true)).status, 'goal_reached');
+    const second = await reveal(a);
+    assert.deepEqual([second.kind, second.round, second.can_swipe_again], ['match', 2, false]);
+    assert.deepEqual(second.dishes.map((d) => d.id), [d3]);
+    assert.equal(second.seen, false, 'the animation plays again');
+
+    await assert.rejects(again(a), /swipe_again_used|already_matched/);
+  });
+
+  test('a second round that still has no match gets the fallback ladder, not another round', async () => {
+    const { a, b } = await noMatch();
+    const first = await reveal(a);
+    await again(a);
+    const f = await feed(b);
+    await swipe(b, f.deck_id, f.dishes[0].id, true);
+    await assert.rejects(revealNow(a), /nothing_swiped/, 'a has not swiped in this round');
+    await revealNow(b);
+    const second = await reveal(b);
+    assert.equal(second.kind, 'closest');
+    assert.notDeepEqual(second.dishes.map((d) => d.id), first.dishes.map((d) => d.id));
+    assert.equal(second.can_swipe_again, false);
+    await assert.rejects(again(b), /swipe_again_used/);
+  });
+
+  test('it is refused when there is a match, before the reveal, and outside a couple', async () => {
+    const m = await makeCouple({ mode: 'instant', goal: 1 });
+    const f = await feed(m.a);
+    await assert.rejects(again(m.a), /not_revealed/);
+    await swipe(m.a, f.deck_id, f.dishes[0].id, true);
+    await swipe(m.b, f.deck_id, f.dishes[0].id, true);
+    assert.equal((await reveal(m.a)).can_swipe_again, false);
+    await assert.rejects(again(m.a), /already_matched/);
+    const outsider = await addUser(db, 'again-out@test.dev');
+    await assert.rejects(again(outsider), /couple_not_ready/);
+  });
+
+  test('in scheduled mode swiping reopens after the reveal time, and the second round reveals as soon as they match', async () => {
+    const { a, b, deck } = await noMatch({ mode: 'scheduled', goal: 1 });
+    assert.equal((await feed(a)).status, 'closed');
+    assert.equal((await reveal(a)).can_swipe_again, true);
+    await again(a);
+    const f = await feed(a);
+    assert.equal(f.status, 'ready');
+    assert.equal((await reveal(b)).status, 'pending');
+    await swipe(a, deck, f.dishes[0].id, true);
+    await swipe(b, deck, f.dishes[0].id, true);
+    const r = await reveal(b);
+    assert.deepEqual([r.status, r.kind, r.round], ['revealed', 'match', 2]);
+    assert.equal((await feed(a)).status, 'goal_reached');
+  });
+
+  test('swiping again is only possible with something left to swipe', async () => {
+    const { a, b, deck } = await noMatch();
+    await db.query(
+      'insert into swipes (deck_id, user_id, recipe_id, liked) select $1, u, rid, false from daily_decks d, unnest(d.recipe_ids) rid, unnest($2::uuid[]) u where d.id = $1 on conflict do nothing',
+      [deck, [a, b]],
+    );
+    assert.equal((await reveal(a)).can_swipe_again, false);
+    await assert.rejects(again(a), /nothing_left/);
+  });
+
+  // The whole queue swiped N days ago, then today's queue is built: how many of those dishes are back?
+  async function overlapAfter(days) {
+    const { a, deck } = await makeCouple({ mode: 'instant' }).then(async (c) => ({ ...c, deck: (await feed(c.a)).deck_id }));
+    await db.query(
+      'insert into swipes (deck_id, user_id, recipe_id, liked) select $1, $2, rid, false from daily_decks d, unnest(d.recipe_ids) rid where d.id = $1',
+      [deck, a],
+    );
+    await db.query('update daily_decks set deck_date = deck_date - $2::int where id = $1', [deck, days]);
+    const old = (await db.query('select recipe_ids from daily_decks where id = $1', [deck])).rows[0].recipe_ids;
+    const today = (await feed(a)).deck_id;
+    const fresh = (await db.query('select recipe_ids from daily_decks where id = $1', [today])).rows[0].recipe_ids;
+    return fresh.filter((id) => old.includes(id)).length;
+  }
+
+  test('dishes the couple swiped come back after 7 days, not before', async () => {
+    assert.equal(await overlapAfter(3), 0, 'a dish swiped 3 days ago is held back');
+    assert.ok((await overlapAfter(10)) > 0, 'a dish swiped 10 days ago can be served again');
   });
 });
 

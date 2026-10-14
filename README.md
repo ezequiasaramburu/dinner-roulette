@@ -109,7 +109,7 @@ ranking, built once per dinner cycle (see "Swiping and matches").
 | Soft | onions, tomatoes, chili (each is in more than 25% of the catalog) | Used last, behind even repeated dishes. |
 | Boost | cuisines | Both like: highest. One likes: next. Never a restriction. |
 | Variety | max 3 per country, 3 per category, 2 per dish family | Relaxed only if the pool can't fill 12. |
-| History | nothing served in the last 30 days | If the pool runs dry, the oldest dishes return first. |
+| History | nothing the couple swiped in the last 7 days | If the pool runs dry, the oldest dishes return first. |
 
 The dislike rules live in the `dislike_rules` table (regex over ingredient names). The catalog is curated by
 `scripts/mealdb/exclude.mjs` (sauces, sides, desserts, duplicates and fast-food clones are removed) and each dish gets a
@@ -133,7 +133,7 @@ Server pieces (`supabase/migrations/0006_swipes.sql`, `0007_match_goal_queue.sql
 - `record_swipe()` / `undo_last_swipe()` check the deck belongs to the caller's couple, is the current cycle's, and isn't
   closed by the goal. Row-level security lets you read only your own swipes.
 - The queue is built once per cycle with `build_deck(..., 100)`: the full ranked list, so the order is stable.
-  "Recently seen" means dishes the couple actually swiped in the last 30 days, not everything that was queued.
+  "Recently seen" means dishes the couple actually swiped in the last 7 days, not everything that was queued.
 
 Gotcha for SQL changes: the Supabase API role runs with `pg_safeupdate`, which rejects any `UPDATE`/`DELETE` without a
 `WHERE`. `npm run test:db` scans the migrations for that, but always try new functions through the real API too.
@@ -148,7 +148,15 @@ How the dinner is found:
 - `closest`: nothing shared, so dishes one of you liked (up to the match goal).
 - `surprise`: nobody liked anything, so the top of the queue (the best fit for both tastes).
 
-Swipes after the reveal belong to tomorrow's queue, so a revealed result never changes. `mark_reveal_seen()` records that a
+Instant mode uses the same ladder. It opens when the match goal is reached, when both partners have been through every
+dish, or when either taps "Reveal with what we have" (`reveal_now()`, migration 0026).
+
+If nobody matched (`closest` or `surprise`), the couple can **swipe again** once (`swipe_again()`, migration 0027): the
+dishes just shown are set aside, the reveal reopens, and a second round with new dishes from the rest of the queue
+reveals the instant way, whatever the couple's mode. After that the result is final. A dish the couple swiped is held
+back from new queues for 7 days.
+
+Apart from that, swipes after the reveal belong to tomorrow's queue, so a revealed result never changes. `mark_reveal_seen()` records that a
 partner opened it: the roulette animation plays once, and home shows "New" until then. The recipe screen carries an
 allergen disclaimer, since allergens are derived from ingredient text.
 

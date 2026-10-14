@@ -6,6 +6,7 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-nat
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SwipeDeck, type SwipeDeckHandle } from '@/components/dish/swipe-deck';
+import { RevealNowButton } from '@/components/reveal-now-button';
 import { Accent, BackButton, Button, Screen, Text } from '@/components/ui';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
@@ -32,7 +33,9 @@ export default function Swipe() {
 
   const queryClient = useQueryClient();
   const data = feed.data;
-  const instant = couple?.reveal_mode === 'instant';
+  // After "swipe again" the second round reveals the instant way, whatever the couple's mode.
+  const instant = couple?.reveal_mode === 'instant' || (data?.round ?? 1) > 1;
+  const partnerName = couple?.partner?.display_name ?? 'your partner';
   const dishes = useMemo(() => data?.dishes ?? [], [data?.dishes]);
 
   // Warm the next photos so cards never appear blank.
@@ -110,7 +113,12 @@ export default function Swipe() {
       <Screen
         scroll={false}
         contentStyle={styles.screen}
-        footer={<Button title="Back home" onPress={() => router.back()} />}>
+        footer={
+          <>
+            {!sorted && !closed && instant ? <RevealNowButton partner={partnerName} /> : null}
+            <Button title="Back home" onPress={() => router.back()} />
+          </>
+        }>
         <View style={styles.header}>
           <BackButton />
         </View>
@@ -139,7 +147,7 @@ export default function Swipe() {
               : closed
                 ? "Today's dinner has been revealed. New dishes open tomorrow."
                 : instant
-                  ? "You've been through every dish that fits you both. New dishes open tomorrow."
+                  ? `You've been through every dish that fits you both. Once ${partnerName} is through too, you'll both see tonight's dinner. Or reveal it now with what you have.`
                   : `You've been through every dish that fits you both. We'll work with what you liked and reveal at ${revealTime}.`}
           </Text>
         </Animated.View>

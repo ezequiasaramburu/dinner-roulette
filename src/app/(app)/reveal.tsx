@@ -1,13 +1,14 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
 import { DishRow } from '@/components/dish/dish-row';
 import { Accent, BackButton, Button, RouletteWheel, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
-import { useMarkRevealSeen, useReveal } from '@/hooks/use-reveal';
+import { useMarkRevealSeen, useReveal, useSwipeAgain } from '@/hooks/use-reveal';
+import { friendlyError } from '@/lib/errors';
 
 const SPIN_MS = 3000;
 
@@ -17,6 +18,7 @@ export default function RevealScreen() {
   const { data: couple } = useCouple();
   const reveal = useReveal(true);
   const markSeen = useMarkRevealSeen();
+  const swipeAgain = useSwipeAgain();
   const data = reveal.data?.status === 'revealed' ? reveal.data : undefined;
 
   // The wheel only spins the first time this person opens the reveal.
@@ -37,7 +39,32 @@ export default function RevealScreen() {
     if (showDishes && deckId && !seen) markSeenMutate(deckId);
   }, [showDishes, deckId, seen, markSeenMutate]);
 
+  // The reveal went away under us (your partner swiped again): back to the start, not a spinner.
+  const reopened = reveal.data?.status === 'pending';
+  const startedHere = swipeAgain.isPending || swipeAgain.isSuccess;
+  useEffect(() => {
+    if (reopened && !startedHere) router.dismissTo('/');
+  }, [reopened, startedHere, router]);
+
   const partner = couple?.partner?.display_name ?? 'your partner';
+
+  function onSwipeAgain() {
+    Alert.alert(
+      'Swipe again?',
+      `You didn't match, so you get one more round with a new set of dishes. Tonight's dinner is replaced for both of you, and ${partner} will be asked to swipe too. You can do this once.`,
+      [
+        { text: 'Keep this dinner', style: 'cancel' },
+        {
+          text: 'Swipe again',
+          onPress: () =>
+            swipeAgain.mutate(undefined, {
+              onSuccess: () => router.replace('/swipe'),
+              onError: (e) => Alert.alert('Error', friendlyError(e)),
+            }),
+        },
+      ],
+    );
+  }
 
   if (!data || !showDishes) {
     return (
@@ -106,7 +133,14 @@ export default function RevealScreen() {
 
   return (
     <Screen
-      footer={<Button title="Back home" variant="secondary" onPress={() => router.dismissTo('/')} />}>
+      footer={
+        <>
+          {data.can_swipe_again ? (
+            <Button title="Not feeling it? Swipe again" onPress={onSwipeAgain} loading={swipeAgain.isPending} />
+          ) : null}
+          <Button title="Back home" variant="secondary" onPress={() => router.dismissTo('/')} />
+        </>
+      }>
       <BackButton />
       <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
         <Text variant="overline" tone="primary">

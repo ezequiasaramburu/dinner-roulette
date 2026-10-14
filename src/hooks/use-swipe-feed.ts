@@ -39,6 +39,8 @@ export type SwipeFeed = {
   cycle_date: string;
   status: 'ready' | 'goal_reached' | 'closed' | 'exhausted';
   has_swiped: boolean;
+  /** 2 after the couple used their one "swipe again". */
+  round: number;
   dishes: Dish[];
 };
 

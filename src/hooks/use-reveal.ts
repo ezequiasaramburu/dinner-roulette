@@ -30,6 +30,10 @@ export type Reveal =
       reveal_at: string;
       deck_id: string;
       kind: 'match' | 'closest' | 'surprise' | 'none';
+      /** 2 once the couple has swiped again. */
+      round: number;
+      /** Nobody matched and the couple hasn't used their one extra round yet. */
+      can_swipe_again: boolean;
       seen: boolean;
       dishes: Recipe[];
     };
@@ -64,5 +68,43 @@ export function useMarkRevealSeen() {
     onSuccess: () => {
       queryClient.setQueryData<Reveal>(key, (r) => (r && r.status === 'revealed' ? { ...r, seen: true } : r));
     },
+  });
+}
+
+/** Open today's dinner early, for both of us, with what we have (instant mode only). */
+export function useRevealNow() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const userId = session?.user.id;
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('reveal_now');
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reveal', userId] });
+      queryClient.invalidateQueries({ queryKey: ['feed', userId] });
+    },
+  });
+}
+
+/** Nobody matched: start one more round with a new set of dishes (once). */
+export function useSwipeAgain() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const userId = session?.user.id;
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('swipe_again');
+      if (error) throw error;
+    },
+    // Wait for fresh data before the screen moves on: a stale "dinner is sorted" feed would bounce straight back.
+    onSuccess: () =>
+      Promise.all([
+        queryClient.refetchQueries({ queryKey: ['reveal', userId] }),
+        queryClient.refetchQueries({ queryKey: ['feed', userId] }),
+      ]),
   });
 }

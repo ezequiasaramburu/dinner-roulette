@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { RevealNowButton } from '@/components/reveal-now-button';
 import { Accent, Avatar, Button, Card, MenuButton, MenuItem, MenuLabel, Pill, Screen, SideMenu, Text } from '@/components/ui';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
@@ -96,7 +97,9 @@ export default function Home() {
   const me = profile?.display_name ?? 'You';
   const partner = couple?.partner?.display_name ?? 'Your partner';
   const instant = couple?.reveal_mode === 'instant';
-  const findOut = instant ? 'as soon as you match' : `what matched at ${couple?.reveal_time ?? 'the reveal'}`;
+  // After "swipe again" the second round reveals the instant way, whatever the couple's mode.
+  const instantRound = instant || (feed.data?.round ?? 1) > 1;
+  const findOut = instantRound ? 'as soon as you match' : `what matched at ${couple?.reveal_time ?? 'the reveal'}`;
 
   return (
     <Screen
@@ -197,6 +200,9 @@ export default function Home() {
             <Text variant="caption" tone="secondary">
               Swipe a few dishes whenever you have a minute, as often as you like. You&apos;ll both find out {findOut}.
             </Text>
+            {instantRound && feed.data.has_swiped ? (
+              <RevealNowButton partner={partner} onKeepSwiping={() => router.push('/swipe')} />
+            ) : null}
           </Card>
         ) : feed.data?.status === 'closed' ? (
           <Card tone="accent" padding="lg">
@@ -220,13 +226,14 @@ export default function Home() {
             </Text>
             <Text variant="caption" tone="secondary">
               {feed.data.status === 'goal_reached'
-                ? instant
+                ? instantRound
                   ? 'Nothing more to swipe today. New dishes tomorrow.'
                   : `Nothing more to swipe. You'll both find out what matched at ${couple?.reveal_time}.`
-                : instant
-                  ? 'Check back tomorrow for new dishes.'
+                : instantRound
+                  ? `Once ${couple?.partner?.display_name ?? 'your partner'} is through too, you'll both see tonight's dinner. Or reveal it now.`
                   : `We'll work with what you liked and reveal at ${couple?.reveal_time}.`}
             </Text>
+            {instantRound && feed.data.status === 'exhausted' ? <RevealNowButton partner={partner} /> : null}
           </Card>
         ) : (
           <Card tone="accent" padding="lg">
