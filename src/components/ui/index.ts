@@ -14,4 +14,5 @@ export { Section } from './section';
 export { MenuItem, SideMenu } from './side-menu';
 export { Stepper } from './stepper';
 export { Accent, Text } from './text';
+export { TermsField } from './terms-field';
 export { TextField } from './text-field';

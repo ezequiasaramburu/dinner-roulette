@@ -169,3 +169,13 @@ about it through Realtime (`0010`); a push notification for a partner who isn't 
 goal tells the partner on their home screen ("Daryna changed matches per day from 2 to 3", with "Got it" to dismiss).
 Changes collapse into one notice from the original to the latest value, changing it back leaves none, and changing the
 goal yourself clears the notice you were holding. Readable only by the recipient; created by `update_couple_settings`.
+
+### Free-text exclusions
+
+Beyond the fixed allergy and dislike lists, each person can type their own ("kiwi", "mustard", "blue cheese"):
+`preferences.custom_allergens` and `custom_dislikes` (`0013_custom_exclusions.sql`). Nothing is stored on recipes. Each
+term is matched against a recipe's ingredient names when the deck is built (whole words, plural tolerated: "nut" is not
+"nutmeg", "peanuts" matches "peanut butter"), both partners' terms add up, and both lists exclude outright. A trigger
+cleans what is typed (lower-case, letters/digits/spaces/hyphens, 3 to 40 characters, at most 20 per list). Terms are
+private to their owner, like the rest of the preferences. Because it works on ingredient names at query time, it covers
+recipes added later without any tagging.

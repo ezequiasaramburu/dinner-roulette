@@ -8,9 +8,20 @@ export type Preferences = {
   allergens: string[];
   cuisines: string[];
   disliked: string[];
+  /** Anything else they are allergic to, in their own words (matched against ingredient names). */
+  custom_allergens: string[];
+  /** Anything else they don't want, in their own words. */
+  custom_dislikes: string[];
 };
 
-export const EMPTY_PREFERENCES: Preferences = { diet: 'none', allergens: [], cuisines: [], disliked: [] };
+export const EMPTY_PREFERENCES: Preferences = {
+  diet: 'none',
+  allergens: [],
+  cuisines: [],
+  disliked: [],
+  custom_allergens: [],
+  custom_dislikes: [],
+};
 
 /** The signed-in user's saved preferences, or null if they haven't set any yet. */
 export function usePreferences() {
@@ -23,7 +34,7 @@ export function usePreferences() {
     queryFn: async (): Promise<Preferences | null> => {
       const { data, error } = await supabase
         .from('preferences')
-        .select('diet, allergens, cuisines, disliked')
+        .select('diet, allergens, cuisines, disliked, custom_allergens, custom_dislikes')
         .eq('user_id', userId!)
         .maybeSingle();
       if (error) throw error;

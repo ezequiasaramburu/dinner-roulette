@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
 
-import { Accent, Button, Chip, Screen, Section, Text } from '@/components/ui';
+import { Accent, Button, Chip, Screen, Section, TermsField, Text } from '@/components/ui';
 import { ALLERGENS, DIETS, DISLIKES, countryFlag } from '@/constants/food';
 import { Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
@@ -117,7 +117,7 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
       <Section
         title="Allergies"
         hint="We never show dishes with these. Always double-check the ingredient list."
-        count={prefs.allergens.length}>
+        count={prefs.allergens.length + prefs.custom_allergens.length}>
         {ALLERGENS.map((o) => (
           <Chip
             key={o.id}
@@ -127,6 +127,12 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
             onPress={() => setPrefs({ ...prefs, allergens: toggle(prefs.allergens, o.id) })}
           />
         ))}
+        <TermsField
+          label="Anything else you're allergic to?"
+          placeholder="e.g. kiwi, mustard, celery"
+          terms={prefs.custom_allergens}
+          onChange={(custom_allergens) => setPrefs({ ...prefs, custom_allergens })}
+        />
       </Section>
 
       <Section
@@ -144,7 +150,10 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
         ))}
       </Section>
 
-      <Section title="Not for me" hint="Things you'd rather avoid." count={prefs.disliked.length}>
+      <Section
+        title="Not for me"
+        hint="Things you'd rather avoid."
+        count={prefs.disliked.length + prefs.custom_dislikes.length}>
         {DISLIKES.map((o) => (
           <Chip
             key={o.id}
@@ -154,6 +163,12 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
             onPress={() => setPrefs({ ...prefs, disliked: toggle(prefs.disliked, o.id) })}
           />
         ))}
+        <TermsField
+          label="Anything else you don't like?"
+          placeholder="e.g. anchovies, blue cheese"
+          terms={prefs.custom_dislikes}
+          onChange={(custom_dislikes) => setPrefs({ ...prefs, custom_dislikes })}
+        />
       </Section>
     </Screen>
   );
