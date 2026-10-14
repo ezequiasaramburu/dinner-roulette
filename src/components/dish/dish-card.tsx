@@ -6,6 +6,7 @@ import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
 import { thumbnail, type Dish } from '@/hooks/use-swipe-feed';
 import { useScheme, useTheme } from '@/hooks/use-theme';
+import { ingredientLine, ingredientList, mainIngredients } from '@/lib/main-ingredients';
 
 const DIET_LABEL: Record<string, string> = { vegan: 'Vegan', vegetarian: 'Vegetarian', pescatarian: 'Pescatarian' };
 
@@ -16,6 +17,8 @@ export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<Vi
 
   const diet = ['vegan', 'vegetarian', 'pescatarian'].find((d) => recipe.diet_flags.includes(d));
   const contains = recipe.allergens.map(allergenLabel);
+  const line = ingredientLine(recipe.ingredient_names);
+  const more = ingredientList(recipe.ingredient_names).length - mainIngredients(recipe.ingredient_names).length;
 
   return (
     <View
@@ -39,6 +42,12 @@ export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<Vi
         <Text variant="heading" numberOfLines={2} style={styles.title}>
           {recipe.title}
         </Text>
+        {line ? (
+          <Text variant="caption" tone="secondary" numberOfLines={2}>
+            {line}
+            {more > 0 ? <Text variant="caption" tone="primary">{`  +${more} more`}</Text> : null}
+          </Text>
+        ) : null}
         <View style={styles.tags}>
           <Pill label={dishTypeLabel(recipe.dish_type)} tone="neutral" dot={false} />
           {diet ? <Pill label={DIET_LABEL[diet]} tone="success" dot={false} /> : null}

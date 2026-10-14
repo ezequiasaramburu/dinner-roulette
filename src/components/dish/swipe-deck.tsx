@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -13,6 +13,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { DishCard } from '@/components/dish/dish-card';
+import { IngredientsSheet } from '@/components/dish/ingredients-sheet';
 import { Text } from '@/components/ui';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import type { Dish } from '@/hooks/use-swipe-feed';
@@ -31,6 +32,7 @@ type Props = {
 export function SwipeDeck({ recipes, onSwipe, ref }: Props) {
   const topRef = useRef<SwipeDeckHandle>(null);
   const [top, next] = recipes;
+  const [inspected, setInspected] = useState<Dish | null>(null);
 
   useImperativeHandle(ref, () => ({ swipe: (liked) => topRef.current?.swipe(liked) }), []);
 
@@ -44,7 +46,8 @@ export function SwipeDeck({ recipes, onSwipe, ref }: Props) {
         </View>
       ) : null}
       {/* key: each card owns its own animation state and starts fresh */}
-      <TopCard key={top.id} ref={topRef} recipe={top} onSwiped={onSwipe} />
+      <TopCard key={top.id} ref={topRef} recipe={top} onSwiped={onSwipe} onInspect={setInspected} />
+      <IngredientsSheet dish={inspected} onClose={() => setInspected(null)} />
     </View>
   );
 }
@@ -52,10 +55,12 @@ export function SwipeDeck({ recipes, onSwipe, ref }: Props) {
 function TopCard({
   recipe,
   onSwiped,
+  onInspect,
   ref,
 }: {
   recipe: Dish;
   onSwiped: (recipe: Dish, liked: boolean) => void;
+  onInspect: (recipe: Dish) => void;
   ref: Ref<SwipeDeckHandle>;
 }) {
   const theme = useTheme();
@@ -107,6 +112,14 @@ function TopCard({
       }
     });
 
+  // A tap (no drag) opens the ingredient list; dragging still swipes.
+  const tap = Gesture.Tap()
+    .maxDuration(250)
+    .onEnd((_e, success) => {
+      if (success && !flying.get()) scheduleOnRN(onInspect, recipe);
+    });
+  const gesture = Gesture.Race(pan, tap);
+
   const cardStyle = useAnimatedStyle(() => ({
     transform: [
       { translateX: x.value },
@@ -119,7 +132,7 @@ function TopCard({
   const passStyle = useAnimatedStyle(() => ({ opacity: interpolate(x.get(), [-threshold, 0], [1, 0], Extrapolation.CLAMP) }));
 
   return (
-    <GestureDetector gesture={pan}>
+    <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.top, cardStyle]}>
         <DishCard recipe={recipe} />
         <Animated.View style={[styles.stamp, styles.yum, { borderColor: theme.primary, backgroundColor: theme.surface }, yumStyle]} pointerEvents="none">

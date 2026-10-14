@@ -17,6 +17,8 @@ export type Dish = {
   diet_flags: string[];
   /** Easy swaps that make the dish fit a diet, e.g. chicken stock cube -> vegetable stock cube. */
   swaps: { from: string; to: string }[];
+  /** Ingredient names only (no amounts), as stored. The card shows the main few; a tap shows all. */
+  ingredient_names: string[];
 };
 
 /**
