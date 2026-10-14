@@ -354,13 +354,13 @@ export default function Home() {
         <MenuLabel>Your dinners</MenuLabel>
         <View style={styles.menuItems}>
           <MenuItem
-            emoji="🥗"
+            icon="nutrition-outline"
             label="Food preferences"
             caption="Diet, allergies and tastes"
             onPress={() => go('/preferences')}
           />
           <MenuItem
-            emoji="⚙️"
+            icon="settings-outline"
             label="Settings"
             caption="Matches per day and reveal time"
             onPress={() => go('/settings')}
@@ -370,13 +370,13 @@ export default function Home() {
         <MenuLabel>Recipes</MenuLabel>
         <View style={styles.menuItems}>
           <MenuItem
-            emoji="✍️"
+            icon="create-outline"
             label="Add a recipe"
             caption="Share a dish with everyone"
             onPress={() => go('/add-recipe')}
           />
           <MenuItem
-            emoji="📖"
+            icon="book-outline"
             label="Your recipes"
             caption="See where each one is in review"
             onPress={() => go('/recipes')}
@@ -386,7 +386,7 @@ export default function Home() {
         <View style={styles.menuSpacer} />
 
         <View style={[styles.menuFooter, { borderTopColor: theme.border }]}>
-          <MenuItem emoji="👋" label="Sign out" onPress={signOut} />
+          <MenuItem icon="log-out-outline" label="Sign out" onPress={signOut} />
           <View style={styles.menuLegal}>
             <Text variant="caption" tone="tertiary" onPress={() => go('/legal/terms')}>
               Terms

@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
 import { Modal, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withTiming } from 'react-native-reanimated';
@@ -99,18 +100,18 @@ export function MenuLabel({ children }: { children: string }) {
   );
 }
 
-type ItemProps = { emoji: string; label: string; caption?: string; onPress: () => void };
+type ItemProps = { icon: ComponentProps<typeof Ionicons>['name']; label: string; caption?: string; onPress: () => void };
 
 /** One row in the side menu. */
-export function MenuItem({ emoji, label, caption, onPress }: ItemProps) {
+export function MenuItem({ icon, label, caption, onPress }: ItemProps) {
   const theme = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.item, pressed && { backgroundColor: theme.surfaceMuted }]}>
-      <View style={[styles.badge, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Text style={styles.badgeEmoji}>{emoji}</Text>
+      <View style={[styles.badge, { backgroundColor: theme.primarySoft }]}>
+        <Ionicons name={icon} size={22} color={theme.primary} />
       </View>
       <View style={styles.itemText}>
         <Text variant="bodyStrong">{label}</Text>
@@ -140,8 +141,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   item: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg, padding: Spacing.md, borderRadius: Radius.lg },
-  badge: { width: 44, height: 44, borderRadius: Radius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  badgeEmoji: { fontSize: 22, lineHeight: 28 },
+  badge: { width: 44, height: 44, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
   itemText: { flex: 1, gap: 2 },
   chevron: { fontSize: 24, lineHeight: 26 },
   label: { paddingHorizontal: Spacing.md, marginTop: Spacing.sm, marginBottom: Spacing.xs },
