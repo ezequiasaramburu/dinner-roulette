@@ -1,11 +1,12 @@
+import Constants from 'expo-constants';
 import { Image } from 'expo-image';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { Accent, Avatar, Button, Card, MenuButton, MenuItem, Pill, Screen, SideMenu, Text } from '@/components/ui';
-import { Fonts, Spacing } from '@/constants/theme';
+import { Accent, Avatar, Button, Card, MenuButton, MenuItem, MenuLabel, Pill, Screen, SideMenu, Text } from '@/components/ui';
+import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
 import { thumbnail, useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useDismissNotice, useNotices } from '@/hooks/use-notices';
@@ -78,7 +79,7 @@ export default function Home() {
     }, [bothReady, refetchReveal]),
   );
 
-  function go(path: '/preferences' | '/settings') {
+  function go(path: '/preferences' | '/settings' | '/legal/terms' | '/legal/privacy') {
     setMenuOpen(false);
     router.push(path);
   }
@@ -323,14 +324,37 @@ export default function Home() {
 
       <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)}>
         <View style={styles.menuHeader}>
-          <Avatar name={me} size={56} colorIndex={0} />
-          <View style={styles.menuHeaderText}>
-            <Text variant="heading">{me}</Text>
-            <Text variant="caption" tone="secondary">
-              with {partner}
+          <View style={styles.avatars}>
+            <Avatar name={me} size={60} colorIndex={0} />
+            <View style={styles.second}>
+              <Avatar name={partner} size={60} colorIndex={1} />
+            </View>
+          </View>
+          <Text variant="heading" style={styles.menuNames}>
+            {me} & {partner}
+          </Text>
+          <Text variant="caption" tone="secondary">
+            Dinner for two
+          </Text>
+        </View>
+
+        <View style={[styles.menuStats, { backgroundColor: theme.surfaceMuted }]}>
+          <View style={styles.menuStat}>
+            <Text variant="overline" tone="tertiary">
+              Matches
             </Text>
+            <Text variant="bodyStrong">{couple?.match_goal ?? 2} a day</Text>
+          </View>
+          <View style={[styles.menuStatDivider, { backgroundColor: theme.border }]} />
+          <View style={styles.menuStat}>
+            <Text variant="overline" tone="tertiary">
+              Reveal
+            </Text>
+            <Text variant="bodyStrong">{instant ? 'When you match' : `At ${couple?.reveal_time ?? '17:00'}`}</Text>
           </View>
         </View>
+
+        <MenuLabel>Your dinners</MenuLabel>
         <View style={styles.menuItems}>
           <MenuItem
             emoji="🥗"
@@ -345,8 +369,29 @@ export default function Home() {
             onPress={() => go('/settings')}
           />
         </View>
+
         <View style={styles.menuSpacer} />
-        <MenuItem emoji="👋" label="Sign out" onPress={signOut} />
+
+        <View style={[styles.menuFooter, { borderTopColor: theme.border }]}>
+          <MenuItem emoji="👋" label="Sign out" onPress={signOut} />
+          <View style={styles.menuLegal}>
+            <Text variant="caption" tone="tertiary" onPress={() => go('/legal/terms')}>
+              Terms
+            </Text>
+            <Text variant="caption" tone="tertiary">
+              ·
+            </Text>
+            <Text variant="caption" tone="tertiary" onPress={() => go('/legal/privacy')}>
+              Privacy
+            </Text>
+            <Text variant="caption" tone="tertiary">
+              ·
+            </Text>
+            <Text variant="caption" tone="tertiary">
+              v{Constants.expoConfig?.version ?? '1.0.0'}
+            </Text>
+          </View>
+        </View>
       </SideMenu>
     </Screen>
   );
@@ -354,16 +399,21 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   header: { gap: Spacing.sm },
-  menuHeader: {
+  menuHeader: { alignItems: 'center', gap: Spacing.xs, paddingBottom: Spacing.lg },
+  menuNames: { marginTop: Spacing.sm, textAlign: 'center' },
+  menuStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.xl,
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.xl,
   },
-  menuHeaderText: { flex: 1, gap: 2 },
+  menuStat: { flex: 1, alignItems: 'center', gap: 2 },
+  menuStatDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
   menuItems: { gap: Spacing.xs },
   menuSpacer: { flex: 1 },
+  menuFooter: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.md, gap: Spacing.md },
+  menuLegal: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.sm },
   coupleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   avatars: { flexDirection: 'row', alignItems: 'center' },
   second: { marginLeft: -14 },

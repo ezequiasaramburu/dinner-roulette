@@ -90,6 +90,15 @@ export function SideMenu({ visible, onClose, children }: Props) {
   );
 }
 
+/** Small caps label above a group of rows. */
+export function MenuLabel({ children }: { children: string }) {
+  return (
+    <Text variant="overline" tone="tertiary" style={styles.label}>
+      {children}
+    </Text>
+  );
+}
+
 type ItemProps = { emoji: string; label: string; caption?: string; onPress: () => void };
 
 /** One row in the side menu. */
@@ -111,6 +120,9 @@ export function MenuItem({ emoji, label, caption, onPress }: ItemProps) {
           </Text>
         ) : null}
       </View>
+      <Text tone="tertiary" style={styles.chevron}>
+        ›
+      </Text>
     </Pressable>
   );
 }
@@ -131,4 +143,6 @@ const styles = StyleSheet.create({
   badge: { width: 44, height: 44, borderRadius: Radius.md, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   badgeEmoji: { fontSize: 22, lineHeight: 28 },
   itemText: { flex: 1, gap: 2 },
+  chevron: { fontSize: 24, lineHeight: 26 },
+  label: { paddingHorizontal: Spacing.md, marginBottom: Spacing.xs },
 });

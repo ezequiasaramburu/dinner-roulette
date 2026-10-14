@@ -11,7 +11,7 @@ export { Pill } from './pill';
 export { RouletteWheel } from './roulette-wheel';
 export { Screen } from './screen';
 export { Section } from './section';
-export { MenuItem, SideMenu } from './side-menu';
+export { MenuItem, MenuLabel, SideMenu } from './side-menu';
 export { Stepper } from './stepper';
 export { TimeField } from './time-field';
 export { Accent, Text } from './text';
