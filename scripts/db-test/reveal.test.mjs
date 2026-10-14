@@ -16,12 +16,12 @@ const seen = (u, deck) => call(u, 'select public.mark_reveal_seen($1) as r', [de
 
 let n = 0;
 // reveal '23:59:59' = still ahead today (pending); '00:00' = already passed today (revealed).
-async function makeCouple({ reveal = '23:59:59', goal = 2 } = {}) {
+async function makeCouple({ reveal = '23:59:59', goal = 2, mode = 'scheduled' } = {}) {
   n++;
   const a = await addUser(db, `ra${n}@test.dev`);
   const b = await addUser(db, `rb${n}@test.dev`);
   const couple = (
-    await db.query('insert into couples (owner_id, timezone, reveal_time, match_goal) values ($1, $2, $3, $4) returning id', [a, 'Pacific/Auckland', reveal, goal])
+    await db.query('insert into couples (owner_id, timezone, reveal_time, match_goal, reveal_mode) values ($1, $2, $3, $4, $5) returning id', [a, 'Pacific/Auckland', reveal, goal, mode])
   ).rows[0].id;
   await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [couple, a, b]);
   for (const u of [a, b]) {
@@ -142,5 +142,87 @@ describe('reveal', () => {
     const { a, couple } = await makeCouple();
     await assert.rejects(asUser(db, a, () => db.query('select public.ensure_deck($1, current_date)', [couple])), /permission denied/);
     await assert.rejects(asUser(db, a, () => db.query('select public.recipe_json(array[]::uuid[])')), /permission denied/);
+  });
+});
+
+describe('instant reveal', () => {
+  const settings = (u, ...args) => call(u, 'select public.update_couple_settings($1, $2, $3) as r', args);
+
+  test('the reveal opens the moment the goal is reached, for both partners, whatever the reveal time says', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant', reveal: '00:00' }); // a set time that passed long ago
+    const f = await feed(a);
+    assert.equal(f.for_today, true, 'swipes count toward today');
+    const [d1, d2, d3] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(b, f.deck_id, d1, true);
+    assert.deepEqual(await reveal(a), { status: 'pending', reveal_at: null }, 'one match is not enough');
+    await swipe(a, f.deck_id, d2, true);
+    assert.equal((await swipe(b, f.deck_id, d2, true)).status, 'goal_reached');
+    for (const u of [a, b]) {
+      const r = await reveal(u);
+      assert.equal(r.status, 'revealed');
+      assert.equal(r.kind, 'match');
+      assert.deepEqual(r.dishes.map((d) => d.id), [d1, d2]);
+      assert.ok(r.dishes[0].ingredients.length > 0);
+    }
+    assert.ok(!(await reveal(a)).dishes.some((d) => d.id === d3));
+  });
+
+  test('once revealed it sticks: raising the goal does not take it back or reopen swiping today', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant', goal: 1 });
+    const f = await feed(a);
+    const [d1, d2] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(b, f.deck_id, d1, true);
+    await settings(a, 5, null, null);
+    assert.equal((await reveal(b)).status, 'revealed');
+    assert.equal((await feed(a)).status, 'goal_reached');
+    await assert.rejects(swipe(a, f.deck_id, d2, true), /deck_closed/);
+    await seen(a, f.deck_id);
+    assert.equal((await reveal(a)).seen, true);
+  });
+
+  test('lowering the goal below the matches already made reveals right away', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant', goal: 3 });
+    const f = await feed(a);
+    const d1 = f.dishes[0].id;
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(b, f.deck_id, d1, true);
+    assert.equal((await reveal(a)).status, 'pending');
+    await settings(b, 1, null, null);
+    assert.equal((await reveal(a)).status, 'revealed');
+  });
+
+  test('instant mode has no fallback: a partial day gives nothing, and "seen" waits for the reveal', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant' });
+    const f = await feed(a);
+    await swipe(a, f.deck_id, f.dishes[0].id, true);
+    assert.equal((await reveal(b)).status, 'pending');
+    await seen(b, f.deck_id);
+    assert.equal((await db.query('select count(*)::int n from reveal_views where deck_id = $1', [f.deck_id])).rows[0].n, 0);
+  });
+});
+
+describe('couple settings', () => {
+  const settings = (u, ...args) => call(u, 'select public.update_couple_settings($1, $2, $3) as r', args);
+  const state = (u) => call(u, 'select public.get_couple_state() as r');
+
+  test('either partner can change the mode, reveal time and goal; omitted settings stay as they were', async () => {
+    const { a, b } = await makeCouple();
+    assert.equal((await state(a)).reveal_mode, 'scheduled');
+    await settings(b, null, 'instant', null);
+    let st = await state(a);
+    assert.deepEqual([st.reveal_mode, st.reveal_time, st.match_goal], ['instant', '23:59', 2]);
+    await settings(a, 4, 'scheduled', '18:30');
+    st = await state(b);
+    assert.deepEqual([st.reveal_mode, st.reveal_time, st.match_goal], ['scheduled', '18:30', 4]);
+  });
+
+  test('bad values and outsiders are refused', async () => {
+    const { a } = await makeCouple();
+    const outsider = await addUser(db, 'settings-out@test.dev');
+    await assert.rejects(settings(a, null, 'whenever', null), /invalid_reveal_mode/);
+    await assert.rejects(settings(a, 9, null, null), /invalid_match_goal/);
+    await assert.rejects(settings(outsider, 2, null, null), /couple_not_ready/);
   });
 });

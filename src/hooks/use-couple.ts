@@ -11,6 +11,8 @@ export type CoupleState = {
   timezone: string;
   /** "HH:MM" in the couple's timezone. */
   reveal_time: string;
+  /** 'scheduled': reveal at reveal_time. 'instant': reveal as soon as the match goal is reached. */
+  reveal_mode: 'scheduled' | 'instant';
   /** How many matches the couple wants revealed each day (1 to 5). */
   match_goal: number;
   /** The current user has finished choosing their food preferences. */
@@ -44,7 +46,9 @@ export function useCreateCouple() {
   return useMutation({
     mutationFn: async () => {
       const timezone = getCalendars()[0]?.timeZone ?? 'UTC';
-      const { error } = await supabase.rpc('create_couple', { p_timezone: timezone });
+      const { error } = await supabase.rpc('create_couple', {
+        p_timezone: timezone,
+      });
       if (error) throw error;
     },
     onSuccess: invalidate,
@@ -105,7 +109,12 @@ export function useCoupleRealtime(coupleId: string | undefined) {
       .channel(`couple-members-${coupleId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'couple_members', filter: `couple_id=eq.${coupleId}` },
+        {
+          event: '*',
+          schema: 'public',
+          table: 'couple_members',
+          filter: `couple_id=eq.${coupleId}`,
+        },
         () => invalidate(),
       )
       .subscribe();
@@ -117,29 +126,86 @@ export function useCoupleRealtime(coupleId: string | undefined) {
 }
 
 /** Change how many matches the couple wants each day. Either partner can do it. */
-export function useUpdateMatchGoal() {
+export type CoupleSettings = {
+  matchGoal?: number;
+  revealMode?: 'scheduled' | 'instant';
+  revealTime?: string;
+};
+
+/** Change couple-wide settings (either partner can). Pass only what changes. */
+export function useUpdateCoupleSettings() {
   const queryClient = useQueryClient();
   const { session } = useAuth();
   const key = ['couple', session?.user.id];
 
   return useMutation({
-    mutationFn: async (goal: number) => {
-      const { error } = await supabase.rpc('update_couple_settings', { p_match_goal: goal });
+    mutationFn: async ({ matchGoal, revealMode, revealTime }: CoupleSettings) => {
+      const { error } = await supabase.rpc('update_couple_settings', {
+        p_match_goal: matchGoal ?? null,
+        p_reveal_mode: revealMode ?? null,
+        p_reveal_time: revealTime ?? null,
+      });
       if (error) throw error;
     },
-    onMutate: async (goal) => {
+    onMutate: async ({ matchGoal, revealMode, revealTime }) => {
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<CoupleState | null>(key);
-      queryClient.setQueryData<CoupleState | null>(key, (c) => (c ? { ...c, match_goal: goal } : c));
+      queryClient.setQueryData<CoupleState | null>(key, (c) =>
+        c
+          ? {
+              ...c,
+              match_goal: matchGoal ?? c.match_goal,
+              reveal_mode: revealMode ?? c.reveal_mode,
+              reveal_time: revealTime ?? c.reveal_time,
+            }
+          : c,
+      );
       return { previous };
     },
-    onError: (_e, _goal, context) => {
+    onError: (_e, _vars, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
     },
-    // A new goal can reopen a finished queue (or close it), so the feed must be refetched.
+    // Settings change which queue is current and whether a reveal is open, so everything dinner-related refetches.
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['reveal'] });
       queryClient.invalidateQueries({ queryKey: ['couple'] });
     },
   });
+}
+
+/** The partner's swipes can open an instant reveal and their settings change ours: refetch when either happens. */
+export function useDinnerRealtime(coupleId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!coupleId) return;
+    const refresh = (keys: string[]) => () => keys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+    const channel = supabase
+      .channel(`dinner-${coupleId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_decks',
+          filter: `couple_id=eq.${coupleId}`,
+        },
+        refresh(['reveal', 'feed']),
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'couples',
+          filter: `id=eq.${coupleId}`,
+        },
+        refresh(['couple', 'feed', 'reveal']),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [coupleId, queryClient]);
 }

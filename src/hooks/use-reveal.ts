@@ -16,7 +16,7 @@ export type Recipe = Dish & {
 
 /**
  * Today's reveal, seen by both partners alike.
- *  - pending: the reveal time hasn't come yet
+ *  - pending: the reveal time hasn't come yet (reveal_at is null when the couple reveals as soon as they match)
  *  - revealed: `kind` says how the dinner was found
  *      match     dishes you both liked
  *      closest   nothing shared, so dishes one of you liked
@@ -24,7 +24,7 @@ export type Recipe = Dish & {
  *      none      nothing to pick from
  */
 export type Reveal =
-  | { status: 'pending'; reveal_at: string }
+  | { status: 'pending'; reveal_at: string | null }
   | {
       status: 'revealed';
       reveal_at: string;
