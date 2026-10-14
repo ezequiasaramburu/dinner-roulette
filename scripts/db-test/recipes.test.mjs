@@ -428,6 +428,41 @@ describe('hiding takes effect at once', () => {
   });
 });
 
+describe('recipe photos', () => {
+  const put = (user, path) =>
+    rpc(user, "insert into storage.objects (bucket_id, name) values ('recipe-photos', $1)", [path]);
+
+  test('the bucket is public, small and JPEG only', async () => {
+    const [b] = (await db.query("select public, file_size_limit, allowed_mime_types from storage.buckets where id = 'recipe-photos'")).rows;
+    assert.equal(b.public, true);
+    assert.equal(Number(b.file_size_limit), 3 * 1024 * 1024);
+    assert.deepEqual(b.allowed_mime_types, ['image/jpeg']);
+  });
+
+  test('people can add, list and remove files in their own folder only', async () => {
+    const a = await newUser('A');
+    const b = await newUser('B');
+    await put(a, `${a}/one.jpg`);
+    await assert.rejects(put(a, `${b}/two.jpg`), /row-level security/);
+    await assert.rejects(put(a, 'loose.jpg'), /row-level security/);
+
+    await put(b, `${b}/three.jpg`);
+    assert.deepEqual((await rpc(a, "select name from storage.objects where bucket_id = 'recipe-photos'")).map((r) => r.name), [`${a}/one.jpg`]);
+
+    await rpc(b, "delete from storage.objects where name = $1", [`${a}/one.jpg`]); // someone else's: matches nothing
+    assert.equal((await db.query('select 1 from storage.objects where name = $1', [`${a}/one.jpg`])).rowCount, 1);
+    await rpc(a, "delete from storage.objects where name = $1", [`${a}/one.jpg`]);
+    assert.equal((await db.query('select 1 from storage.objects where name = $1', [`${a}/one.jpg`])).rowCount, 0);
+  });
+
+  test('nobody can overwrite a file (there is no update policy)', async () => {
+    const a = await newUser('A');
+    await put(a, `${a}/x.jpg`);
+    await rpc(a, "update storage.objects set name = $2 where name = $1", [`${a}/x.jpg`, `${a}/y.jpg`]);
+    assert.equal((await db.query('select 1 from storage.objects where name = $1', [`${a}/x.jpg`])).rowCount, 1);
+  });
+});
+
 describe('deleting an account', () => {
   test('removes the recipes the person wrote', async () => {
     const a = await newUser('Chef');

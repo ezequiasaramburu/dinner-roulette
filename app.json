@@ -45,6 +45,13 @@
           }
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Dinner Roulette needs your photos so you can add a picture to a recipe you share.",
+          "cameraPermission": "Dinner Roulette needs the camera so you can photograph a dish you share."
+        }
+      ],
       "expo-localization",
       "@react-native-community/datetimepicker"
     ],

@@ -235,4 +235,11 @@ it is approved.
   approved recipe back to `pending`. **Block** (`block_author`, takes a recipe so the app never handles another person's
   id): hides the author's recipes for the whole couple. It is refused for yourself and your partner, ignored when queues
   are built, and removed when two people pair up. Authors are never told.
+- **Photos** (optional, last field of the form): the app crops to 4:3, resizes to at most 1600 px wide and saves a JPEG
+  (`expo-image-picker` + `expo-image-manipulator`, which need a native rebuild), then uploads it when the recipe is
+  submitted to the public `recipe-photos` bucket, into `<user id>/<random>.jpg` (migration `0025_recipe_photos.sql`: 3 MB,
+  JPEG only; people can add, list and remove only their own folder). `submit_recipe` only accepts a URL inside the
+  author's own folder. Files are removed through the Storage API when a recipe or account is deleted (SQL deletes are
+  blocked by Storage). A photo is publicly readable by its URL even while the recipe is pending; to take one down, delete
+  the file in Studio → Storage.
 - Deleting an account deletes the recipes the person wrote.

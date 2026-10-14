@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { Alert } from 'react-native';
 
+import { removeAllMyPhotos } from '@/lib/recipe-photo';
 import { supabase } from '@/lib/supabase';
 
 /** Deletes the account for good, then signs this phone out. The auth listener swaps back to the welcome screen. */
@@ -9,6 +10,9 @@ export function useDeleteAccount() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
+      // Photos can only be removed while still signed in, so they go first. A failure here must not block deleting.
+      const { data } = await supabase.auth.getUser();
+      if (data.user) await removeAllMyPhotos(data.user.id);
       const { error } = await supabase.rpc('delete_account');
       if (error) throw error;
       await Notifications.cancelAllScheduledNotificationsAsync().catch(() => {});

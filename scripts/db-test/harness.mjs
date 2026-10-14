@@ -18,11 +18,21 @@ export async function createDb() {
     -- Stand-in for pgcrypto (only used for invite codes).
     create function extensions.gen_random_bytes(n int) returns bytea language sql as $$
       select decode(substr(md5(random()::text), 1, n * 2), 'hex') $$;
+    -- Just enough of Supabase Storage for the bucket and its policies.
+    create schema storage;
+    create table storage.buckets (id text primary key, name text not null, public boolean default false,
+      file_size_limit bigint, allowed_mime_types text[]);
+    create table storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text references storage.buckets (id),
+      name text not null, owner uuid default auth.uid());
+    alter table storage.objects enable row level security;
+    create function storage.foldername(name text) returns text[] language sql immutable as $$
+      select (string_to_array(name, '/'))[1:array_length(string_to_array(name, '/'), 1) - 1] $$;
     create publication supabase_realtime;
     -- Supabase grants the API roles access to everything in public by default; RLS then does the gatekeeping.
     alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
     alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
-    grant usage on schema public, auth, extensions to anon, authenticated, service_role;
+    grant usage on schema public, auth, extensions, storage to anon, authenticated, service_role;
+    grant all on storage.objects, storage.buckets to authenticated, service_role;
   `);
   for (const file of readdirSync(root + 'migrations').filter((f) => f.endsWith('.sql')).sort()) {
     await db.exec(readFileSync(root + 'migrations/' + file, 'utf8'));

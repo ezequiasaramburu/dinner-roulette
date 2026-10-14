@@ -1,14 +1,16 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { DishImage } from '@/components/dish/dish-image';
 import { Accent, BackButton, Button, Card, CountryField, Screen, Text, TextField } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
 import { useProfile } from '@/hooks/use-profile';
 import { useSubmitRecipe } from '@/hooks/use-recipes';
 import { useTheme } from '@/hooks/use-theme';
 import { friendlyError } from '@/lib/errors';
+import { pickRecipePhoto, type PickedPhoto } from '@/lib/recipe-photo';
 
 type Ingredient = { id: number; name: string; measure: string };
 type Step = { id: number; text: string };
@@ -38,6 +40,8 @@ export default function AddRecipe() {
     { id: 1, text: '' },
     { id: 2, text: '' },
   ]);
+  const [photo, setPhoto] = useState<PickedPhoto | null>(null);
+  const [pickingPhoto, setPickingPhoto] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
 
@@ -66,6 +70,33 @@ export default function AddRecipe() {
     return found;
   }
 
+  async function pickPhoto(source: 'camera' | 'library') {
+    setPickingPhoto(true);
+    try {
+      const picked = await pickRecipePhoto(source);
+      if (picked === 'denied') {
+        Alert.alert('Camera access is off', 'Allow the camera for Dinner Roulette in your phone settings, or choose a photo from your library.', [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Open settings', onPress: () => Linking.openSettings() },
+        ]);
+      } else if (picked) {
+        setPhoto(picked);
+      }
+    } catch {
+      Alert.alert("Couldn't use that photo", source === 'camera' ? "The camera isn't available. Try choosing a photo instead." : 'Please try another one.');
+    } finally {
+      setPickingPhoto(false);
+    }
+  }
+
+  function addPhoto() {
+    Alert.alert('Add a photo', 'Only share photos you took yourself.', [
+      { text: 'Take a photo', onPress: () => pickPhoto('camera') },
+      { text: 'Choose from library', onPress: () => pickPhoto('library') },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  }
+
   async function onSubmit() {
     const found = validate();
     setErrors(found);
@@ -77,6 +108,7 @@ export default function AddRecipe() {
         country,
         ingredients: filledIngredients,
         steps: filledSteps,
+        photoUri: photo?.uri ?? null,
         acceptTerms: accepted || !needsTerms,
       });
       Alert.alert('Thank you!', "Your recipe is in review. We'll publish it once it's checked, and you can follow it in Your recipes.");
@@ -222,6 +254,24 @@ export default function AddRecipe() {
           ) : null}
         </View>
 
+        <View style={styles.group}>
+          <Text variant="heading">Photo</Text>
+          <Text variant="caption" tone="secondary">
+            Optional. A good photo makes people want to cook it. Only share photos you took yourself.
+          </Text>
+          {photo ? (
+            <>
+              <DishImage url={photo.uri} size="large" label="Your photo" style={styles.photo} />
+              <View style={styles.photoActions}>
+                <Button title="Change photo" variant="secondary" onPress={addPhoto} loading={pickingPhoto} style={styles.photoButton} />
+                <Button title="Remove" variant="ghost" onPress={() => setPhoto(null)} style={styles.photoButton} />
+              </View>
+            </>
+          ) : (
+            <Button title="Add a photo" variant="secondary" onPress={addPhoto} loading={pickingPhoto} />
+          )}
+        </View>
+
         {needsTerms ? (
           <Card tone="muted" padding="lg">
             <Pressable
@@ -242,7 +292,7 @@ export default function AddRecipe() {
                 ) : null}
               </View>
               <Text variant="caption" style={styles.termsText}>
-                I wrote this recipe myself, and I agree to the{' '}
+                I wrote this recipe myself, any photo is mine, and I agree to the{' '}
                 <Text variant="caption" tone="primary" onPress={() => router.push('/legal/terms')}>
                   Terms of Use
                 </Text>
@@ -284,6 +334,9 @@ const styles = StyleSheet.create({
   stepRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.sm },
   stepNumber: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 14 },
   stepText: { flex: 1 },
+  photo: { width: '100%', aspectRatio: 4 / 3, borderRadius: Radius.lg },
+  photoActions: { flexDirection: 'row', gap: Spacing.md },
+  photoButton: { flex: 1 },
   multiline: { minHeight: 80, paddingTop: Spacing.md, textAlignVertical: 'top' },
   remove: { width: 36, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: Radius.md },
   removeSpace: { width: 36 },

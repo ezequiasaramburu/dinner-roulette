@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { removeRecipePhoto, uploadRecipePhoto } from '@/lib/recipe-photo';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 
@@ -40,7 +41,8 @@ export type NewRecipe = {
   country: string;
   ingredients: { name: string; measure: string }[];
   steps: string[];
-  imageUrl?: string | null;
+  /** A local file (already resized) to upload with the recipe. */
+  photoUri?: string | null;
   acceptTerms: boolean;
 };
 
@@ -50,15 +52,20 @@ export function useSubmitRecipe() {
 
   return useMutation({
     mutationFn: async (recipe: NewRecipe): Promise<string> => {
+      // Upload only once everything else is ready, so a refused recipe leaves no photo behind.
+      const imageUrl = recipe.photoUri && session ? await uploadRecipePhoto(session.user.id, recipe.photoUri) : null;
       const { data, error } = await supabase.rpc('submit_recipe', {
         p_title: recipe.title,
         p_country: recipe.country,
         p_ingredients: recipe.ingredients,
         p_steps: recipe.steps,
-        p_image_url: recipe.imageUrl ?? null,
+        p_image_url: imageUrl,
         p_accept_terms: recipe.acceptTerms,
       });
-      if (error) throw error;
+      if (error) {
+        await removeRecipePhoto(imageUrl);
+        throw error;
+      }
       return data as string;
     },
     onSuccess: () => {
@@ -72,9 +79,10 @@ export function useSubmitRecipe() {
 export function useDeleteRecipe() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc('delete_recipe', { p_recipe_id: id });
+    mutationFn: async (recipe: Pick<MyRecipe, 'id' | 'image_url'>) => {
+      const { error } = await supabase.rpc('delete_recipe', { p_recipe_id: recipe.id });
       if (error) throw error;
+      await removeRecipePhoto(recipe.image_url);
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-recipes'] }),
   });

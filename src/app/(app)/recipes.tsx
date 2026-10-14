@@ -2,9 +2,10 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { DishImage } from '@/components/dish/dish-image';
 import { Accent, BackButton, Button, Card, Pill, Screen, Text } from '@/components/ui';
 import { countryFlag } from '@/constants/countries';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useDeleteRecipe, useMyRecipes, type MyRecipe } from '@/hooks/use-recipes';
 import { useTheme } from '@/hooks/use-theme';
 import { friendlyError } from '@/lib/errors';
@@ -27,7 +28,7 @@ export default function Recipes() {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: () => remove.mutate(recipe.id, { onError: (e) => Alert.alert('Could not delete', friendlyError(e)) }),
+        onPress: () => remove.mutate(recipe, { onError: (e) => Alert.alert('Could not delete', friendlyError(e)) }),
       },
     ]);
   }
@@ -63,6 +64,9 @@ export default function Recipes() {
             const status = STATUS[recipe.status];
             return (
               <Card key={recipe.id} padding="lg">
+                {recipe.image_url ? (
+                  <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.photo} />
+                ) : null}
                 <Text variant="overline" tone="primary">
                   {countryFlag(recipe.country)}  {recipe.country}
                 </Text>
@@ -90,5 +94,6 @@ const styles = StyleSheet.create({
   loading: { marginTop: Spacing.xl },
   empty: { marginTop: Spacing.sm },
   title: { marginTop: Spacing.xs },
+  photo: { width: '100%', height: 160, borderRadius: Radius.lg, marginBottom: Spacing.md },
   statusRow: { flexDirection: 'row', marginVertical: Spacing.md },
 });
