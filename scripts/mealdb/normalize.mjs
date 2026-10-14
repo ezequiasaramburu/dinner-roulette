@@ -1,5 +1,6 @@
 // Pure functions that turn a raw TheMealDB meal into one of our `recipes` rows.
 // Allergen ids here must match ALLERGENS in src/constants/food.ts.
+import { DIET_OVERRIDES } from './overrides.mjs';
 
 export const DINNER_CATEGORIES = new Set([
   'Beef', 'Chicken', 'Pork', 'Lamb', 'Goat', 'Seafood', 'Pasta', 'Vegetarian', 'Vegan',
@@ -25,6 +26,10 @@ const ALLERGEN_RULES = [
 
 const MEAT = /\b(beef|steaks?|mince|veal|brisket|chicken|turkey|duck|goose|pork|bacon|ham|gammon|sausages?|chorizo|salami|pepperoni|prosciutto|pancetta|lamb|mutton|goat|venison|rabbit|oxtail|ribs?|liver|kidney|lard|suet|gelatine?|marrow|meatballs?|mortadella|bresaola|pat[eé])\b/;
 const NOT_MEAT = /kidney beans?/;
+// A meat stock cube is the one animal ingredient a cook swaps without changing the dish: "chicken stock cube"
+// becomes "vegetable stock cube". Dishes whose only meat is a stock count as vegetarian, with the swap noted.
+const MEAT_STOCK = /^(chicken|beef|pork|lamb|meat|ham|turkey|duck)\s+(stock|bouillon|broth)\b/;
+const MEAT_WORD = /\b(chicken|beef|pork|lamb|meat|ham|turkey|duck)\b/;
 const NON_VEGAN = /\b(honey|gelatine?)\b/;
 
 // Dish family, derived from the title: lets a deck avoid three rice dishes or three pies in a row.
@@ -102,8 +107,16 @@ export function tagAllergens(names) {
   return [...found].sort();
 }
 
+/** Meat stock ingredients that can be swapped for a vegetable one: [{ from, to }], e.g. chicken stock cube -> vegetable stock cube. */
+export function stockSwaps(names) {
+  return names.filter((n) => MEAT_STOCK.test(n)).map((n) => ({ from: n, to: n.replace(MEAT_WORD, 'vegetable') }));
+}
+
+/** Ingredients that name meat (kidney beans are not meat). */
+export const meatIngredients = (names) => names.filter((n) => MEAT.test(n) && !NOT_MEAT.test(n));
+
 export function dietFlags({ category, names, allergens }) {
-  const hasMeat = names.some((n) => MEAT.test(n) && !NOT_MEAT.test(n)) || MEAT_CATEGORIES.has(category);
+  const hasMeat = meatIngredients(names).length > 0 || MEAT_CATEGORIES.has(category);
   const hasFish = allergens.includes('fish') || allergens.includes('shellfish') || category === 'Seafood';
   const flags = [];
   if (!hasMeat) flags.push('pescatarian');
@@ -131,6 +144,16 @@ export function normalizeMeal(meal) {
     allergens.sort();
   }
 
+  // Dishes whose only meat is a stock cube: judge them without it, and remember the swap.
+  const swaps = stockSwaps(names);
+  const swapped = new Set(swaps.map((w) => w.from));
+  const ownFlags = dietFlags({ category: meal.strCategory, names, allergens });
+  const flagsWithSwap = dietFlags({ category: meal.strCategory, names: names.filter((n) => !swapped.has(n)), allergens });
+  const usesSwap = swaps.length > 0 && flagsWithSwap.length > ownFlags.length;
+  const override = DIET_OVERRIDES.get(meal.idMeal);
+  if (override?.allergens) allergens.splice(0, allergens.length, ...new Set([...allergens, ...override.allergens]));
+  allergens.sort();
+
   return {
     source_id: meal.idMeal,
     title: meal.strMeal.trim(),
@@ -145,6 +168,7 @@ export function normalizeMeal(meal) {
     steps,
     ingredient_names: names,
     allergens,
-    diet_flags: dietFlags({ category: meal.strCategory, names, allergens }),
+    diet_flags: override ? override.flags : usesSwap ? flagsWithSwap : ownFlags,
+    swaps: usesSwap ? swaps : [],
   };
 }

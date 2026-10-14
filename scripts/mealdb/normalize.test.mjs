@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { dietFlags, dishFamily, normalizeMeal, parseSteps, tagAllergens } from './normalize.mjs';
+import { dietFlags, dishFamily, meatIngredients, normalizeMeal, parseSteps, stockSwaps, tagAllergens } from './normalize.mjs';
 
 const allergens = (...names) => tagAllergens(names.map((n) => n.toLowerCase()));
 
@@ -81,4 +81,50 @@ test("goat's and sheep's dairy still count as dairy (the word \"oat\" hides insi
   assert.deepEqual(allergens('Goats Cheese'), ['dairy']);
   assert.deepEqual(allergens("Goat's Milk", 'Goat Yoghurt'), ['dairy']);
   assert.deepEqual(allergens('Oat Milk', 'Rice Milk', 'Coconut Cream'), []);
+});
+
+function meal(over, ingredients) {
+  const fields = { idMeal: '1', strMeal: 'Test dish', strCategory: 'Vegetarian', strCountry: 'Italian', strInstructions: 'Cook it.', strMealThumb: 'x', ...over };
+  ingredients.forEach(([name, measure], i) => {
+    fields[`strIngredient${i + 1}`] = name;
+    fields[`strMeasure${i + 1}`] = measure;
+  });
+  return fields;
+}
+
+test('a meat stock cube can be swapped for a vegetable one', () => {
+  assert.deepEqual(stockSwaps(['chicken stock cube', 'onion', 'beef bouillon powder']), [
+    { from: 'chicken stock cube', to: 'vegetable stock cube' },
+    { from: 'beef bouillon powder', to: 'vegetable bouillon powder' },
+  ]);
+  assert.deepEqual(stockSwaps(['vegetable stock', 'chicken breast', 'stockfish']), []);
+});
+
+test('a dish whose only meat is a stock counts as vegetarian, with the swap noted', () => {
+  const soup = normalizeMeal(meal({}, [['Beetroot', '3'], ['Potatoes', '2'], ['Chicken Stock Cube', '1']]));
+  assert.deepEqual(soup.diet_flags, ['pescatarian', 'vegan', 'vegetarian']);
+  assert.deepEqual(soup.swaps, [{ from: 'chicken stock cube', to: 'vegetable stock cube' }]);
+});
+
+test('real meat is never swapped away, and meat dishes keep no swap', () => {
+  const adobo = normalizeMeal(meal({}, [['Aubergine', '2'], ['Ground Pork', '200g'], ['Chicken Stock', '1']]));
+  assert.deepEqual(adobo.diet_flags, []);
+  assert.deepEqual(adobo.swaps, []);
+  const soup = normalizeMeal(meal({ strCategory: 'Chicken' }, [['Chicken Thighs', '4'], ['Chicken Stock', '1'], ['Carrot', '2']]));
+  assert.deepEqual(soup.diet_flags, []);
+  assert.deepEqual(soup.swaps, []);
+  assert.deepEqual(meatIngredients(['kidney beans', 'bacon']), ['bacon']);
+});
+
+test('an editorial override replaces the computed diet flags', () => {
+  const pie = normalizeMeal(meal({ idMeal: '53000', strCategory: 'Beef' }, [['Potatoes', '2'], ['Lentils', '1 cup'], ['Butter', '30g']]));
+  assert.deepEqual(pie.diet_flags, ['pescatarian', 'vegetarian']);
+  const other = normalizeMeal(meal({ idMeal: '1', strCategory: 'Beef' }, [['Potatoes', '2'], ['Lentils', '1 cup'], ['Butter', '30g']]));
+  assert.deepEqual(other.diet_flags, []);
+});
+
+test('an override can add an allergen the ingredient list leaves out', () => {
+  const soup = normalizeMeal(meal({ idMeal: '52955', strMeal: 'Egg Drop Soup' }, [['Chicken Stock', '4 cups'], ['Peas', '1 cup'], ['Sesame Seed Oil', '1 tsp']]));
+  assert.deepEqual(soup.allergens, ['eggs', 'sesame']);
+  assert.deepEqual(soup.diet_flags, ['pescatarian', 'vegetarian']);
 });

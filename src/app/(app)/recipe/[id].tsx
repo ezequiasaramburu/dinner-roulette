@@ -83,6 +83,22 @@ export default function RecipeScreen() {
           </Text>
         </Card>
 
+        {recipe.swaps.length ? (
+          <Card tone="accent" padding="lg">
+            <Text variant="overline" tone="tertiary">
+              Easy swap
+            </Text>
+            {recipe.swaps.map((swap) => (
+              <Text key={swap.from} variant="bodyStrong" style={styles.allergenLine}>
+                Use {swap.to} instead of {swap.from}
+              </Text>
+            ))}
+            <Text variant="caption" tone="secondary">
+              The original uses meat stock. With this swap the dish suits a vegetarian diet.
+            </Text>
+          </Card>
+        ) : null}
+
         <View style={styles.section}>
           <Text variant="heading">Ingredients</Text>
           <View>

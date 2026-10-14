@@ -48,6 +48,11 @@ export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<Vi
             Contains {contains.join(', ').toLowerCase()}
           </Text>
         ) : null}
+        {recipe.swaps.length ? (
+          <Text variant="caption" tone="secondary" numberOfLines={1}>
+            Easy swap: {recipe.swaps[0].to} for {recipe.swaps[0].from}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

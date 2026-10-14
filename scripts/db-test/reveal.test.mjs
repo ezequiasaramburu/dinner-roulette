@@ -278,3 +278,35 @@ describe('notices', () => {
     await assert.rejects(asUser(db, b, () => db.query("insert into public.notices (recipient_id, kind) values ($1, 'match_goal_changed')", [b])), /row-level security|permission denied/);
   });
 });
+
+describe('diet corrections in the catalog', () => {
+  const pool = async (diet, allergens = []) =>
+    new Set((await db.query(
+      `select r.title from public.recipes r where ($1 = 'none' or $1 = any(r.diet_flags)) and not (r.allergens && $2::text[])`,
+      [diet, allergens],
+    )).rows.map((r) => r.title));
+
+  test('a dish filed under Beef but made of lentils is vegetarian', async () => {
+    assert.ok((await pool('vegetarian')).has('Vegetable Shepherds Pie'));
+    assert.ok(!(await pool('vegan')).has('Vegetable Shepherds Pie'), 'it has butter');
+  });
+
+  test('a dish whose only meat is a stock cube is offered to vegetarians, with the swap in its payload', async () => {
+    assert.ok((await pool('vegetarian')).has('Beetroot Soup (Borscht)'));
+    const { rows } = await db.query(
+      `select public.recipe_json(array[(select id from public.recipes where title = 'Beetroot Soup (Borscht)')]) -> 0 -> 'swaps' as swaps`,
+    );
+    assert.deepEqual(rows[0].swaps, [{ from: 'chicken stock cube', to: 'vegetable stock cube' }]);
+  });
+
+  test('dishes with real meat or fish are never rescued by the swap rule', async () => {
+    const veg = await pool('vegetarian');
+    for (const title of ['Eggplant Adobo', 'Thai rice noodle salad', 'Liegeoise Salad']) assert.ok(!veg.has(title), title);
+  });
+
+  test('eggs missing from an ingredient list are fixed: not vegan, and not safe for an egg allergy', async () => {
+    assert.ok(!(await pool('vegan')).has('Egg Drop Soup'));
+    assert.ok(!(await pool('none', ['eggs'])).has('Egg Drop Soup'));
+    assert.ok(!(await pool('vegan')).has('Ful Medames'));
+  });
+});

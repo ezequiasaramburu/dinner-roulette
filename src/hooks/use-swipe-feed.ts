@@ -15,6 +15,8 @@ export type Dish = {
   tags: string[];
   allergens: string[];
   diet_flags: string[];
+  /** Easy swaps that make the dish fit a diet, e.g. chicken stock cube -> vegetable stock cube. */
+  swaps: { from: string; to: string }[];
 };
 
 /**

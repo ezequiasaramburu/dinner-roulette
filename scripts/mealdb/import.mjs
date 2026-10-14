@@ -8,12 +8,13 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { EXCLUDED } from './exclude.mjs';
-import { normalizeMeal } from './normalize.mjs';
+import { meatIngredients, normalizeMeal } from './normalize.mjs';
+import { DIET_OVERRIDES } from './overrides.mjs';
 
 const COLUMNS = {
   source_id: 'text', title: 'text', category: 'text', dish_type: 'text', country: 'text', tags: 'text[]',
   image_url: 'text', youtube_url: 'text', source_url: 'text', ingredients: 'jsonb', steps: 'jsonb',
-  ingredient_names: 'text[]', allergens: 'text[]', diet_flags: 'text[]',
+  ingredient_names: 'text[]', allergens: 'text[]', diet_flags: 'text[]', swaps: 'jsonb',
 };
 
 async function fetchAll() {
@@ -34,10 +35,18 @@ const known = new Set(raw.map((m) => m.idMeal));
 const unknown = [...EXCLUDED.keys()].filter((id) => !known.has(id));
 if (unknown.length) throw new Error(`exclude.mjs lists ids that are not in the catalog: ${unknown.join(', ')}`);
 
+const missingOverrides = [...DIET_OVERRIDES.keys()].filter((id) => !known.has(id));
+if (missingOverrides.length) throw new Error(`overrides.mjs lists ids that are not in the catalog: ${missingOverrides.join(', ')}`);
+
 const recipes = raw
   .filter((meal) => !EXCLUDED.has(meal.idMeal))
   .map(normalizeMeal)
   .filter(Boolean).sort((a, b) => Number(a.source_id) - Number(b.source_id));
+// Invariant: nothing may be flagged vegetarian while an ingredient names meat, unless it is a swappable stock.
+for (const r of recipes.filter((r) => r.diet_flags.includes('vegetarian'))) {
+  const meat = meatIngredients(r.ingredient_names).filter((n) => !r.swaps.some((w) => w.from === n));
+  if (meat.length) throw new Error(`${r.title} is flagged vegetarian but lists ${meat.join(', ')}`);
+}
 if (recipes.length < 100) throw new Error(`Only ${recipes.length} usable recipes; refusing to write seed.sql`);
 
 const json = JSON.stringify(recipes);
