@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
@@ -17,6 +18,7 @@ import {
   type Dish,
 } from '@/hooks/use-swipe-feed';
 import { useTheme } from '@/hooks/use-theme';
+import { timeInZoneToLocal } from '@/lib/zoned-time';
 
 export default function Swipe() {
   const router = useRouter();
@@ -28,7 +30,9 @@ export default function Swipe() {
   const canUndo = useUndoAvailable((s) => s.count > 0);
   const deckRef = useRef<SwipeDeckHandle>(null);
 
+  const queryClient = useQueryClient();
   const data = feed.data;
+  const instant = couple?.reveal_mode === 'instant';
   const dishes = useMemo(() => data?.dishes ?? [], [data?.dishes]);
 
   // Warm the next photos so cards never appear blank.
@@ -36,6 +40,14 @@ export default function Swipe() {
     const urls = dishes.slice(0, 4).map((d) => thumbnail(d.image_url, 'large'));
     if (urls.length) Image.prefetch(urls);
   }, [dishes]);
+
+  // Instant reveal: the moment the goal is reached the dinner is open, so go straight to the spinning wheel.
+  const goalReached = data?.status === 'goal_reached';
+  useEffect(() => {
+    if (!instant || !goalReached) return;
+    queryClient.invalidateQueries({ queryKey: ['reveal'] });
+    router.replace('/reveal');
+  }, [instant, goalReached, queryClient, router]);
 
   // The next batch is on its way (the queue is endless, so this is only ever a short wait).
   useEffect(() => {
@@ -82,7 +94,13 @@ export default function Swipe() {
     );
   }
 
-  const revealTime = couple?.reveal_time ?? 'the reveal';
+  // The reveal time is on the couple's clock; say it on this phone's.
+  const revealTime = couple
+    ? (() => {
+        const { hour, minute } = timeInZoneToLocal(couple.reveal_time, couple.timezone);
+        return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      })()
+    : 'the reveal';
 
   if (data.status !== 'ready') {
     const sorted = data.status === 'goal_reached';
@@ -119,7 +137,9 @@ export default function Swipe() {
               ? `You both liked enough of the same dishes. We'll show you what matched at ${revealTime}.`
               : closed
                 ? "Today's dinner has been revealed. New dishes open tomorrow."
-                : `You've been through every dish that fits you both. We'll work with what you liked and reveal at ${revealTime}.`}
+                : instant
+                  ? "You've been through every dish that fits you both. New dishes open tomorrow."
+                  : `You've been through every dish that fits you both. We'll work with what you liked and reveal at ${revealTime}.`}
           </Text>
         </Animated.View>
       </Screen>
