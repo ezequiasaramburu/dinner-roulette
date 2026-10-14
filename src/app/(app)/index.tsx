@@ -21,12 +21,6 @@ function greeting(hour: number) {
   return 'Good evening';
 }
 
-function revealedTitle(titles: string[]) {
-  if (titles.length === 0) return "Open tonight's dinner";
-  if (titles.length === 1) return titles[0];
-  return `${titles[0]} and ${titles.length - 1} more`;
-}
-
 export default function Home() {
   const router = useRouter();
   const theme = useTheme();
@@ -142,21 +136,42 @@ export default function Home() {
       {revealed ? (
         <Animated.View entering={FadeInDown.delay(60).duration(500)}>
           <Card
-            tone="accent"
             padding="lg"
             onPress={() => router.push('/reveal')}
-            accessibilityLabel="Open tonight's dinner">
-            <Pill
-              label={revealed.seen ? 'Tonight' : 'New'}
-              tone={revealed.seen ? 'neutral' : 'success'}
-              dot={!revealed.seen}
-            />
-            <Text variant="heading" style={styles.sortedTitle}>
-              {revealed.seen ? revealedTitle(revealed.dishes.map((d) => d.title)) : "Tonight's dinner is revealed"}
-            </Text>
-            <Text variant="caption" tone="secondary">
-              {revealed.seen ? 'Tap to see the recipe.' : 'Tap to find out what you matched on.'}
-            </Text>
+            accessibilityLabel={revealed.seen ? "Open tonight's recipe" : "Open tonight's dinner"}
+            style={{ borderColor: theme.primary, borderWidth: 1.5 }}>
+            <View style={styles.revealRowCard}>
+              {revealed.seen && revealed.dishes[0] ? (
+                <Image
+                  source={thumbnail(revealed.dishes[0].image_url)}
+                  contentFit="cover"
+                  transition={250}
+                  style={[styles.revealThumb, { backgroundColor: theme.surfaceMuted }]}
+                />
+              ) : (
+                <View style={[styles.revealThumb, styles.revealMystery, { backgroundColor: theme.primarySoft }]}>
+                  <Text style={styles.soonEmoji}>🎁</Text>
+                </View>
+              )}
+              <View style={styles.soonText}>
+                <Text variant="overline" tone="primary">
+                  {revealed.seen ? "Tonight's dinner" : 'New'}
+                </Text>
+                <Text variant="heading" numberOfLines={2}>
+                  {revealed.seen ? (revealed.dishes[0]?.title ?? "Tonight's dinner") : "It's time to find out"}
+                </Text>
+                <Text variant="label" tone="primary">
+                  {!revealed.seen
+                    ? 'Reveal dinner'
+                    : revealed.dishes.length > 1
+                      ? `See all ${revealed.dishes.length} dishes`
+                      : 'See the recipe'}
+                </Text>
+              </View>
+              <View style={[styles.chevron, { backgroundColor: theme.primary }]}>
+                <Text style={[styles.chevronText, { color: theme.onPrimary }]}>›</Text>
+              </View>
+            </View>
           </Card>
         </Animated.View>
       ) : null}
@@ -358,6 +373,11 @@ const styles = StyleSheet.create({
   thumb: { width: 56, height: 56, borderRadius: 28, borderWidth: 3 },
   thumbOverlap: { marginLeft: -14 },
   more: { alignItems: 'center', justifyContent: 'center' },
+  revealRowCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
+  revealThumb: { width: 72, height: 72, borderRadius: 20 },
+  revealMystery: { alignItems: 'center', justifyContent: 'center' },
+  chevron: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  chevronText: { fontFamily: Fonts.medium, fontSize: 26, lineHeight: 30, marginTop: -2, marginLeft: 2 },
   noticeText: { marginTop: Spacing.xs, marginBottom: Spacing.md },
   sortedTitle: { marginTop: Spacing.md },
 });
