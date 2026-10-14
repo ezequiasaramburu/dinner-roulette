@@ -5,13 +5,14 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Accent, Button, Card, CodeTiles, Pill, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
-import { useCancelCouple, useCouple, useCoupleRealtime, useInviteCode } from '@/hooks/use-couple';
+import { useCancelCouple, useCouple, useCoupleRealtime, useInviteCode, useRegenerateInvite } from '@/hooks/use-couple';
 import { friendlyError } from '@/lib/errors';
 
 export default function Invite() {
   const couple = useCouple();
   const invite = useInviteCode(couple.data?.couple_id);
   const cancel = useCancelCouple();
+  const regenerate = useRegenerateInvite(couple.data?.couple_id);
 
   // Realtime moves us along instantly; polling covers a dropped socket.
   useCoupleRealtime(couple.data?.couple_id);
@@ -26,6 +27,16 @@ export default function Invite() {
     await Share.share({
       message: `Let's pick dinner together on Dinner Roulette! Use my invite code ${invite.data}, or open ${link}`,
     });
+  }
+
+  function onNewCode() {
+    Alert.alert('Get a new code?', 'The current code will stop working.', [
+      { text: 'Keep it', style: 'cancel' },
+      {
+        text: 'Get a new code',
+        onPress: () => regenerate.mutate(undefined, { onError: (e) => Alert.alert('Error', friendlyError(e)) }),
+      },
+    ]);
   }
 
   function onCancel() {
@@ -47,6 +58,13 @@ export default function Invite() {
             <Button title="Try again" variant="secondary" onPress={() => invite.refetch()} />
           ) : null}
           <Button title="Share invite" onPress={onShare} disabled={!invite.data} />
+          <Button
+            title="Get a new code"
+            variant="ghost"
+            onPress={onNewCode}
+            loading={regenerate.isPending}
+            disabled={!invite.data}
+          />
           <Button title="Start over" variant="ghost" onPress={onCancel} loading={cancel.isPending} />
         </>
       }>

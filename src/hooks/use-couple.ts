@@ -101,6 +101,19 @@ export function useInviteCode(coupleId: string | undefined) {
   });
 }
 
+/** Cancels the current code and mints a new one; the invite screen shows it straight away. */
+export function useRegenerateInvite(coupleId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (): Promise<string> => {
+      const { data, error } = await supabase.rpc('regenerate_invite');
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (code) => queryClient.setQueryData(['invite-code', coupleId], code),
+  });
+}
+
 /** Refetch the couple the moment a member row is added, so the owner sees the partner join. */
 export function useCoupleRealtime(coupleId: string | undefined) {
   const invalidate = useInvalidateCouple();

@@ -58,6 +58,36 @@ describe('invite code rate limit', () => {
   });
 });
 
+describe('getting a new invite code', () => {
+  test('the old code stops working and the new one works', async () => {
+    const owner = await addUser(db, 'new-a@test.dev');
+    const partner = await addUser(db, 'new-b@test.dev');
+    await rpc(owner, 'select public.create_couple($1)', ['UTC']);
+    const first = (await rpc(owner, 'select public.create_invite() as code')).rows[0].code;
+    const second = (await rpc(owner, 'select public.regenerate_invite() as code')).rows[0].code;
+    assert.notEqual(first, second);
+    // create_invite now returns the new one, and the old one is dead.
+    assert.equal((await rpc(owner, 'select public.create_invite() as code')).rows[0].code, second);
+    assert.equal((await rpc(partner, 'select public.join_couple($1) as id', [first])).rows[0].id, null);
+    assert.ok((await rpc(partner, 'select public.join_couple($1) as id', [second])).rows[0].id);
+  });
+
+  test('only the owner of a couple with room can ask, and not too often', async () => {
+    const owner = await addUser(db, 'new-c@test.dev');
+    const stranger = await addUser(db, 'new-d@test.dev');
+    await rpc(owner, 'select public.create_couple($1)', ['UTC']);
+    await assert.rejects(rpc(stranger, 'select public.regenerate_invite()'), /not_couple_owner/);
+
+    for (let i = 0; i < 5; i++) await rpc(owner, 'select public.regenerate_invite()');
+    await assert.rejects(rpc(owner, 'select public.regenerate_invite()'), /too_many_invites/);
+  });
+
+  test('a full couple cannot get another code', async () => {
+    const { owner } = await pair('new-e@test.dev', 'new-f@test.dev');
+    await assert.rejects(rpc(owner, 'select public.regenerate_invite()'), /couple_full/);
+  });
+});
+
 describe('deleting an account', () => {
   test('removes the person and everything of theirs', async () => {
     const { owner, partner } = await pair('del-a@test.dev', 'del-b@test.dev');

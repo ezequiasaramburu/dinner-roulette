@@ -1,9 +1,9 @@
-import { useRouter } from 'expo-router';
-import { StyleSheet, useWindowDimensions } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { useRouter } from "expo-router";
+import { StyleSheet, useWindowDimensions } from "react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 
-import { Accent, Button, RouletteWheel, Screen, Text } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Accent, Button, RouletteWheel, Screen, Text } from "@/components/ui";
+import { Spacing } from "@/constants/theme";
 
 export default function Welcome() {
   const router = useRouter();
@@ -16,37 +16,53 @@ export default function Welcome() {
       contentStyle={styles.content}
       footer={
         <>
-          <Button title="Continue with email" onPress={() => router.push('/email')} />
-          <Text variant="caption" tone="tertiary" align="center">
+          <Button
+            title="Continue with email"
+            onPress={() => router.push("/email")}
+          />
+          {/* <Text variant="caption" tone="tertiary" align="center">
             Your partner joins for free.
-          </Text>
+          </Text> */}
           <Text variant="caption" tone="tertiary" align="center">
-            By continuing you agree to our{' '}
-            <Text variant="caption" tone="secondary" onPress={() => router.push('/legal/terms')}>
+            By continuing you agree to our{" "}
+            <Text
+              variant="caption"
+              tone="secondary"
+              onPress={() => router.push("/legal/terms")}
+            >
               Terms
-            </Text>{' '}
-            and{' '}
-            <Text variant="caption" tone="secondary" onPress={() => router.push('/legal/privacy')}>
+            </Text>{" "}
+            and{" "}
+            <Text
+              variant="caption"
+              tone="secondary"
+              onPress={() => router.push("/legal/privacy")}
+            >
               Privacy Policy
             </Text>
             .
           </Text>
         </>
-      }>
+      }
+    >
       <Animated.View entering={FadeIn.duration(900)} style={styles.wheel}>
         <RouletteWheel size={wheelSize} />
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(250).duration(650)} style={styles.copy}>
+      <Animated.View
+        entering={FadeInDown.delay(250).duration(650)}
+        style={styles.copy}
+      >
         <Text variant="overline" tone="primary">
           Dinner Roulette
         </Text>
         <Text variant="display">
-          Decide dinner,{'\n'}
+          Decide dinner,{"\n"}
           <Accent>together.</Accent>
         </Text>
         <Text tone="secondary" style={styles.sub}>
-          Two people, a few swipes, one answer. You both find out at the same moment, every evening.
+          Two people, a few swipes, one answer. You both find out at the same
+          moment, every evening.
         </Text>
       </Animated.View>
     </Screen>
@@ -54,8 +70,12 @@ export default function Welcome() {
 }
 
 const styles = StyleSheet.create({
-  content: { justifyContent: 'space-between', paddingTop: Spacing.xxl, paddingBottom: Spacing.lg },
-  wheel: { alignItems: 'center' },
+  content: {
+    justifyContent: "space-between",
+    paddingTop: Spacing.xxl,
+    paddingBottom: Spacing.lg,
+  },
+  wheel: { alignItems: "center" },
   copy: { gap: Spacing.md },
   sub: { maxWidth: 420 },
 });
