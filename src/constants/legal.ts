@@ -87,7 +87,7 @@ export const LEGAL: Record<LegalDoc, { title: string; sections: Section[] }> = {
           'Account: your email address and the first name you choose.',
           'What you tell us: food preferences (diet, allergies, dislikes, cuisines), your swipes, and your couple settings such as match goal and reveal time.',
           'Your couple: the time zone of the phone that created it, and who your partner is.',
-          'Recipes you submit, if you do, including any photo.',
+          'Recipes you submit, if you do, including any photo, and the reports and blocks you make about other people\'s recipes.',
           'Notifications: a reminder at the reveal time is scheduled on your phone itself; nothing is sent from a server for it.',
           'We do not use advertising or analytics trackers, and we do not sell data.',
         ],
@@ -108,7 +108,7 @@ export const LEGAL: Record<LegalDoc, { title: string; sections: Section[] }> = {
       {
         heading: 'How long we keep it',
         body: [
-          'For as long as you have an account. When you delete your account in Settings, your profile, preferences, swipes and notices are deleted straight away. If you created the couple, it ends and your partner keeps their own account; if you were invited, your partner keeps the couple without your data.',
+          'For as long as you have an account. When you delete your account in Settings, your profile, preferences, swipes, notices and any recipes you wrote are deleted straight away. If you created the couple, it ends and your partner keeps their own account; if you were invited, your partner keeps the couple without your data.',
         ],
       },
       {

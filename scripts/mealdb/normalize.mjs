@@ -5,14 +5,14 @@ import { DIET_OVERRIDES } from './overrides.mjs';
 export const DINNER_CATEGORIES = new Set([
   'Beef', 'Chicken', 'Pork', 'Lamb', 'Goat', 'Seafood', 'Pasta', 'Vegetarian', 'Vegan',
 ]);
-const MEAT_CATEGORIES = new Set(['Beef', 'Chicken', 'Pork', 'Lamb', 'Goat']);
+export const MEAT_CATEGORIES = new Set(['Beef', 'Chicken', 'Pork', 'Lamb', 'Goat']);
 
 // Whole words only: a bare "oat" would also match "goats cheese".
 const NON_DAIRY = /coconut|almond|\bsoy|\boats?\b|\brice\b|cashew|peanut|\bnut\b|cocoa|shea|butter ?beans?|butternut|buttercup|cream of tartar|vegan|plant.based|dairy.free|non.dairy/;
 const NOT_GLUTEN_FLOUR = /corn|rice|gram|chickpea|almond|coconut|buckwheat|potato|tapioca|cassava|gluten.free|\boat/;
 
 // [allergen id, matches, optional exclusion]. Matched against each lower-cased ingredient name.
-const ALLERGEN_RULES = [
+export const ALLERGEN_RULES = [
   ['gluten', /\b(flour|bread|breadcrumbs?|panko|pasta|spaghetti|linguine|fettuccine|tagliatelle|penne|macaroni|rigatoni|lasagn[ae]|noodles?|vermicelli|couscous|barley|rye|semolina|bulgur|bulghur|seitan|wheat|pastry|pita|pitta|tortillas?|naan|buns?|biscuits?|crackers?|soy sauce|beer|ale|stout|orzo|gnocchi|filo|phyllo|croutons?|baguette|ciabatta|brioche|dough|teriyaki|worcestershire)\b/, NOT_GLUTEN_FLOUR],
   ['dairy', /\b(milk|cream|butter|ghee|cheese|cheddar|parmesan|parmigiano|mozzarella|mozarella|feta|ricotta|mascarpone|halloumi|paneer|gruy[eè]re|brie|camembert|gorgonzola|pecorino|manchego|emmental|edam|gouda|yogh?urt|kefir|buttermilk|custard|whey|casein|cr[eè]me fra[iî]che|labneh|skyr|quark|ice cream)\b/, NON_DAIRY],
   ['eggs', /\b(eggs?|mayonnaise|mayo|meringue)\b/, /vegan|egg.free|plant.based/],
@@ -24,18 +24,18 @@ const ALLERGEN_RULES = [
   ['sesame', /\b(sesame|tahini|hummus)\b/],
 ];
 
-const MEAT = /\b(beef|steaks?|mince|veal|brisket|chicken|turkey|duck|goose|pork|bacon|ham|gammon|sausages?|chorizo|salami|pepperoni|prosciutto|pancetta|lamb|mutton|goat|venison|rabbit|oxtail|ribs?|liver|kidney|lard|suet|gelatine?|marrow|meatballs?|mortadella|bresaola|pat[eé])\b/;
-const NOT_MEAT = /kidney beans?/;
+export const MEAT = /\b(beef|steaks?|mince|veal|brisket|chicken|turkey|duck|goose|pork|bacon|ham|gammon|sausages?|chorizo|salami|pepperoni|prosciutto|pancetta|lamb|mutton|goat|venison|rabbit|oxtail|ribs?|liver|kidney|lard|suet|gelatine?|marrow|meatballs?|mortadella|bresaola|pat[eé])\b/;
+export const NOT_MEAT = /kidney beans?/;
 // A meat stock cube is the one animal ingredient a cook swaps without changing the dish: "chicken stock cube"
 // becomes "vegetable stock cube". Dishes whose only meat is a stock count as vegetarian, with the swap noted.
-const MEAT_STOCK = /^(chicken|beef|pork|lamb|meat|ham|turkey|duck)\s+(stock|bouillon|broth)\b/;
-const MEAT_WORD = /\b(chicken|beef|pork|lamb|meat|ham|turkey|duck)\b/;
-const NON_VEGAN = /\b(honey|gelatine?)\b/;
+export const MEAT_STOCK = /^(chicken|beef|pork|lamb|meat|ham|turkey|duck)\s+(stock|bouillon|broth)\b/;
+export const MEAT_WORD = /\b(chicken|beef|pork|lamb|meat|ham|turkey|duck)\b/;
+export const NON_VEGAN = /\b(honey|gelatine?)\b/;
 
 // Dish family, derived from the title: lets a deck avoid three rice dishes or three pies in a row.
 // First matching rule wins, so order matters (specific before general). Unmatched dishes fall back to the
 // category ("meat", "seafood") and finally "other". Reviewed against the whole catalog: see normalize.test.mjs.
-const DISH_FAMILIES = [
+export const DISH_FAMILIES = [
   ['soup', /\b(soups?|broth|chowder|bisque|bors[c]h|borscht|bortsch|shchi|ukha|pho|laksa|congee|waterzooi|ribollita|pistou|fiskesuppe|tom (yum|kha)|chorba|leblebi)\b/i],
   ['salad', /\bsalad\b/i],
   ['pasta', /\b(pasta|mac and cheese|spaghetti|linguine|fettuccine|fettucine|penne|rigatoni|lasagn[ae]|cannelloni|macaroni|carbonara|bolognese|fideu[aà]|alfredo|puttanesca|cassoulet)\b/i],

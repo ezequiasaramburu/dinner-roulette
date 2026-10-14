@@ -212,3 +212,27 @@ editing `couples.reveal_time`, remember a stamped deck stays revealed; use a fre
 - **Terms and Privacy:** draft text in `src/constants/legal.ts`, shown at `/legal/terms` and `/legal/privacy` (reachable
   signed out too). Fill in the operator name and support email and get it reviewed before submitting to the stores; the
   stores also need the privacy policy at a public URL (the landing page).
+
+## Community recipes
+
+Anyone can submit a recipe (`submit_recipe`, migration `0023_community_recipes.sql`). It starts `pending` and is only
+published (`approved`) after review: open the `recipes` table in Supabase Studio, filter `status = pending`, read it,
+and change `status` to `approved` or `rejected` (put the reason in `review_note`). A recipe appears in queues built after
+it is approved.
+
+- **Authors write ingredients and steps only.** Everything the app filters on is derived from the ingredients by a
+  trigger (`recipes_derive`) using rules in tables (`allergen_rules`, `diet_patterns`, `dish_family_rules`):
+  `ingredient_names`, `category` (main ingredient), `dish_type`, `allergens`, `diet_flags`, `swaps`. Editing a recipe's
+  title or ingredients in Studio re-derives them. The rules are ported from `scripts/mealdb/normalize.mjs`;
+  `recipes.test.mjs` checks they reproduce the importer's output on the whole catalogue (except the three hand-corrected
+  recipes in `overrides.mjs`). Change a rule in both places.
+- **Each viewer's exclusions apply at query time**, exactly as for the catalogue: community recipes go through the same
+  `build_deck` filters (diet, allergens, hard dislikes, free-text terms).
+- **Limits:** 3 to 30 ingredients, 1 to 25 steps, no links, 5 submissions per day, 10 waiting for review. Terms must be
+  accepted on the first submission (`profiles.terms_accepted_at`). Photos must live in the author's own folder of the
+  `recipe-photos` bucket.
+- **Report** (`report_recipe`): the reporter's couple stops seeing the recipe at once; three different reporters send an
+  approved recipe back to `pending`. **Block** (`block_author`, takes a recipe so the app never handles another person's
+  id): hides the author's recipes for the whole couple. It is refused for yourself and your partner, ignored when queues
+  are built, and removed when two people pair up. Authors are never told.
+- Deleting an account deletes the recipes the person wrote.
