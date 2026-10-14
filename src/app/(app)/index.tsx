@@ -8,6 +8,7 @@ import { Accent, Avatar, Button, Card, MenuButton, MenuItem, Pill, Screen, SideM
 import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
 import { thumbnail, useSwipeFeed } from '@/hooks/use-swipe-feed';
+import { useDismissNotice, useNotices } from '@/hooks/use-notices';
 import { useProfile } from '@/hooks/use-profile';
 import { useReveal } from '@/hooks/use-reveal';
 import { useTheme } from '@/hooks/use-theme';
@@ -37,6 +38,8 @@ export default function Home() {
   const bothReady = partnerReady && !!couple?.me_ready;
   const feed = useSwipeFeed(bothReady);
   const reveal = useReveal(bothReady);
+  const notices = useNotices(bothReady);
+  const dismissNotice = useDismissNotice();
   const refetchReveal = reveal.refetch;
   const revealAt = reveal.data?.reveal_at;
   const revealed = reveal.data?.status === 'revealed' ? reveal.data : undefined;
@@ -119,6 +122,22 @@ export default function Home() {
           {me}, <Accent>dinner awaits.</Accent>
         </Text>
       </Animated.View>
+
+      {notices.data?.map((notice) => (
+        <Animated.View key={notice.id} entering={FadeInDown.duration(400)}>
+          <Card tone="muted" padding="lg">
+            <Text variant="bodyStrong">
+              {partner} changed matches per day from {notice.from_value} to {notice.to_value}
+            </Text>
+            <Text variant="caption" tone="secondary" style={styles.noticeText}>
+              You&apos;ll keep swiping until you&apos;ve both liked{' '}
+              {notice.to_value === 1 ? 'a dish' : `${notice.to_value} of the same dishes`}. You can change it in
+              Settings.
+            </Text>
+            <Button title="Got it" variant="secondary" onPress={() => dismissNotice.mutate(notice.id)} />
+          </Card>
+        </Animated.View>
+      ))}
 
       {revealed ? (
         <Animated.View entering={FadeInDown.delay(60).duration(500)}>
@@ -340,5 +359,6 @@ const styles = StyleSheet.create({
   thumb: { width: 56, height: 56, borderRadius: 28, borderWidth: 3 },
   thumbOverlap: { marginLeft: -14 },
   more: { alignItems: 'center', justifyContent: 'center' },
+  noticeText: { marginTop: Spacing.xs, marginBottom: Spacing.md },
   sortedTitle: { marginTop: Spacing.md },
 });

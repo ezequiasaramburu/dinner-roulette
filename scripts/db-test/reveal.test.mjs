@@ -226,3 +226,55 @@ describe('couple settings', () => {
     await assert.rejects(settings(outsider, 2, null, null), /couple_not_ready/);
   });
 });
+
+describe('notices', () => {
+  const settings = (u, ...args) => call(u, 'select public.update_couple_settings($1, $2, $3) as r', args);
+  const mine = (u) => asUser(db, u, async () => (await db.query('select id, kind, from_value, to_value from public.notices')).rows);
+  const dismiss = (u, id) => call(u, 'select public.dismiss_notice($1) as r', [id]);
+
+  test('changing the match goal leaves a notice for the partner only', async () => {
+    const { a, b } = await makeCouple({ goal: 2 });
+    await settings(a, 3, null, null);
+    assert.deepEqual(await mine(a), []);
+    const [n] = await mine(b);
+    assert.deepEqual([n.kind, n.from_value, n.to_value], ['match_goal_changed', 2, 3]);
+  });
+
+  test('several changes collapse into one notice, and changing it back leaves none', async () => {
+    const { a, b } = await makeCouple({ goal: 2 });
+    await settings(a, 3, null, null);
+    await settings(a, 5, null, null);
+    let notices = await mine(b);
+    assert.equal(notices.length, 1);
+    assert.deepEqual([notices[0].from_value, notices[0].to_value], [2, 5]);
+    await settings(a, 2, null, null);
+    assert.deepEqual(await mine(b), []);
+  });
+
+  test('other settings and unchanged values make no notice', async () => {
+    const { a, b } = await makeCouple({ goal: 2 });
+    await settings(a, 2, 'instant', '18:00');
+    await settings(a, null, 'scheduled', null);
+    assert.deepEqual(await mine(b), []);
+  });
+
+  test('acting on the goal yourself clears the notice you were holding, and the partner gets a fresh one', async () => {
+    const { a, b } = await makeCouple({ goal: 2 });
+    await settings(a, 3, null, null);
+    await settings(b, 4, null, null);
+    assert.deepEqual(await mine(b), []);
+    const [n] = await mine(a);
+    assert.deepEqual([n.from_value, n.to_value], [3, 4]);
+  });
+
+  test('dismissing removes it; only the recipient can dismiss, nobody can read or write notices directly', async () => {
+    const { a, b } = await makeCouple({ goal: 2 });
+    await settings(a, 3, null, null);
+    const [n] = await mine(b);
+    await dismiss(a, n.id); // the sender's attempt does nothing
+    assert.equal((await mine(b)).length, 1);
+    await dismiss(b, n.id);
+    assert.deepEqual(await mine(b), []);
+    await assert.rejects(asUser(db, b, () => db.query("insert into public.notices (recipient_id, kind) values ($1, 'match_goal_changed')", [b])), /row-level security|permission denied/);
+  });
+});

@@ -162,3 +162,10 @@ moment the match goal is reached (`daily_decks.revealed_at`, so it sticks even i
 closed until tomorrow. There are no fallbacks: a day that doesn't reach the goal reveals nothing. An open app hears
 about it through Realtime (`0010`); a push notification for a partner who isn't in the app comes with the push work.
 `update_couple_settings(match_goal, reveal_mode, reveal_time)` changes any of the three; omitted ones stay.
+
+### Notices
+
+`notices` (`0011_notices.sql`) holds short in-app messages one partner's action leaves for the other. Changing the match
+goal tells the partner on their home screen ("Daryna changed matches per day from 2 to 3", with "Got it" to dismiss).
+Changes collapse into one notice from the original to the latest value, changing it back leaves none, and changing the
+goal yourself clears the notice you were holding. Readable only by the recipient; created by `update_couple_settings`.
