@@ -13,7 +13,7 @@ Expo (SDK 57) · Expo Router · TypeScript · Supabase · TanStack Query · Reac
 - [x] Phase 4: food preferences (diet, allergies, cuisines, dislikes)
 - [x] Phase 5: recipe catalog (473 dinners imported from TheMealDB)
 - [x] Phase 6: daily deck builder (server-side filters, ranking, variety, no-repeat window)
-- [x] Phase 7: swipe screen (gesture card stack, like/pass, undo, partner progress)
+- [x] Phase 7: swiping (endless queue, match goal, gesture card stack, settings)
 - [ ] Phases 8–9: matching and reveal, launch polish
 
 ## Setup (local, no cloud needed)
@@ -99,8 +99,8 @@ The app icon is still the Expo placeholder.
 
 ## How decks are built
 
-`public.build_deck` (see `supabase/migrations/0005_decks.sql`) picks 12 dishes per couple per local day, the same for both
-partners. It is created on the first `get_or_create_today_deck()` call of the day.
+`public.build_deck` (see `supabase/migrations/0005_decks.sql`) ranks the dishes for a couple. The swipe queue is that
+ranking, built once per dinner cycle (see "Swiping and matches").
 
 | Tier | Filters | Behaviour |
 |---|---|---|
@@ -114,13 +114,24 @@ The dislike rules live in the `dislike_rules` table (regex over ingredient names
 `scripts/mealdb/exclude.mjs` (sauces, sides, desserts, duplicates and fast-food clones are removed) and each dish gets a
 family (`dish_type`) from its title. Add to the blocklist whenever a bad dish shows up in a deck.
 
-## Swiping
+## Swiping and matches
 
-Each person swipes the 12 dishes of the day (right = yum, left = pass; buttons and undo are there too). Choices are stored
-by `record_swipe` / `undo_last_swipe` (see `supabase/migrations/0006_swipes.sql`), which check that the deck belongs to the
-caller's couple and is still today's. Row-level security means you can only read **your own** swipes. The deck payload
-carries your swipes plus how *many* dishes your partner has swiped, never which ones, so the match stays a surprise
-until the reveal.
+There is no daily quota and no "N left". Each couple has **one ranked queue per dinner cycle** (a cycle runs from one
+reveal to the next, so swiping after tonight's reveal counts toward tomorrow). Both partners walk the same queue in the
+same order at their own pace, a few swipes at a time, whenever they like.
+
+A **match** is a dish both partners liked. The couple's **match goal** (default 2, settable 1 to 5 in Settings, by either
+partner) is how many matches get revealed together at the reveal time. When the goal is reached, swiping ends for both
+of them; the matches themselves stay hidden until the reveal.
+
+Server pieces (`supabase/migrations/0006_swipes.sql`, `0007_match_goal_queue.sql`):
+
+- `get_swipe_feed()` creates the cycle's queue on first use and returns the caller's next few dishes plus a status
+  (`ready`, `goal_reached`, `exhausted`). No counts, nothing about the partner's choices.
+- `record_swipe()` / `undo_last_swipe()` check the deck belongs to the caller's couple, is the current cycle's, and isn't
+  closed by the goal. Row-level security lets you read only your own swipes.
+- The queue is built once per cycle with `build_deck(..., 100)`: the full ranked list, so the order is stable.
+  "Recently seen" means dishes the couple actually swiped in the last 30 days, not everything that was queued.
 
 Gotcha for SQL changes: the Supabase API role runs with `pg_safeupdate`, which rejects any `UPDATE`/`DELETE` without a
 `WHERE`. `npm run test:db` scans the migrations for that, but always try new functions through the real API too.

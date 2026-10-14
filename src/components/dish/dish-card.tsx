@@ -4,13 +4,13 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Pill, Text } from '@/components/ui';
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
-import { thumbnail, type DeckRecipe } from '@/hooks/use-deck';
+import { thumbnail, type Dish } from '@/hooks/use-swipe-feed';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 const DIET_LABEL: Record<string, string> = { vegan: 'Vegan', vegetarian: 'Vegetarian', pescatarian: 'Pescatarian' };
 
 /** The visual card for one dish: big photo, then name, cuisine and what to watch out for. */
-export function DishCard({ recipe, style }: { recipe: DeckRecipe; style?: StyleProp<ViewStyle> }) {
+export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<ViewStyle> }) {
   const theme = useTheme();
   const scheme = useScheme();
 

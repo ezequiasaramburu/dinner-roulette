@@ -68,6 +68,7 @@ export default function AppLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="preferences" />
         <Stack.Screen name="swipe" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="settings" />
       </Stack.Protected>
     </Stack>
   );

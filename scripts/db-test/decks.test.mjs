@@ -224,182 +224,237 @@ describe('build_deck ranking', () => {
   });
 });
 
-describe('get_or_create_today_deck', () => {
-  let a, b, c, couple;
-
-  before(async () => {
-    a = await addUser(db, 'a@test.dev');
-    b = await addUser(db, 'b@test.dev');
-    c = await addUser(db, 'c@test.dev');
-    couple = (await db.query("insert into couples (owner_id, timezone) values ($1, 'Pacific/Auckland') returning id", [a])).rows[0].id;
-    await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [couple, a, b]);
-  });
-
-  const call = (user) => asUser(db, user, async () => (await db.query('select public.get_or_create_today_deck() as deck')).rows[0].deck);
-
-  test('needs both partners to have finished their preferences', async () => {
-    await assert.rejects(call(a), /couple_not_ready/);
-    await db.query("insert into preferences (user_id, diet) values ($1, 'none')", [a]);
-    await assert.rejects(call(a), /couple_not_ready/);
-    await db.query("insert into preferences (user_id, diet, allergens, disliked) values ($1, 'none', '{shellfish}', '{olives}')", [b]);
-  });
-
-  test('someone outside any couple cannot get a deck', async () => {
-    await assert.rejects(call(c), /couple_not_ready/);
-  });
-
-  test('both partners get the same deck, and repeat calls are idempotent', async () => {
-    const first = await call(a);
-    const second = await call(b);
-    const again = await call(a);
-    assert.equal(first.recipes.length, 12);
-    assert.equal(first.deck_id, second.deck_id);
-    assert.equal(first.deck_id, again.deck_id);
-    assert.deepEqual(first.recipes.map((r) => r.id), second.recipes.map((r) => r.id));
-    assert.equal((await db.query('select count(*)::int n from daily_decks where couple_id = $1', [couple])).rows[0].n, 1);
-  });
-
-  test("uses the couple's local date, and respects the partner's allergy", async () => {
-    const deck = await call(a);
-    const expected = (await db.query("select (now() at time zone 'Pacific/Auckland')::date::text d")).rows[0].d;
-    assert.equal(deck.deck_date, expected);
-    assert.ok(deck.recipes.every((r) => !r.allergens.includes('shellfish')));
-  });
-
-  test('the payload does not leak the recipe (ingredients and steps stay hidden until the reveal)', async () => {
-    const deck = await call(a);
-    for (const r of deck.recipes) {
-      assert.equal(r.ingredients, undefined);
-      assert.equal(r.steps, undefined);
-      assert.ok(r.title && r.image_url);
-    }
-  });
-
-  test('tomorrow avoids everything served today', async () => {
-    const today = await call(a);
-    // Pretend today's deck was yesterday's, then ask for a fresh one.
-    await db.query("update daily_decks set deck_date = deck_date - 1 where couple_id = $1", [couple]);
-    const next = await call(a);
-    const seen = new Set(today.recipes.map((r) => r.id));
-    assert.notEqual(next.deck_id, today.deck_id);
-    assert.ok(next.recipes.every((r) => !seen.has(r.id)), 'a dish repeated within 30 days');
-    assert.equal(next.repeat_count, 0);
-  });
-
-  test('row level security: members read their deck, outsiders and clients cannot touch internals', async () => {
-    const own = await asUser(db, a, async () => (await db.query('select count(*)::int n from daily_decks')).rows[0].n);
-    const outsider = await asUser(db, c, async () => (await db.query('select count(*)::int n from daily_decks')).rows[0].n);
-    assert.ok(own >= 1);
-    assert.equal(outsider, 0);
-    await assert.rejects(asUser(db, a, () => db.query("select * from public.build_deck('{}', '{}')")), /permission denied/);
-    await assert.rejects(asUser(db, a, () => db.query('select * from public.recipe_dislike_hits limit 1')), /permission denied/);
-    const rules = await asUser(db, a, async () => (await db.query('select * from public.dislike_rules')).rows.length);
-    assert.equal(rules, 0, 'dislike_rules is internal: RLS with no policies');
-    await assert.rejects(asUser(db, a, () => db.query("insert into daily_decks (couple_id, deck_date, recipe_ids, pool_size) values ($1, current_date + 5, '{}', 0)", [couple])), /row-level security|permission denied/);
-  });
-});
-
-describe('swipes', () => {
-  let a, b, c, d2, couple, deck, otherCouple, otherDeck;
-
-  const callDeck = (user) => asUser(db, user, async () => (await db.query('select public.get_or_create_today_deck() as deck')).rows[0].deck);
+describe('swipe feed', () => {
+  const feed = (user) => asUser(db, user, async () => (await db.query('select public.get_swipe_feed() as f')).rows[0].f);
   const swipe = (user, deckId, recipeId, liked) =>
-    asUser(db, user, () => db.query('select public.record_swipe($1, $2, $3)', [deckId, recipeId, liked]));
+    asUser(db, user, async () => (await db.query('select public.record_swipe($1, $2, $3) as r', [deckId, recipeId, liked])).rows[0].r);
   const undo = (user, deckId) => asUser(db, user, async () => (await db.query('select public.undo_last_swipe($1) as r', [deckId])).rows[0].r);
-  const mine = (user) => asUser(db, user, async () => (await db.query('select recipe_id, liked from public.swipes')).rows);
+  const setGoal = (user, n) => asUser(db, user, () => db.query('select public.update_couple_settings($1)', [n]));
+  const mineSwipes = (user) => asUser(db, user, async () => (await db.query('select recipe_id, liked from public.swipes')).rows);
 
-  before(async () => {
-    a = await addUser(db, 'sw-a@test.dev');
-    b = await addUser(db, 'sw-b@test.dev');
-    c = await addUser(db, 'sw-c@test.dev');
-    d2 = await addUser(db, 'sw-d@test.dev');
-    couple = (await db.query("insert into couples (owner_id, timezone) values ($1, 'Europe/Rome') returning id", [a])).rows[0].id;
+  let n = 0;
+  async function makeCouple({ tz = 'Pacific/Auckland', reveal = '17:00', prefsA = prefs(), prefsB = prefs() } = {}) {
+    n++;
+    const a = await addUser(db, `fa${n}@test.dev`);
+    const b = await addUser(db, `fb${n}@test.dev`);
+    const couple = (await db.query('insert into couples (owner_id, timezone, reveal_time) values ($1, $2, $3) returning id', [a, tz, reveal])).rows[0].id;
     await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [couple, a, b]);
-    otherCouple = (await db.query("insert into couples (owner_id, timezone) values ($1, 'Europe/Rome') returning id", [c])).rows[0].id;
-    await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [otherCouple, c, d2]);
-    for (const u of [a, b, c, d2]) await db.query("insert into preferences (user_id, diet) values ($1, 'none')", [u]);
-    deck = await callDeck(a);
-    otherDeck = await callDeck(c);
-  });
-
-  test('a fresh deck has no swipes yet', async () => {
-    assert.deepEqual(deck.my_swipes, {});
-    assert.equal(deck.partner_swiped, 0);
-  });
-
-  test('swiping stores the choice; the payload shows my swipes and only the COUNT of my partner\'s', async () => {
-    const [r1, r2, r3] = deck.recipes.map((r) => r.id);
-    await swipe(a, deck.deck_id, r1, true);
-    await swipe(a, deck.deck_id, r2, false);
-    await swipe(b, deck.deck_id, r3, true);
-
-    const forA = await callDeck(a);
-    assert.deepEqual(forA.my_swipes, { [r1]: true, [r2]: false });
-    assert.equal(forA.partner_swiped, 1);
-    assert.ok(!JSON.stringify(forA).includes(`"${r3}":`), "the partner's choices must not leak");
-
-    const forB = await callDeck(b);
-    assert.deepEqual(forB.my_swipes, { [r3]: true });
-    assert.equal(forB.partner_swiped, 2);
-  });
-
-  test("row level security: you can read only your own swipes", async () => {
-    const rows = await mine(a);
-    assert.equal(rows.length, 2);
-    const outsider = await mine(c);
-    assert.equal(outsider.length, 0);
-    // With RLS and no delete policy this either errors or matches zero rows; either way nothing is deleted.
-    try {
-      await asUser(db, a, () => db.query('delete from public.swipes where true'));
-    } catch {
-      /* denied is fine */
+    for (const [u, p] of [[a, prefsA], [b, prefsB]]) {
+      await db.query('insert into preferences (user_id, diet, allergens, cuisines, disliked) values ($1, $2, $3, $4, $5)', [u, p.diet, p.allergens, p.cuisines, p.disliked]);
     }
-    assert.equal((await mine(a)).length, 2);
+    return { a, b, couple };
+  }
+
+  test('needs both partners to have finished their preferences; outsiders get nothing', async () => {
+    const a = await addUser(db, 'np-a@test.dev'), b = await addUser(db, 'np-b@test.dev'), c = await addUser(db, 'np-c@test.dev');
+    const couple = (await db.query("insert into couples (owner_id) values ($1) returning id", [a])).rows[0].id;
+    await db.query("insert into couple_members (couple_id, user_id, role) values ($1, $2, 'owner'), ($1, $3, 'partner')", [couple, a, b]);
+    await assert.rejects(feed(a), /couple_not_ready/);
+    await db.query("insert into preferences (user_id) values ($1)", [a]);
+    await assert.rejects(feed(a), /couple_not_ready/);
+    await db.query("insert into preferences (user_id) values ($1)", [b]);
+    assert.equal((await feed(a)).status, 'ready');
+    await assert.rejects(feed(c), /couple_not_ready/);
   });
 
-  test('changing your mind overwrites the swipe instead of duplicating it', async () => {
-    const r1 = deck.recipes[0].id;
-    await swipe(a, deck.deck_id, r1, false);
-    const rows = (await mine(a)).filter((r) => r.recipe_id === r1);
+  test('the feed shows the next few dishes and carries no counts, progress or partner info', async () => {
+    const { a } = await makeCouple();
+    const f = await feed(a);
+    assert.equal(f.status, 'ready');
+    assert.equal(f.dishes.length, 6);
+    assert.equal(f.has_swiped, false);
+    assert.equal(typeof f.for_today, 'boolean');
+    assert.deepEqual(Object.keys(f).sort(), ['cycle_date', 'deck_id', 'dishes', 'for_today', 'has_swiped', 'status']);
+    for (const d of f.dishes) {
+      assert.equal(d.ingredients, undefined);
+      assert.equal(d.steps, undefined);
+      assert.ok(d.title && d.image_url);
+    }
+  });
+
+  test('both partners walk the same queue in the same order', async () => {
+    const { a, b } = await makeCouple();
+    const fa = await feed(a), fb = await feed(b);
+    assert.equal(fa.deck_id, fb.deck_id);
+    assert.deepEqual(fa.dishes.map((d) => d.id), fb.dishes.map((d) => d.id));
+  });
+
+  test('a swiped dish leaves my feed but not my partner\'s', async () => {
+    const { a, b } = await makeCouple();
+    const f = await feed(a);
+    const first = f.dishes[0].id;
+    await swipe(a, f.deck_id, first, false);
+    assert.ok(!(await feed(a)).dishes.some((d) => d.id === first));
+    assert.equal((await feed(b)).dishes[0].id, first);
+    assert.equal((await feed(a)).has_swiped, true);
+  });
+
+  test('the queue is endless: 40 swipes later there are still fresh dishes, none repeated', async () => {
+    const { a } = await makeCouple();
+    const seen = new Set();
+    for (let i = 0; i < 40; i++) {
+      const f = await feed(a);
+      assert.equal(f.status, 'ready', `ran dry after ${i} swipes`);
+      const dish = f.dishes[0];
+      assert.ok(!seen.has(dish.id), `${dish.title} came up twice`);
+      seen.add(dish.id);
+      await swipe(a, f.deck_id, dish.id, false);
+    }
+    assert.equal(seen.size, 40);
+  });
+
+  test('a match is a dish BOTH liked; the default goal of 2 ends swiping for both, and the app is told', async () => {
+    const { a, b } = await makeCouple();
+    const f = await feed(a);
+    const [d1, d2, d3] = f.dishes.map((d) => d.id);
+
+    await swipe(a, f.deck_id, d1, true);
+    assert.equal((await swipe(b, f.deck_id, d1, true)).status, 'ready', 'one match is not enough');
+
+    await swipe(a, f.deck_id, d3, true);
+    assert.equal((await swipe(b, f.deck_id, d3, false)).status, 'ready', 'a like and a pass is not a match');
+
+    await swipe(a, f.deck_id, d2, true);
+    assert.equal((await swipe(b, f.deck_id, d2, true)).status, 'goal_reached');
+
+    for (const user of [a, b]) {
+      const after = await feed(user);
+      assert.equal(after.status, 'goal_reached');
+      assert.deepEqual(after.dishes, []);
+    }
+  });
+
+  test('once the goal is reached, swiping and undo are closed; raising the goal reopens the queue', async () => {
+    const { a, b } = await makeCouple();
+    await setGoal(a, 1);
+    const f = await feed(a);
+    const [d1, d2] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, true);
+    assert.equal((await swipe(b, f.deck_id, d1, true)).status, 'goal_reached');
+    await assert.rejects(swipe(a, f.deck_id, d2, true), /deck_closed/);
+    await assert.rejects(undo(b, f.deck_id), /deck_closed/);
+    await setGoal(b, 3);
+    assert.equal((await feed(a)).status, 'ready');
+    await swipe(a, f.deck_id, d2, true);
+  });
+
+  test('partners at different paces still match: the slower one catches up on dishes the other liked earlier', async () => {
+    const { a, b } = await makeCouple();
+    const f = await feed(a);
+    const [d1, d2, d3] = f.dishes.map((d) => d.id);
+    for (const d of [d1, d2, d3]) await swipe(a, f.deck_id, d, true); // morning
+    // lunch: b starts from the same first dishes
+    assert.deepEqual((await feed(b)).dishes.slice(0, 3).map((d) => d.id), [d1, d2, d3]);
+    assert.equal((await swipe(b, f.deck_id, d1, true)).status, 'ready');
+    assert.equal((await swipe(b, f.deck_id, d2, true)).status, 'goal_reached');
+  });
+
+  test('undo takes back my last swipe and un-matches it', async () => {
+    const { a, b } = await makeCouple();
+    const f = await feed(a);
+    const [d1] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(b, f.deck_id, d1, true);
+    assert.equal(await undo(b, f.deck_id), d1);
+    assert.ok((await feed(b)).dishes.some((d) => d.id === d1), 'the dish is back in my feed');
+    assert.equal(await undo(b, f.deck_id), null, 'nothing left to undo');
+  });
+
+  test('changing your mind overwrites the swipe', async () => {
+    const { a } = await makeCouple();
+    const f = await feed(a);
+    const d1 = f.dishes[0].id;
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(a, f.deck_id, d1, false);
+    const rows = (await mineSwipes(a)).filter((r) => r.recipe_id === d1);
     assert.equal(rows.length, 1);
     assert.equal(rows[0].liked, false);
   });
 
-  test('undo removes the most recent swipe and reports which dish it was', async () => {
-    const r4 = deck.recipes[3].id;
-    await swipe(a, deck.deck_id, r4, true);
-    assert.equal(await undo(a, deck.deck_id), r4);
-    assert.ok(!(await mine(a)).some((r) => r.recipe_id === r4));
-    // Partner's swipes are untouched.
-    assert.equal((await mine(b)).length, 1);
+  test('a cycle runs reveal to reveal: after the reveal time, swipes count toward tomorrow', async () => {
+    const { a, couple } = await makeCouple({ reveal: '23:59:59' }); // reveal is still ahead today
+    const before = await feed(a);
+    assert.equal(before.for_today, true);
+    await db.query("update couples set reveal_time = '00:00' where id = $1", [couple]); // reveal has passed today
+    const after = await feed(a);
+    assert.equal(after.for_today, false);
+    assert.notEqual(after.deck_id, before.deck_id);
+    assert.ok(after.cycle_date > before.cycle_date);
   });
 
-  test('undo with nothing to undo is harmless', async () => {
-    assert.equal(await undo(d2, otherDeck.deck_id), null);
+  test('a small pool ends gracefully with "exhausted" after every fitting dish was swiped', async () => {
+    const tiny = prefs({ diet: 'vegan', allergens: ALLERGENS });
+    const { a } = await makeCouple({ prefsA: tiny });
+    let swiped = 0, f = await feed(a);
+    while (f.status === 'ready' && swiped < 200) {
+      await swipe(a, f.deck_id, f.dishes[0].id, false);
+      swiped++;
+      f = await feed(a);
+    }
+    assert.equal(f.status, 'exhausted');
+    const deckSize = (await db.query('select cardinality(recipe_ids) n from daily_decks where id = $1', [f.deck_id])).rows[0].n;
+    assert.equal(swiped, deckSize);
   });
 
-  test('you cannot swipe a dish that is not in the deck', async () => {
-    const outside = recipes.find((r) => !deck.recipes.some((x) => x.id === r.id)).id;
-    await assert.rejects(swipe(a, deck.deck_id, outside, true), /recipe_not_in_deck/);
+  test('dishes the couple swiped recently are queued last tomorrow, while unseen ones come first', async () => {
+    const { a, couple } = await makeCouple();
+    const f = await feed(a);
+    const swipedToday = f.dishes.map((d) => d.id);
+    for (const id of swipedToday) await swipe(a, f.deck_id, id, false);
+    // Pretend that cycle was yesterday's.
+    await db.query('update daily_decks set deck_date = deck_date - 1 where couple_id = $1', [couple]);
+    const next = await feed(a);
+    assert.notEqual(next.deck_id, f.deck_id);
+    for (const d of next.dishes) assert.ok(!swipedToday.includes(d.id), `${d.title} was swiped yesterday but is first in line`);
   });
 
-  test("you cannot swipe on, or undo in, another couple's deck", async () => {
-    await assert.rejects(swipe(a, otherDeck.deck_id, otherDeck.recipes[0].id, true), /deck_not_found/);
-    await assert.rejects(undo(a, otherDeck.deck_id), /deck_not_found/);
-    await assert.rejects(swipe(a, '00000000-0000-0000-0000-000000000000', deck.recipes[0].id, true), /deck_not_found/);
+  test('the match goal: 1 to 5, either partner can change it, outsiders cannot', async () => {
+    const { a, b } = await makeCouple();
+    const outsider = await addUser(db, 'goal-out@test.dev');
+    await setGoal(b, 4);
+    assert.equal((await db.query("select match_goal from couples where id = (select couple_id from couple_members where user_id = $1)", [a])).rows[0].match_goal, 4);
+    for (const bad of [0, 6, -1]) await assert.rejects(setGoal(a, bad), /invalid_match_goal/);
+    await assert.rejects(setGoal(outsider, 2), /couple_not_ready/);
+    const state = await asUser(db, a, async () => (await db.query('select public.get_couple_state() as s')).rows[0].s);
+    assert.equal(state.match_goal, 4);
   });
 
-  test('a deck from a previous day is closed', async () => {
-    await db.query("update daily_decks set deck_date = deck_date - 1 where id = $1", [otherDeck.deck_id]);
-    await assert.rejects(swipe(c, otherDeck.deck_id, otherDeck.recipes[0].id, true), /deck_closed/);
-    await assert.rejects(undo(c, otherDeck.deck_id), /deck_closed/);
+  test('privacy: only my own swipes are readable, nothing writes directly, internals are locked', async () => {
+    const { a, b } = await makeCouple();
+    const outsider = await addUser(db, 'priv-out@test.dev');
+    const f = await feed(a);
+    const [d1, d2] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(b, f.deck_id, d2, true);
+
+    assert.deepEqual((await mineSwipes(a)).map((r) => r.recipe_id), [d1]);
+    assert.deepEqual((await mineSwipes(b)).map((r) => r.recipe_id), [d2]);
+    assert.equal((await mineSwipes(outsider)).length, 0);
+    // b's feed never says what a chose, or even how many dishes a has swiped.
+    const fb = await feed(b);
+    for (const key of ['my_swipes', 'partner_swiped', 'partner', 'liked', 'matches', 'match_count']) assert.ok(!(key in fb), key);
+
+    await assert.rejects(swipe(outsider, f.deck_id, d1, true), /deck_not_found/);
+    await assert.rejects(asUser(db, a, () => db.query('insert into public.swipes (deck_id, user_id, recipe_id, liked) values ($1, $2, $3, true)', [f.deck_id, a, f.dishes[3].id])), /row-level security|permission denied/);
+    for (const fn of ['deck_match_count($1)', 'swipe_guard($1)', 'dish_json(array[$1::uuid])']) {
+      await assert.rejects(asUser(db, a, () => db.query(`select public.${fn}`, [f.deck_id])), /permission denied/, fn);
+    }
+    const decks = (user) => asUser(db, user, async () => (await db.query('select count(*)::int n from public.daily_decks')).rows[0].n);
+    assert.ok((await decks(a)) >= 1);
+    assert.equal(await decks(outsider), 0);
   });
 
-  test('clients cannot write swipes directly or call the guard', async () => {
-    await assert.rejects(
-      asUser(db, a, () => db.query('insert into public.swipes (deck_id, user_id, recipe_id, liked) values ($1, $2, $3, true)', [deck.deck_id, a, deck.recipes[5].id])),
-      /row-level security|permission denied/,
-    );
-    await assert.rejects(asUser(db, a, () => db.query('select public.swipe_guard($1)', [deck.deck_id])), /permission denied/);
+  test("you cannot swipe a dish outside the queue or on another couple's deck", async () => {
+    const vegan = await makeCouple({ prefsA: prefs({ diet: 'vegan' }) });
+    const other = await makeCouple();
+    const f = await feed(vegan.a);
+    const queued = new Set((await db.query('select unnest(recipe_ids) id from daily_decks where id = $1', [f.deck_id])).rows.map((r) => r.id));
+    const notQueued = recipes.find((r) => !queued.has(r.id));
+    assert.ok(notQueued, 'a vegan queue must leave some dishes out');
+    await assert.rejects(swipe(vegan.a, f.deck_id, notQueued.id, true), /recipe_not_in_deck/);
+
+    const otherFeed = await feed(other.a);
+    await assert.rejects(swipe(vegan.a, otherFeed.deck_id, otherFeed.dishes[0].id, true), /deck_not_found/);
+    await assert.rejects(swipe(vegan.a, '00000000-0000-0000-0000-000000000000', f.dishes[0].id, true), /deck_not_found/);
   });
 });

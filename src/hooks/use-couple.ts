@@ -11,6 +11,8 @@ export type CoupleState = {
   timezone: string;
   /** "HH:MM" in the couple's timezone. */
   reveal_time: string;
+  /** How many matches the couple wants revealed each day (1 to 5). */
+  match_goal: number;
   /** The current user has finished choosing their food preferences. */
   me_ready: boolean;
   partner: { id: string; display_name: string | null; ready: boolean } | null;
@@ -112,4 +114,32 @@ export function useCoupleRealtime(coupleId: string | undefined) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coupleId]);
+}
+
+/** Change how many matches the couple wants each day. Either partner can do it. */
+export function useUpdateMatchGoal() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const key = ['couple', session?.user.id];
+
+  return useMutation({
+    mutationFn: async (goal: number) => {
+      const { error } = await supabase.rpc('update_couple_settings', { p_match_goal: goal });
+      if (error) throw error;
+    },
+    onMutate: async (goal) => {
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<CoupleState | null>(key);
+      queryClient.setQueryData<CoupleState | null>(key, (c) => (c ? { ...c, match_goal: goal } : c));
+      return { previous };
+    },
+    onError: (_e, _goal, context) => {
+      if (context?.previous) queryClient.setQueryData(key, context.previous);
+    },
+    // A new goal can reopen a finished queue (or close it), so the feed must be refetched.
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['feed'] });
+      queryClient.invalidateQueries({ queryKey: ['couple'] });
+    },
+  });
 }

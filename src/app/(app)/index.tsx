@@ -1,16 +1,15 @@
 import { Image } from 'expo-image';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { Accent, Avatar, Button, Card, Pill, Screen, Text } from '@/components/ui';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
-import { thumbnail, useTodayDeck } from '@/hooks/use-deck';
+import { thumbnail, useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useProfile } from '@/hooks/use-profile';
 import { useTheme } from '@/hooks/use-theme';
-import { supabase } from '@/lib/supabase';
 
 function greeting(hour: number) {
   if (hour < 5) return 'Late night';
@@ -25,7 +24,7 @@ export default function Home() {
   const { data: profile } = useProfile();
   const { data: couple, refetch } = useCouple();
   const partnerReady = !!couple?.partner?.ready;
-  const deck = useTodayDeck(partnerReady && !!couple?.me_ready);
+  const feed = useSwipeFeed(partnerReady && !!couple?.me_ready);
 
   // We can't see the partner's preferences (by design), so poll for their "ready" flag.
   useEffect(() => {
@@ -34,50 +33,33 @@ export default function Home() {
     return () => clearInterval(id);
   }, [couple?.me_ready, partnerReady, refetch]);
 
-  // While the home screen is showing, keep the partner's swipe count fresh.
-  const refetchDeck = deck.refetch;
-  const partnerSwiped = deck.data?.partner_swiped ?? 0;
-  const deckSize = deck.data?.recipes.length ?? 0;
+  // While the home screen is showing, check now and then whether the couple has reached its match goal.
+  const refetchFeed = feed.refetch;
+  const status = feed.data?.status;
   useFocusEffect(
     useCallback(() => {
-      if (!deckSize || partnerSwiped >= deckSize) return;
-      const id = setInterval(() => refetchDeck(), 20_000);
+      if (status !== 'ready') return;
+      const id = setInterval(() => refetchFeed(), 30_000);
       return () => clearInterval(id);
-    }, [deckSize, partnerSwiped, refetchDeck]),
+    }, [status, refetchFeed]),
   );
-
-  async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    if (error) Alert.alert('Could not sign out', error.message);
-  }
 
   // Everyone chooses their food preferences before seeing the home screen.
   if (couple && !couple.me_ready) return <Redirect href="/preferences" />;
 
   const me = profile?.display_name ?? 'You';
   const partner = couple?.partner?.display_name ?? 'Your partner';
-  const mySwiped = deck.data ? Object.keys(deck.data.my_swipes).length : 0;
-  const allSwiped = !!deck.data && mySwiped >= deck.data.recipes.length;
-
-  const swipeLabel = !deck.data
-    ? ''
-    : mySwiped === 0
-      ? 'Start swiping'
-      : allSwiped
-        ? 'Review your picks'
-        : `Keep swiping · ${deck.data.recipes.length - mySwiped} left`;
+  const revealTime = couple?.reveal_time ?? 'the reveal';
+  const forToday = feed.data?.for_today ?? true;
 
   return (
     <Screen
       footer={
         <>
-          {deck.data ? (
-            <Button title={swipeLabel} variant={allSwiped ? 'secondary' : 'primary'} onPress={() => router.push('/swipe')} />
+          {status === 'ready' ? (
+            <Button title={feed.data?.has_swiped ? 'Keep swiping' : 'Start swiping'} onPress={() => router.push('/swipe')} />
           ) : null}
-          <View style={styles.linkRow}>
-            <Button title="Preferences" variant="ghost" style={styles.link} onPress={() => router.push('/preferences')} />
-            <Button title="Sign out" variant="ghost" style={styles.link} onPress={signOut} />
-          </View>
+          <Button title="Settings" variant={status === 'ready' ? 'ghost' : 'secondary'} onPress={() => router.push('/settings')} />
         </>
       }>
       <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
@@ -90,52 +72,44 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-        {deck.data ? (
+        {feed.data && feed.data.status === 'ready' ? (
           <Card tone="accent" padding="lg">
             <Text variant="overline" tone="tertiary">
-              Tonight&apos;s deck
+              {forToday ? 'Tonight' : 'For tomorrow'}
             </Text>
             <View style={styles.thumbs}>
-              {deck.data.recipes.slice(0, 5).map((recipe, i) => (
+              {feed.data.dishes.slice(0, 5).map((dish, i) => (
                 <Image
-                  key={recipe.id}
-                  source={thumbnail(recipe.image_url)}
-                  accessibilityLabel={recipe.title}
+                  key={dish.id}
+                  source={thumbnail(dish.image_url)}
+                  accessibilityLabel={dish.title}
                   contentFit="cover"
                   transition={250}
                   style={[styles.thumb, { borderColor: theme.surface, backgroundColor: theme.surfaceMuted }, i > 0 && styles.thumbOverlap]}
                 />
               ))}
-              {deck.data.recipes.length > 5 ? (
-                <View style={[styles.thumb, styles.thumbOverlap, styles.more, { borderColor: theme.surface, backgroundColor: theme.surface }]}>
-                  <Text variant="label">+{deck.data.recipes.length - 5}</Text>
-                </View>
-              ) : null}
             </View>
-            <Text variant="bodyStrong">{deck.data.recipes.length} dishes picked for the two of you</Text>
+            <Text variant="bodyStrong">{forToday ? "Find tonight's dinner" : "Find tomorrow's dinner"}</Text>
             <Text variant="caption" tone="secondary">
-              {deck.data.recipes.length < 12
-                ? `Only ${deck.data.recipes.length} dishes fit both your preferences today.`
-                : deck.data.repeat_count > 0
-                  ? 'A few favourites are back because your preferences narrow the menu.'
-                  : 'Swipe right on what you fancy. Your picks stay hidden until the reveal.'}
+              Swipe a few dishes whenever you have a minute, as often as you like. You&apos;ll both find out what matched at{' '}
+              {revealTime}.
             </Text>
-            <View style={styles.progressRow}>
-              <Pill
-                label={allSwiped ? 'You are done' : `You: ${mySwiped} of ${deck.data.recipes.length}`}
-                tone={allSwiped ? 'success' : 'neutral'}
-                dot={false}
-              />
-              <Pill
-                label={
-                  deck.data.partner_swiped >= deck.data.recipes.length
-                    ? `${partner} is done`
-                    : `${partner}: ${deck.data.partner_swiped} of ${deck.data.recipes.length}`
-                }
-                tone={deck.data.partner_swiped >= deck.data.recipes.length ? 'success' : 'neutral'}
-                dot={false}
-              />
-            </View>
+          </Card>
+        ) : feed.data ? (
+          <Card tone="accent" padding="lg">
+            <Pill
+              label={feed.data.status === 'goal_reached' ? 'Dinner is sorted' : 'All swiped for now'}
+              tone={feed.data.status === 'goal_reached' ? 'success' : 'neutral'}
+              dot={false}
+            />
+            <Text variant="bodyStrong" style={styles.sortedTitle}>
+              {feed.data.status === 'goal_reached' ? 'You found your match' : "You've seen everything for now"}
+            </Text>
+            <Text variant="caption" tone="secondary">
+              {feed.data.status === 'goal_reached'
+                ? `Nothing more to swipe. You'll both find out what matched at ${revealTime}.`
+                : `We'll work with what you liked and reveal at ${revealTime}.`}
+            </Text>
           </Card>
         ) : (
           <Card tone="accent" padding="lg">
@@ -144,8 +118,8 @@ export default function Home() {
               <View style={styles.soonText}>
                 <Text variant="bodyStrong">{partnerReady ? "Picking tonight's dishes…" : "Tonight's options are on their way"}</Text>
                 <Text variant="caption" tone="secondary">
-                  {deck.isError
-                    ? "We couldn't load tonight's deck. Pull down to try again soon."
+                  {feed.isError
+                    ? "We couldn't load your dishes. Check your connection and reopen the app."
                     : partnerReady
                       ? 'Hang on a second.'
                       : `We'll start as soon as ${partner} chooses their food preferences.`}
@@ -215,7 +189,5 @@ const styles = StyleSheet.create({
   thumb: { width: 56, height: 56, borderRadius: 28, borderWidth: 3 },
   thumbOverlap: { marginLeft: -14 },
   more: { alignItems: 'center', justifyContent: 'center' },
-  progressRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.md },
-  linkRow: { flexDirection: 'row', gap: Spacing.sm },
-  link: { flex: 1 },
+  sortedTitle: { marginTop: Spacing.md },
 });

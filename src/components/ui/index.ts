@@ -9,5 +9,6 @@ export { Pill } from './pill';
 export { RouletteWheel } from './roulette-wheel';
 export { Screen } from './screen';
 export { Section } from './section';
+export { Stepper } from './stepper';
 export { Accent, Text } from './text';
 export { TextField } from './text-field';

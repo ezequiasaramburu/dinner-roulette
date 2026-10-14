@@ -15,15 +15,15 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { DishCard } from '@/components/dish/dish-card';
 import { Text } from '@/components/ui';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
-import type { DeckRecipe } from '@/hooks/use-deck';
+import type { Dish } from '@/hooks/use-swipe-feed';
 import { useTheme } from '@/hooks/use-theme';
 
 export type SwipeDeckHandle = { swipe: (liked: boolean) => void };
 
 type Props = {
   /** Dishes still to swipe, top card first. */
-  recipes: DeckRecipe[];
-  onSwipe: (recipe: DeckRecipe, liked: boolean) => void;
+  recipes: Dish[];
+  onSwipe: (recipe: Dish, liked: boolean) => void;
   ref?: Ref<SwipeDeckHandle>;
 };
 
@@ -54,8 +54,8 @@ function TopCard({
   onSwiped,
   ref,
 }: {
-  recipe: DeckRecipe;
-  onSwiped: (recipe: DeckRecipe, liked: boolean) => void;
+  recipe: Dish;
+  onSwiped: (recipe: Dish, liked: boolean) => void;
   ref: Ref<SwipeDeckHandle>;
 }) {
   const theme = useTheme();
