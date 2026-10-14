@@ -16,16 +16,23 @@ import { useTheme } from '@/hooks/use-theme';
 const DISHES = ['🍝', '🌮', '🍣', '🥗', '🍕', '🍜', '🥘', '🍤'];
 const TICKS = 24;
 
-/** The brand mark: a slowly turning wheel of dishes with a fixed pointer. Purely decorative. */
-export function RouletteWheel({ size = 280 }: { size?: number }) {
+/**
+ * The brand mark: a wheel of dishes with a fixed pointer. Purely decorative.
+ * By default it turns slowly forever; with `spin` it does one fast turn that slows to a stop (the reveal).
+ */
+export function RouletteWheel({ size = 280, spin: spinOnce = false }: { size?: number; spin?: boolean }) {
   const theme = useTheme();
   const reduceMotion = useReducedMotion();
   const rotation = useSharedValue(0);
 
   useEffect(() => {
     if (reduceMotion) return;
+    if (spinOnce) {
+      rotation.value = withTiming(360 * 4 + 45, { duration: 2800, easing: Easing.out(Easing.cubic) });
+      return;
+    }
     rotation.value = withRepeat(withTiming(360, { duration: 70_000, easing: Easing.linear }), -1);
-  }, [reduceMotion, rotation]);
+  }, [reduceMotion, spinOnce, rotation]);
 
   const spin = useAnimatedStyle(() => ({ transform: [{ rotate: `${rotation.value}deg` }] }));
 

@@ -69,6 +69,8 @@ export default function AppLayout() {
         <Stack.Screen name="preferences" />
         <Stack.Screen name="swipe" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="reveal" options={{ animation: 'fade' }} />
+        <Stack.Screen name="recipe/[id]" />
       </Stack.Protected>
     </Stack>
   );

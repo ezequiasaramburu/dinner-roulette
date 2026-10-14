@@ -14,7 +14,8 @@ Expo (SDK 57) · Expo Router · TypeScript · Supabase · TanStack Query · Reac
 - [x] Phase 5: recipe catalog (473 dinners imported from TheMealDB)
 - [x] Phase 6: daily deck builder (server-side filters, ranking, variety, no-repeat window)
 - [x] Phase 7: swiping (endless queue, match goal, gesture card stack, settings)
-- [ ] Phases 8–9: matching and reveal, launch polish
+- [~] Phase 8: reveal (done: reveal result, reveal screen, full recipe; to do: daily notification)
+- [ ] Phase 9: launch polish
 
 ## Setup (local, no cloud needed)
 
@@ -135,3 +136,20 @@ Server pieces (`supabase/migrations/0006_swipes.sql`, `0007_match_goal_queue.sql
 
 Gotcha for SQL changes: the Supabase API role runs with `pg_safeupdate`, which rejects any `UPDATE`/`DELETE` without a
 `WHERE`. `npm run test:db` scans the migrations for that, but always try new functions through the real API too.
+
+## The reveal
+
+At the couple's reveal time, `get_reveal()` (`supabase/migrations/0008_reveal.sql`) opens today's cycle for both
+partners, with the full recipe (ingredients, steps, video). Before that it only returns `pending` and the reveal time.
+How the dinner is found:
+
+- `match`: dishes both liked, in queue order.
+- `closest`: nothing shared, so dishes one of you liked (up to the match goal).
+- `surprise`: nobody liked anything, so the top of the queue (the best fit for both tastes).
+
+Swipes after the reveal belong to tomorrow's queue, so a revealed result never changes. `mark_reveal_seen()` records that a
+partner opened it: the roulette animation plays once, and home shows "New" until then. The recipe screen carries an
+allergen disclaimer, since allergens are derived from ingredient text.
+
+To try it without waiting for 17:00, set `couples.reveal_time` to `00:00` in the local database, reload the app, and
+put it back afterwards.

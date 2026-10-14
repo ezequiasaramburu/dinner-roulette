@@ -9,6 +9,7 @@ import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
 import { thumbnail, useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useProfile } from '@/hooks/use-profile';
+import { useReveal } from '@/hooks/use-reveal';
 import { useTheme } from '@/hooks/use-theme';
 import { supabase } from '@/lib/supabase';
 
@@ -19,6 +20,12 @@ function greeting(hour: number) {
   return 'Good evening';
 }
 
+function revealedTitle(titles: string[]) {
+  if (titles.length === 0) return 'Open tonight\'s dinner';
+  if (titles.length === 1) return titles[0];
+  return `${titles[0]} and ${titles.length - 1} more`;
+}
+
 export default function Home() {
   const router = useRouter();
   const theme = useTheme();
@@ -26,7 +33,12 @@ export default function Home() {
   const { data: couple, refetch } = useCouple();
   const [menuOpen, setMenuOpen] = useState(false);
   const partnerReady = !!couple?.partner?.ready;
-  const feed = useSwipeFeed(partnerReady && !!couple?.me_ready);
+  const bothReady = partnerReady && !!couple?.me_ready;
+  const feed = useSwipeFeed(bothReady);
+  const reveal = useReveal(bothReady);
+  const refetchReveal = reveal.refetch;
+  const revealAt = reveal.data?.reveal_at;
+  const revealed = reveal.data?.status === 'revealed' ? reveal.data : undefined;
 
   // We can't see the partner's preferences (by design), so poll for their "ready" flag.
   useEffect(() => {
@@ -44,6 +56,26 @@ export default function Home() {
       const id = setInterval(() => refetchFeed(), 30_000);
       return () => clearInterval(id);
     }, [status, refetchFeed]),
+  );
+
+  // The reveal opens by itself: wait for the reveal moment (the timer is capped, so long waits re-check hourly),
+  // then fetch the result and tomorrow's queue.
+  const refetchFeedNow = feed.refetch;
+  useEffect(() => {
+    if (!revealAt || reveal.data?.status !== 'pending') return;
+    const wait = Math.min(Math.max(new Date(revealAt).getTime() - Date.now(), 0) + 1000, 3_600_000);
+    const id = setTimeout(() => {
+      refetchReveal();
+      refetchFeedNow();
+    }, wait);
+    return () => clearTimeout(id);
+  }, [revealAt, reveal.data?.status, refetchReveal, refetchFeedNow]);
+
+  // Coming back to the app after the reveal time: check straight away.
+  useFocusEffect(
+    useCallback(() => {
+      if (bothReady) refetchReveal();
+    }, [bothReady, refetchReveal]),
   );
 
   function go(path: '/preferences' | '/settings') {
@@ -82,6 +114,20 @@ export default function Home() {
           {me}, <Accent>dinner awaits.</Accent>
         </Text>
       </Animated.View>
+
+      {revealed ? (
+        <Animated.View entering={FadeInDown.delay(60).duration(500)}>
+          <Card tone="accent" padding="lg" onPress={() => router.push('/reveal')} accessibilityLabel="Open tonight's dinner">
+            <Pill label={revealed.seen ? 'Tonight' : 'New'} tone={revealed.seen ? 'neutral' : 'success'} dot={!revealed.seen} />
+            <Text variant="heading" style={styles.sortedTitle}>
+              {revealed.seen ? revealedTitle(revealed.dishes.map((d) => d.title)) : "Tonight's dinner is revealed"}
+            </Text>
+            <Text variant="caption" tone="secondary">
+              {revealed.seen ? 'Tap to see the recipe.' : 'Tap to find out what you matched on.'}
+            </Text>
+          </Card>
+        </Animated.View>
+      ) : null}
 
       <Animated.View entering={FadeInDown.delay(100).duration(500)}>
         {feed.data && feed.data.status === 'ready' ? (
