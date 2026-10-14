@@ -72,7 +72,7 @@ export function useCuisineOptions() {
       const { data, error } = await supabase
         .from('cuisine_options')
         .select('country, recipe_count')
-        .order('recipe_count', { ascending: false });
+        .order('country', { ascending: true });
       if (error) throw error;
       return data as CuisineOption[];
     },

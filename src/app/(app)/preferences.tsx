@@ -137,7 +137,7 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
 
       <Section
         title="Favourite cuisines"
-        hint="Pick any, or none to be open to everything."
+        hint="We show dishes from these first. Others can still appear, so pick none to be open to everything."
         count={prefs.cuisines.length}>
         {cuisineOptions.map((country) => (
           <Chip

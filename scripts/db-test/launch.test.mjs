@@ -58,6 +58,15 @@ describe('invite code rate limit', () => {
   });
 });
 
+describe('the catalogue', () => {
+  test('every country with a recipe has a flag in the app', async () => {
+    const { countryFlag } = await import('../../src/constants/countries.ts');
+    const { rows } = await db.query('select country from public.cuisine_options');
+    const missing = rows.map((r) => r.country).filter((c) => countryFlag(c) === '🍽️');
+    assert.deepEqual(missing, [], 'add these to COUNTRY_CODES in src/constants/countries.ts');
+  });
+});
+
 describe('new couples', () => {
   test('reveal as soon as they match by default', async () => {
     const owner = await addUser(db, 'default-mode@test.dev');

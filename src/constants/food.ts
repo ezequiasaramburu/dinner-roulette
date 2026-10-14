@@ -41,67 +41,7 @@ export const DISLIKES: Option[] = [
   { id: "beets", label: "Beets", emoji: "🟣" },
 ];
 
-const COUNTRY_CODES: Record<string, string> = {
-  Afghanistan: "AF",
-  Albania: "AL",
-  Algeria: "DZ",
-  Argentina: "AR",
-  Australia: "AU",
-  Austria: "AT",
-  Barbados: "BB",
-  Belgium: "BE",
-  Brazil: "BR",
-  Bulgaria: "BG",
-  Cambodia: "KH",
-  Canada: "CA",
-  "Cayman Islands": "KY",
-  Chile: "CL",
-  China: "CN",
-  Colombia: "CO",
-  "Costa Rica": "CR",
-  Croatia: "HR",
-  Denmark: "DK",
-  Dominica: "DM",
-  Egypt: "EG",
-  Estonia: "EE",
-  France: "FR",
-  Greece: "GR",
-  India: "IN",
-  Ireland: "IE",
-  Italy: "IT",
-  Jamaica: "JM",
-  Japan: "JP",
-  Kenya: "KE",
-  Malaysia: "MY",
-  Mexico: "MX",
-  Morocco: "MA",
-  Netherlands: "NL",
-  Norway: "NO",
-  Philippines: "PH",
-  Poland: "PL",
-  Portugal: "PT",
-  Russia: "RU",
-  "Saudi Arabia": "SA",
-  Spain: "ES",
-  Thailand: "TH",
-  Tunisia: "TN",
-  Turkey: "TR",
-  Ukraine: "UA",
-  "United Kingdom": "GB",
-  "United States": "US",
-  Uruguay: "UY",
-  Venezuela: "VE",
-  Vietnam: "VN",
-};
-
-/** Flag emoji for a country name from the recipe data, or a plate for anything we don't know. */
-export function countryFlag(country: string): string {
-  const code = COUNTRY_CODES[country];
-  if (!code) return "🍽️";
-  return String.fromCodePoint(
-    ...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65),
-  );
-}
+export { countryFlag } from "./countries";
 
 const DISH_TYPE_LABELS: Record<string, string> = {
   soup: "Soup",
