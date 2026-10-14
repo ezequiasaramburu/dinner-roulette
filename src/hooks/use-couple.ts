@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCalendars } from 'expo-localization';
 import { useEffect } from 'react';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, uniqueSuffix } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 
 export type CoupleState = {
@@ -121,7 +121,7 @@ export function useCoupleRealtime(coupleId: string | undefined) {
   useEffect(() => {
     if (!coupleId) return;
     const channel = supabase
-      .channel(`couple-members-${coupleId}`)
+      .channel(`couple-members-${coupleId}-${uniqueSuffix()}`)
       .on(
         'postgres_changes',
         {
@@ -197,7 +197,7 @@ export function useDinnerRealtime(coupleId: string | undefined) {
     if (!coupleId) return;
     const refresh = (keys: string[]) => () => keys.forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
     const channel = supabase
-      .channel(`dinner-${coupleId}`)
+      .channel(`dinner-${coupleId}-${uniqueSuffix()}`)
       .on(
         'postgres_changes',
         {

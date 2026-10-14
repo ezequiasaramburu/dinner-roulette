@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
-import { supabase } from '@/lib/supabase';
+import { supabase, uniqueSuffix } from '@/lib/supabase';
 import { useAuth } from '@/providers/auth-provider';
 
 /** A short message my partner's action left for me. Only I can read it; dismissing it removes it. */
@@ -32,7 +32,7 @@ export function useNotices(enabled: boolean) {
   useEffect(() => {
     if (!enabled || !userId) return;
     const channel = supabase
-      .channel(`notices-${userId}`)
+      .channel(`notices-${userId}-${uniqueSuffix()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'notices', filter: `recipient_id=eq.${userId}` },

@@ -37,3 +37,12 @@ if (Platform.OS !== 'web') {
     }
   });
 }
+
+/**
+ * Realtime reuses a channel that has the same name, and removeChannel finishes asynchronously. When a screen's effect
+ * re-runs straight away (hidden screens coming back, fast refresh) the new subscription would land on the old,
+ * already-subscribed channel and throw. A fresh name per subscription avoids that.
+ */
+export function uniqueSuffix() {
+  return Math.random().toString(36).slice(2, 8);
+}
