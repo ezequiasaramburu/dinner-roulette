@@ -87,7 +87,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 **Checkpoint 5:** full walkthrough with Reduce Motion off, then on.
 
 ### Phase 6: Moments
-- [ ] 16. Haptics for swipe, match, reveal and submit
+- [x] 16. Haptics for swipe, match, reveal and submit (hand-test pending)
 
 **Checkpoint 6 (done):** all SPEC.md success criteria checked; final hand-test on iOS, Android, light and dark.
 

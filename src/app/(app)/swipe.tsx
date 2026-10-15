@@ -20,6 +20,7 @@ import {
   type Dish,
 } from '@/hooks/use-swipe-feed';
 import { useTheme } from '@/hooks/use-theme';
+import { haptics } from '@/lib/haptics';
 import { timeInZoneToLocal } from '@/lib/zoned-time';
 
 export default function Swipe() {
@@ -60,9 +61,14 @@ export default function Swipe() {
 
   function onSwipe(dish: Dish, liked: boolean) {
     if (!data) return;
+    haptics.soft();
     record.mutate(
       { deckId: data.deck_id, dish, liked },
       {
+        // The swipe that completes the match goal gets the success pulse.
+        onSuccess: (result) => {
+          if (result.status === 'goal_reached') haptics.success();
+        },
         onError: (error) => {
           if (!String((error as { message?: string }).message).includes('deck_closed')) {
             Alert.alert("Couldn't save that swipe", 'Please check your connection. The dish is back in your queue.');
@@ -74,6 +80,7 @@ export default function Swipe() {
 
   function onUndo() {
     if (!data || undo.isPending) return;
+    haptics.soft();
     undo.mutate(data.deck_id, { onError: () => Alert.alert("Couldn't undo", 'Please try again.') });
   }
 

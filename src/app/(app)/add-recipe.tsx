@@ -11,6 +11,7 @@ import { useProfile } from '@/hooks/use-profile';
 import { useSubmitRecipe } from '@/hooks/use-recipes';
 import { useTheme } from '@/hooks/use-theme';
 import { friendlyError } from '@/lib/errors';
+import { haptics } from '@/lib/haptics';
 import { pickRecipePhoto, type PickedPhoto } from '@/lib/recipe-photo';
 
 type Ingredient = { id: number; name: string; measure: string };
@@ -112,6 +113,7 @@ export default function AddRecipe() {
         photoUri: photo?.uri ?? null,
         acceptTerms: accepted || !needsTerms,
       });
+      haptics.success();
       Alert.alert('Thank you!', "Your recipe is in review. We'll publish it once it's checked, and you can follow it in Your recipes.");
       router.replace('/recipes');
     } catch (e) {

@@ -181,7 +181,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
 
 ## Phase 6: Moments
 
-- [ ] **Task 16: Haptics for swipe, match, reveal and submit**
+- [x] **Task 16: Haptics for swipe, match, reveal and submit**  _(code done; hand-test pending)_
   - Acceptance: soft tap on swipe commit and on undo; success pulse when a match is found, when the reveal's dish appears, and when a recipe is submitted; nothing on back, close or scroll
   - Verify: tsc, lint, tests; **hand:** swipe a few cards, undo, match, open a reveal, submit a recipe
   - Dependencies: 1, 7
@@ -189,6 +189,6 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Scope: S (3 files)
 
 ### Checkpoint 6: done
-- [ ] All 10 success criteria in SPEC.md met; `check:ui` numbers at their targets; `npm run test:db` still passes
+- [ ] All 10 success criteria in SPEC.md met (needs the hand-test below); `check:ui` at all targets (done); `npm run test:db` still passes (done: 124 pass)
 - [ ] Final hand-test on iOS and Android, light and dark, Reduce Motion on and off
 - [ ] Ready for review

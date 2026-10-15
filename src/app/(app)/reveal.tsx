@@ -10,6 +10,7 @@ import { enter } from '@/hooks/use-motion';
 import { useCouple } from '@/hooks/use-couple';
 import { useMarkRevealSeen, useReveal, useSwipeAgain } from '@/hooks/use-reveal';
 import { friendlyError } from '@/lib/errors';
+import { haptics } from '@/lib/haptics';
 
 const SPIN_MS = 3000;
 
@@ -32,6 +33,12 @@ export default function RevealScreen() {
     const id = setTimeout(() => setSpun(true), SPIN_MS);
     return () => clearTimeout(id);
   }, [data, playIntro]);
+
+  // The moment the dish appears after the wheel (not when reopening one you have seen, and not for "nothing to cook").
+  const kind = data?.kind;
+  useEffect(() => {
+    if (showDishes && playIntro && kind !== 'none') haptics.success();
+  }, [showDishes, playIntro, kind]);
 
   const markSeenMutate = markSeen.mutate;
   const deckId = data?.deck_id;
