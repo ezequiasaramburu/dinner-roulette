@@ -2,11 +2,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { z } from 'zod';
 
 import { Accent, BackButton, Button, Screen, Text, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { useJoinCouple } from '@/hooks/use-couple';
 import { friendlyError } from '@/lib/errors';
 import { usePendingInvite } from '@/lib/pending-invite';
@@ -51,7 +52,7 @@ export default function Join() {
   return (
     <Screen footer={<Button title="Join" onPress={submit} loading={isSubmitting} />}>
       <BackButton />
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="title">
           Enter your <Accent>invite code</Accent>
         </Text>

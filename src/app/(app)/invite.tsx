@@ -1,11 +1,12 @@
 import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
 import { Alert, Share, StyleSheet } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { PartnerLeftNotice } from '@/components/notice-card';
 import { Accent, Button, Card, CodeTiles, Pill, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { useCancelCouple, useCouple, useCoupleRealtime, useInviteCode, useRegenerateInvite } from '@/hooks/use-couple';
 import { useNotices } from '@/hooks/use-notices';
 import { friendlyError } from '@/lib/errors';
@@ -75,7 +76,7 @@ export default function Invite() {
       {left.map((n) => (
         <PartnerLeftNotice key={n.id} notice={n} />
       ))}
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
+      <Animated.View entering={enter()} style={styles.header}>
         <Text variant="overline" tone="primary">
           Almost there
         </Text>
@@ -87,7 +88,7 @@ export default function Invite() {
         </Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(120).duration(500)}>
+      <Animated.View entering={enter(1)}>
         <Card style={styles.codeCard}>
           <Text variant="overline" tone="tertiary" align="center">
             Your invite code

@@ -133,7 +133,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/hooks/use-motion.ts`, `src/app/(auth)/index.tsx`, `src/app/(auth)/email.tsx`, `src/app/(app)/name.tsx`
   - Scope: S (4 files)
 
-- [ ] **Task 12: Onboarding screens**
+- [x] **Task 12: Onboarding screens**  _(code done; hand-test pending)_
   - Acceptance: couple-setup, join and invite use the helper; the invite code tiles keep their own animation
   - Verify: tsc, lint, tests; **hand:** create a couple, join with a code, wait on invite
   - Dependencies: 11

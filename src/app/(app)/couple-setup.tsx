@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { AccountActions } from '@/components/account-actions';
 import { PartnerLeftNotice } from '@/components/notice-card';
 import { Accent, Card, Screen, Text } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { useCreateCouple } from '@/hooks/use-couple';
 import { useNotices } from '@/hooks/use-notices';
 import { useTheme } from '@/hooks/use-theme';
@@ -40,7 +41,7 @@ export default function CoupleSetup() {
       {ended.map((n) => (
         <PartnerLeftNotice key={n.id} notice={n} />
       ))}
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
+      <Animated.View entering={enter()} style={styles.header}>
         <Text variant="overline" tone="primary">
           Better together
         </Text>
@@ -52,7 +53,7 @@ export default function CoupleSetup() {
         </Text>
       </Animated.View>
 
-      <Animated.View entering={FadeInDown.delay(120).duration(500)} style={styles.options}>
+      <Animated.View entering={enter(1)} style={styles.options}>
         <Card onPress={onCreate} accessibilityLabel="Start a couple and invite your partner">
           <View style={styles.option}>
             <View style={[styles.badge, { backgroundColor: theme.primarySoft }]}>
