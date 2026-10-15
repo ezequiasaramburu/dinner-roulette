@@ -1,11 +1,12 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { BackButton, Button, Card, Pill, PressableScale, Screen, Text } from '@/components/ui';
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { useReveal } from '@/hooks/use-reveal';
 import { CommunityActions } from '@/components/dish/community-actions';
 import { CommunityBadge } from '@/components/dish/community-badge';
@@ -48,7 +49,7 @@ export default function RecipeScreen() {
     <Screen>
       <BackButton />
 
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.image} />
         <View style={styles.header}>
           <Text variant="overline" tone="primary">

@@ -147,7 +147,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/app/(app)/index.tsx`, `src/app/(app)/settings.tsx`, `src/components/notice-card.tsx`, `src/hooks/use-motion.ts` (new `exit` and `reflow`), `src/app/(app)/invite.tsx` (its blocks glide up when the partner-left notice above them is dismissed)
   - Scope: M (5 files)
 
-- [ ] **Task 14: Recipes, recipe page, add recipe and reveal**
+- [x] **Task 14: Recipes, recipe page, add recipe and reveal**  _(code done; hand-test pending)_
   - Acceptance: the four screens use the helper; deleting a recipe row slides it out and the list closes up; the reveal keeps its wheel and flow
   - Verify: tsc, lint, tests; **hand:** delete a recipe, open a recipe, add one, open a reveal
   - Dependencies: 11

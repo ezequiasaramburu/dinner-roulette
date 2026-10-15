@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { DishRow } from '@/components/dish/dish-row';
 import { Accent, BackButton, Button, RouletteWheel, Screen, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { useCouple } from '@/hooks/use-couple';
 import { useMarkRevealSeen, useReveal, useSwipeAgain } from '@/hooks/use-reveal';
 import { friendlyError } from '@/lib/errors';
@@ -142,7 +143,7 @@ export default function RevealScreen() {
         </>
       }>
       <BackButton />
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
+      <Animated.View entering={enter()} style={styles.header}>
         <Text variant="overline" tone="primary">
           Tonight&apos;s dinner
         </Text>

@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { Alert, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { DishImage } from '@/components/dish/dish-image';
 import { Accent, BackButton, Button, Card, Pill, Screen, Skeleton, Text } from '@/components/ui';
 import { countryFlag } from '@/constants/countries';
 import { Radius, Spacing } from '@/constants/theme';
+import { enter, exit, reflow } from '@/hooks/use-motion';
 import { useDeleteRecipe, useMyRecipes, type MyRecipe } from '@/hooks/use-recipes';
 import { friendlyError } from '@/lib/errors';
 
@@ -34,7 +35,7 @@ export default function Recipes() {
   return (
     <Screen footer={<Button title="Add a recipe" onPress={() => router.push('/add-recipe')} />}>
       <BackButton />
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="overline" tone="primary">
           Your kitchen
         </Text>
@@ -61,24 +62,26 @@ export default function Recipes() {
           recipes.data.map((recipe) => {
             const status = STATUS[recipe.status];
             return (
-              <Card key={recipe.id} padding="lg">
-                {recipe.image_url ? (
-                  <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.photo} />
-                ) : null}
-                <Text variant="overline" tone="primary">
-                  {countryFlag(recipe.country)}  {recipe.country}
-                </Text>
-                <Text variant="heading" style={styles.title}>
-                  {recipe.title}
-                </Text>
-                <View style={styles.statusRow}>
-                  <Pill label={status.label} tone={status.tone} dot={false} />
-                </View>
-                <Text variant="caption" tone="secondary">
-                  {recipe.review_note ?? status.note}
-                </Text>
-                <Button title="Delete" variant="ghost" onPress={() => confirmDelete(recipe)} />
-              </Card>
+              <Animated.View key={recipe.id} exiting={exit} layout={reflow}>
+                <Card padding="lg">
+                  {recipe.image_url ? (
+                    <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.photo} />
+                  ) : null}
+                  <Text variant="overline" tone="primary">
+                    {countryFlag(recipe.country)}  {recipe.country}
+                  </Text>
+                  <Text variant="heading" style={styles.title}>
+                    {recipe.title}
+                  </Text>
+                  <View style={styles.statusRow}>
+                    <Pill label={status.label} tone={status.tone} dot={false} />
+                  </View>
+                  <Text variant="caption" tone="secondary">
+                    {recipe.review_note ?? status.note}
+                  </Text>
+                  <Button title="Delete" variant="ghost" onPress={() => confirmDelete(recipe)} />
+                </Card>
+              </Animated.View>
             );
           })
         )}

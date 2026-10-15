@@ -1,11 +1,12 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { DishImage } from '@/components/dish/dish-image';
 import { Accent, BackButton, Button, Card, CountryField, PressableScale, Screen, Text, TextField } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { useProfile } from '@/hooks/use-profile';
 import { useSubmitRecipe } from '@/hooks/use-recipes';
 import { useTheme } from '@/hooks/use-theme';
@@ -128,7 +129,7 @@ export default function AddRecipe() {
       footer={<Button title="Submit for review" onPress={onSubmit} loading={submit.isPending} />}>
       <BackButton />
 
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="overline" tone="primary">
           Share a dish
         </Text>
