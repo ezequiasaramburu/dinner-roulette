@@ -251,3 +251,12 @@ it is approved.
   blocked by Storage). A photo is publicly readable by its URL even while the recipe is pending; to take one down, delete
   the file in Studio → Storage.
 - Deleting an account deletes the recipes the person wrote.
+
+## Starting over while testing
+
+`npm run dev:reset -- you@example.com partner@example.com` wipes the app data of two test users in the **local**
+database (couple, invite codes, decks, swipes, preferences, notices, display name) and keeps their accounts, so you can
+walk the whole flow again without new sign-ups or waiting for tomorrow. Add `--dry-run` to see what it would remove,
+`--keep-name` to skip the name screen, `--recipes` to drop their community recipes too. Put
+`DEV_RESET_EMAILS=you@example.com,partner@example.com` in `.env.local` to run it with no arguments. Reopen the app
+afterwards. It refuses to run if their couple includes a third account (override with `--force`).
