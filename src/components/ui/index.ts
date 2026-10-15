@@ -9,6 +9,7 @@ export { CodeTiles } from './code-tiles';
 export { MenuButton } from './menu-button';
 export { OptionCard } from './option-card';
 export { Pill } from './pill';
+export { PressableScale } from './pressable-scale';
 export { RouletteWheel } from './roulette-wheel';
 export { Screen } from './screen';
 export { Section } from './section';

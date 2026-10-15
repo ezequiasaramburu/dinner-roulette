@@ -69,11 +69,12 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/components/ui/menu-button.tsx`, `back-button.tsx`, `time-field.tsx`, `country-field.tsx`
   - Scope: M (4 files)
 
-- [ ] **Task 7: Screen-level pressables**
+- [x] **Task 7: Screen-level pressables**  _(code done; hand-test pending)_
   - Acceptance: the photo add and remove controls, the video link on the recipe page, the swipe round buttons, and the report and ingredients sheets use `PressableScale`; swipe-deck gesture code untouched
   - Verify: tsc, lint, tests; `check:ui` raw-Pressable count is only the allowed list; **hand:** add-recipe photo, recipe video link, swipe buttons, both sheets
   - Dependencies: 3
-  - Files: `src/app/(app)/add-recipe.tsx`, `src/app/(app)/recipe/[id].tsx`, `src/app/(app)/swipe.tsx`, `src/components/dish/report-sheet.tsx`, `src/components/dish/ingredients-sheet.tsx`
+  - Files: `src/app/(app)/add-recipe.tsx`, `src/app/(app)/recipe/[id].tsx`, `src/app/(app)/swipe.tsx`, `src/components/ui/index.ts`, `scripts/check-ui.mjs`
+  - Note: the two sheets only have a full-screen dimmed backdrop that closes them, which must not shrink, so they are on the `check:ui` allowlist next to the side menu's. The real controls here were the terms checkbox, the remove buttons, the ingredient checklist rows and the swipe round buttons.
   - Scope: M (5 files)
 
 ### Checkpoint 2: press feedback complete

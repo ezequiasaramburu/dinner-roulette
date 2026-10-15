@@ -1,9 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { BackButton, Button, Card, Pill, Screen, Text } from '@/components/ui';
+import { BackButton, Button, Card, Pill, PressableScale, Screen, Text } from '@/components/ui';
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useReveal } from '@/hooks/use-reveal';
@@ -103,7 +103,8 @@ export default function RecipeScreen() {
             {recipe.ingredients.map((ing, i) => {
               const done = have.has(i);
               return (
-                <Pressable
+                <PressableScale
+                  haptic="select"
                   key={`${ing.name}-${i}`}
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: done }}
@@ -123,7 +124,7 @@ export default function RecipeScreen() {
                   <Text variant="caption" tone="secondary" style={styles.measure}>
                     {ing.measure}
                   </Text>
-                </Pressable>
+                </PressableScale>
               );
             })}
           </View>

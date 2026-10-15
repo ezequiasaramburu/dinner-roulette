@@ -2,12 +2,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { SwipeDeck, type SwipeDeckHandle } from '@/components/dish/swipe-deck';
 import { RevealNowButton } from '@/components/reveal-now-button';
-import { Accent, BackButton, Button, Screen, Text } from '@/components/ui';
+import { Accent, BackButton, Button, PressableScale, Screen, Text } from '@/components/ui';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
 import {
@@ -225,7 +225,7 @@ function RoundButton({
 }) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       disabled={disabled}
@@ -240,7 +240,6 @@ function RoundButton({
           borderColor: filled ? theme.primary : theme.borderStrong,
         },
         disabled && { opacity: 0.35 },
-        pressed && { transform: [{ scale: 0.94 }] },
       ]}>
       <Text
         style={{
@@ -251,7 +250,7 @@ function RoundButton({
         }}>
         {glyph}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -5,8 +5,13 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/** Files that may use a raw Pressable: the wrapper itself, and the side menu's dimmed backdrop (no feedback wanted). */
-export const RAW_PRESSABLE_ALLOWED = ['src/components/ui/pressable-scale.tsx', 'src/components/ui/side-menu.tsx'];
+/** Files that may use a raw Pressable: the wrapper itself, and the dimmed backdrops that close a menu or sheet (a full-screen backdrop must not shrink). */
+export const RAW_PRESSABLE_ALLOWED = [
+  'src/components/ui/pressable-scale.tsx',
+  'src/components/ui/side-menu.tsx',
+  'src/components/dish/ingredients-sheet.tsx',
+  'src/components/dish/report-sheet.tsx',
+];
 /** The screens that should show skeletons instead of spinners. */
 export const SKELETON_SCREENS = ['src/app/(app)/swipe.tsx', 'src/app/(app)/recipes.tsx', 'src/app/(app)/preferences.tsx'];
 

@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Linking, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { DishImage } from '@/components/dish/dish-image';
-import { Accent, BackButton, Button, Card, CountryField, Screen, Text, TextField } from '@/components/ui';
+import { Accent, BackButton, Button, Card, CountryField, PressableScale, Screen, Text, TextField } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
 import { useProfile } from '@/hooks/use-profile';
 import { useSubmitRecipe } from '@/hooks/use-recipes';
@@ -274,7 +274,8 @@ export default function AddRecipe() {
 
         {needsTerms ? (
           <Card tone="muted" padding="lg">
-            <Pressable
+            <PressableScale
+              haptic="select"
               accessibilityRole="checkbox"
               accessibilityState={{ checked: accepted }}
               onPress={() => setAccepted((v) => !v)}
@@ -298,7 +299,7 @@ export default function AddRecipe() {
                 </Text>
                 .
               </Text>
-            </Pressable>
+            </PressableScale>
             {errors.terms ? (
               <Text variant="caption" tone="danger" style={styles.termsError}>
                 {errors.terms}
@@ -314,14 +315,14 @@ export default function AddRecipe() {
 function RemoveButton({ label, onPress }: { label: string; onPress: () => void }) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={label}
       hitSlop={8}
       onPress={onPress}
       style={({ pressed }) => [styles.remove, { backgroundColor: pressed ? theme.surfaceMuted : 'transparent' }]}>
       <Text tone="tertiary">✕</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
