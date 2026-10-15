@@ -3,7 +3,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { ControlHeight, Fonts, Radius, Spacing } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 type Props = {
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.lg,
     alignSelf: 'flex-start',
-    minHeight: 56,
+    minHeight: ControlHeight,
     borderRadius: Radius.lg,
     borderWidth: 1.5,
     paddingHorizontal: Spacing.xl,

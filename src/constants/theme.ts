@@ -78,6 +78,9 @@ export const Fonts = {
 
 export const MaxContentWidth = 560;
 
+/** One height for every button (filled, outlined, text-only) and every form field, so they line up side by side. */
+export const ControlHeight = 50;
+
 /** Soft, warm elevation. Dark mode relies on borders instead of shadows. */
 export function elevation(scheme: 'light' | 'dark', level: 1 | 2 = 1) {
   if (scheme === 'dark') return {};

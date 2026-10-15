@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Text } from '@/components/ui/text';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { ControlHeight, Fonts, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type Props = TextInputProps & {
@@ -74,7 +74,7 @@ export function TextField({ label, error, hideLabel, variant = 'default', placeh
 const styles = StyleSheet.create({
   wrap: { gap: Spacing.sm },
   input: {
-    minHeight: 56,
+    minHeight: ControlHeight,
     borderRadius: Radius.md,
     borderWidth: 1.5,
     paddingHorizontal: Spacing.lg,

@@ -5,7 +5,7 @@ import Animated from 'react-native-reanimated';
 
 import { DishImage } from '@/components/dish/dish-image';
 import { Accent, BackButton, Button, Card, CountryField, PressableScale, Screen, Text, TextField } from '@/components/ui';
-import { Radius, Spacing } from '@/constants/theme';
+import { ControlHeight, Radius, Spacing } from '@/constants/theme';
 import { enter } from '@/hooks/use-motion';
 import { useProfile } from '@/hooks/use-profile';
 import { useSubmitRecipe } from '@/hooks/use-recipes';
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   photoActions: { flexDirection: 'row', gap: Spacing.md },
   photoButton: { flex: 1 },
   multiline: { minHeight: 80, paddingTop: Spacing.md, textAlignVertical: 'top' },
-  remove: { width: 36, height: 56, alignItems: 'center', justifyContent: 'center', borderRadius: Radius.md },
+  remove: { width: 36, height: ControlHeight, alignItems: 'center', justifyContent: 'center', borderRadius: Radius.md },
   removeSpace: { width: 36 },
   terms: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md },
   box: { width: 24, height: 24, borderRadius: 7, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },

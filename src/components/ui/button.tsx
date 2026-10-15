@@ -4,7 +4,7 @@ import { ActivityIndicator, StyleSheet, type PressableProps, type StyleProp, typ
 import { GradientFill } from '@/components/ui/gradient-fill';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { Radius, Spacing, gradients, primaryGlow } from '@/constants/theme';
+import { ControlHeight, Radius, Spacing, gradients, primaryGlow } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 type Props = Omit<PressableProps, 'children' | 'style'> & {
@@ -41,7 +41,7 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
           borderColor: theme.borderStrong,
           borderWidth: 1.5,
         },
-        variant === 'ghost' && { backgroundColor: pressed ? theme.surfaceMuted : 'transparent', minHeight: 48 },
+        variant === 'ghost' && { backgroundColor: pressed ? theme.surfaceMuted : 'transparent' },
         inactive && styles.inactive,
         style,
       ]}
@@ -69,7 +69,7 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 56,
+    minHeight: ControlHeight,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.xl,
     flexDirection: 'row',

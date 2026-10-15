@@ -6,7 +6,7 @@ import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
 import { COUNTRY_NAMES, countryFlag } from '@/constants/countries';
-import { Radius, Spacing } from '@/constants/theme';
+import { ControlHeight, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type Props = { label: string; value: string; onChange: (country: string) => void; error?: string };
@@ -112,7 +112,7 @@ export function CountryField({ label, value, onChange, error }: Props) {
 const styles = StyleSheet.create({
   wrap: { gap: Spacing.sm },
   field: {
-    minHeight: 56,
+    minHeight: ControlHeight,
     borderRadius: Radius.md,
     borderWidth: 1.5,
     paddingHorizontal: Spacing.lg,

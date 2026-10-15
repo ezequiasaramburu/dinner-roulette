@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   wrap: { width: '100%', gap: Spacing.md },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md },
   input: { flex: 1 },
-  // Lines up with the input, below the field's label (18pt line + gap).
+  // Lines up with the input, below the field's label (18pt line + gap). Same height as the field.
   button: { minWidth: 72, alignSelf: 'flex-start', marginTop: 18 + Spacing.sm },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
 });

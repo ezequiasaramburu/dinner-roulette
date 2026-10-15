@@ -5,7 +5,7 @@ import Animated from 'react-native-reanimated';
 import { DishImage } from '@/components/dish/dish-image';
 import { Accent, BackButton, Button, Card, Pill, Screen, Skeleton, Text } from '@/components/ui';
 import { countryFlag } from '@/constants/countries';
-import { Radius, Spacing } from '@/constants/theme';
+import { ControlHeight, Radius, Spacing } from '@/constants/theme';
 import { enter, exit, reflow } from '@/hooks/use-motion';
 import { useDeleteRecipe, useMyRecipes, type MyRecipe } from '@/hooks/use-recipes';
 import { friendlyError } from '@/lib/errors';
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   stack: { gap: Spacing.lg, marginTop: Spacing.md },
   line: { borderRadius: 7 },
   pill: { width: 84, height: 26, borderRadius: Radius.pill },
-  deleteSlot: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  deleteSlot: { minHeight: ControlHeight, alignItems: 'center', justifyContent: 'center' },
   empty: { marginTop: Spacing.sm },
   title: { marginTop: Spacing.xs },
   photo: { width: '100%', height: 160, borderRadius: Radius.lg, marginBottom: Spacing.md },
