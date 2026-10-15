@@ -60,7 +60,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 
 ### Phase 2: Press feedback everywhere
 - [x] 4. Cards and rows (hand-test pending)
-- [ ] 5. Selection controls (chip, option card, stepper)
+- [x] 5. Selection controls (chip, option card, stepper) (hand-test pending)
 - [ ] 6. Icon buttons and fields
 - [ ] 7. Screen-level pressables
 

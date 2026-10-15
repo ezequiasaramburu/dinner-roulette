@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,7 +19,8 @@ export function Stepper({ value, min, max, onChange, label }: Props) {
   const theme = useTheme();
 
   const step = (glyph: string, delta: number, disabled: boolean, a11y: string) => (
-    <Pressable
+    <PressableScale
+      haptic="select"
       accessibilityRole="button"
       accessibilityLabel={a11y}
       disabled={disabled}
@@ -30,7 +32,7 @@ export function Stepper({ value, min, max, onChange, label }: Props) {
         pressed && { backgroundColor: theme.surfaceMuted },
       ]}>
       <Text style={{ fontFamily: Fonts.medium, fontSize: 24, lineHeight: 28 }}>{glyph}</Text>
-    </Pressable>
+    </PressableScale>
   );
 
   return (

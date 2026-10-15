@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -9,22 +10,22 @@ type Props = { label: string; emoji?: string; selected: boolean; onPress: () => 
 export function Chip({ label, emoji, selected, onPress }: Props) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
+      haptic="select"
       accessibilityRole="button"
       accessibilityState={{ selected }}
       onPress={onPress}
-      style={({ pressed }) => [
+      style={[
         styles.chip,
         selected
           ? { backgroundColor: theme.primary, borderColor: theme.primary }
           : { backgroundColor: theme.surface, borderColor: theme.borderStrong },
-        pressed && styles.pressed,
       ]}>
       {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
       <Text variant="label" style={[styles.label, { color: selected ? theme.onPrimary : theme.text }]}>
         {label}
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -38,7 +39,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     paddingHorizontal: Spacing.lg,
   },
-  pressed: { transform: [{ scale: 0.96 }] },
   emoji: { fontSize: 16, lineHeight: 22 },
   label: { fontSize: 14, lineHeight: 20 },
 });

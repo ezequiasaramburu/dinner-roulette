@@ -55,7 +55,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/components/ui/card.tsx`, `src/components/dish/dish-row.tsx`, `src/components/ui/side-menu.tsx`
   - Scope: S (3 files)
 
-- [ ] **Task 5: Selection controls (chip, option card, stepper)**
+- [x] **Task 5: Selection controls (chip, option card, stepper)**  _(code done; hand-test pending)_
   - Acceptance: all three use `PressableScale` with the `select` haptic; selected and disabled states unchanged; stepper buttons still have 48pt targets
   - Verify: tsc, lint, tests; **hand:** preferences chips, reveal-mode options, matches stepper
   - Dependencies: 3

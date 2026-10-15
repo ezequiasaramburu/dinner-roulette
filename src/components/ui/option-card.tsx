@@ -1,5 +1,6 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -10,7 +11,8 @@ type Props = { title: string; description: string; selected: boolean; onPress: (
 export function OptionCard({ title, description, selected, onPress }: Props) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
+      haptic="select"
       accessibilityRole="radio"
       accessibilityState={{ selected }}
       onPress={onPress}
@@ -31,7 +33,7 @@ export function OptionCard({ title, description, selected, onPress }: Props) {
           {description}
         </Text>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
