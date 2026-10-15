@@ -86,7 +86,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
 
 ## Phase 3: Depth
 
-- [ ] **Task 8: Gradient and shadow tokens**
+- [x] **Task 8: Gradient and shadow tokens**  _(code done; hand-test pending)_
   - Acceptance:
     - Theme gets gradient and shadow tokens derived from existing colors (no new hues)
     - Primary button has a very soft top-light gradient; accent card a faint one; both clip to their radius
@@ -94,8 +94,8 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
     - Looks right in light and dark
   - Verify: tsc, lint, tests; `check:ui` hex count in components is zero; **hand:** sign-in, home, invite in light and dark, on iOS and Android
   - Dependencies: 1, 3
-  - Files: `src/constants/theme.ts`, `src/components/ui/button.tsx`, `src/components/ui/card.tsx`
-  - Scope: S (3 files)
+  - Files: `src/constants/theme.ts`, `src/components/ui/button.tsx`, `src/components/ui/card.tsx`, plus `src/lib/color.ts` (+ test) and `src/components/ui/gradient-fill.tsx`
+  - Scope: M (6 files; the colour-blend helper and the gradient component were split out so the helper could be tested)
 
 ### Checkpoint 3: depth reviewed
 - [ ] User confirms the gradient strength (answer to the spec's open question 2)

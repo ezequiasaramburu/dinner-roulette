@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
 import { View, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
+import { GradientFill } from '@/components/ui/gradient-fill';
 import { PressableScale } from '@/components/ui/pressable-scale';
-import { Radius, Spacing, elevation } from '@/constants/theme';
+import { Radius, Spacing, elevation, gradients } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 type Props = {
@@ -27,7 +28,17 @@ export function Card({ children, tone = 'default', padding = 'xl', onPress, acce
     ...(tone === 'default' ? elevation(scheme) : null),
   };
 
-  if (!onPress) return <View style={[base, style]}>{children}</View>;
+  // The accent tone gets a faint top-light; it sits just inside the 1px border.
+  const fill = tone === 'accent' ? <GradientFill colors={gradients(scheme).accent} radius={Radius.xl - 1} /> : null;
+
+  if (!onPress) {
+    return (
+      <View style={[base, style]}>
+        {fill}
+        {children}
+      </View>
+    );
+  }
 
   return (
     <PressableScale
@@ -35,6 +46,7 @@ export function Card({ children, tone = 'default', padding = 'xl', onPress, acce
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       style={({ pressed }) => [base, pressed && { opacity: 0.92 }, style]}>
+      {fill}
       {children}
     </PressableScale>
   );

@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
+import { GradientFill } from '@/components/ui/gradient-fill';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, gradients, primaryGlow } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 type Props = Omit<PressableProps, 'children' | 'style'> & {
@@ -20,6 +21,7 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
   const scheme = useScheme();
   const inactive = !!disabled || !!loading;
 
+  const colors = gradients(scheme);
   const textColor = variant === 'primary' ? theme.onPrimary : variant === 'ghost' ? theme.textSecondary : theme.text;
 
   return (
@@ -32,7 +34,7 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
         styles.base,
         variant === 'primary' && [
           { backgroundColor: pressed ? theme.primaryPressed : theme.primary },
-          scheme === 'light' && styles.primaryShadow,
+          primaryGlow(scheme),
         ],
         variant === 'secondary' && {
           backgroundColor: pressed ? theme.surfaceMuted : theme.surface,
@@ -44,14 +46,21 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
         style,
       ]}
       {...rest}>
-      {loading ? (
-        <ActivityIndicator color={textColor} />
-      ) : (
+      {({ pressed }) => (
         <>
-          {leading}
-          <Text variant="bodyStrong" style={{ color: textColor, letterSpacing: 0.2 }}>
-            {title}
-          </Text>
+          {variant === 'primary' ? (
+            <GradientFill colors={pressed ? colors.primaryPressed : colors.primary} radius={Radius.lg} />
+          ) : null}
+          {loading ? (
+            <ActivityIndicator color={textColor} />
+          ) : (
+            <>
+              {leading}
+              <Text variant="bodyStrong" style={{ color: textColor, letterSpacing: 0.2 }}>
+                {title}
+              </Text>
+            </>
+          )}
         </>
       )}
     </PressableScale>
@@ -68,13 +77,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.sm,
     alignSelf: 'stretch',
-  },
-  primaryShadow: {
-    shadowColor: '#B93D26',
-    shadowOpacity: 0.28,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
   },
   inactive: { opacity: 0.5 },
 });

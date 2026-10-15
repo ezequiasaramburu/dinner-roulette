@@ -3,6 +3,7 @@ export { Avatar } from './avatar';
 export { BackButton } from './back-button';
 export { Button } from './button';
 export { Card } from './card';
+export { GradientFill } from './gradient-fill';
 export { Chip } from './chip';
 export { CountryField } from './country-field';
 export { CodeTiles } from './code-tiles';

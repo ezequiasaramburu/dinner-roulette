@@ -67,7 +67,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 **Checkpoint 2:** every touchable thing answers back; guards show no raw `Pressable` outside the allowed list.
 
 ### Phase 3: Depth
-- [ ] 8. Gradient and shadow tokens on the primary button and accent card
+- [x] 8. Gradient and shadow tokens on the primary button and accent card (hand-test pending)
 
 **Checkpoint 3:** light and dark both reviewed on a real phone.
 

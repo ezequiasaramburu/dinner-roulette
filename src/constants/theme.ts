@@ -5,6 +5,8 @@
  */
 import { Platform } from 'react-native';
 
+import { mix } from '@/lib/color';
+
 export const Colors = {
   light: {
     background: '#FAF5EC', // paper
@@ -88,4 +90,27 @@ export function elevation(scheme: 'light' | 'dark', level: 1 | 2 = 1) {
     },
     default: { elevation: level === 1 ? 2 : 5 },
   });
+}
+
+/** Barely-there top-light gradients as [top, bottom], blended from the existing colours (no new hues). */
+export function gradients(scheme: 'light' | 'dark') {
+  const c = Colors[scheme];
+  const lift = (color: string, amount: number) => [mix(color, '#FFFFFF', amount), color] as const;
+  return {
+    primary: lift(c.primary, 0.06),
+    primaryPressed: lift(c.primaryPressed, 0.06),
+    accent: lift(c.primarySoft, scheme === 'dark' ? 0.04 : 0.3),
+  };
+}
+
+/** The tomato glow under the primary button. Dark mode relies on borders instead of shadows. */
+export function primaryGlow(scheme: 'light' | 'dark') {
+  if (scheme === 'dark') return {};
+  return {
+    shadowColor: Colors.light.primary,
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  };
 }
