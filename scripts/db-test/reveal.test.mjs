@@ -306,6 +306,15 @@ describe('swipe again', () => {
     await assert.rejects(again(a), /swipe_again_used|already_matched/);
   });
 
+  test('starting a second round leaves a notice for the partner only', async () => {
+    const { a, b } = await noMatch();
+    const notices = (u) => asUser(db, u, async () => (await db.query('select kind, from_name from public.notices')).rows);
+    await db.query("update public.profiles set display_name = 'Quinn' where id = $1", [b]);
+    await again(b);
+    assert.deepEqual(await notices(b), []);
+    assert.deepEqual(await notices(a), [{ kind: 'swipe_again_started', from_name: 'Quinn' }]);
+  });
+
   test('a second round that still has no match gets the fallback ladder, not another round', async () => {
     const { a, b } = await noMatch();
     const first = await reveal(a);

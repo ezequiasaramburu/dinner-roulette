@@ -32,7 +32,7 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 
 ## Small features (only if wanted)
 - [x] 9. Ingredient share button (shares the unticked ingredients as a shopping list; unverified on a device)
-- [ ] 10. Notice to the partner when swipe again starts
+- [x] 10. Notice to the partner when swipe again starts (unverified on a device)
 - [ ] 11. Admin dashboard
 
 ## Parked on purpose

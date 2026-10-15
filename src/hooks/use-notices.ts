@@ -7,10 +7,10 @@ import { useAuth } from '@/providers/auth-provider';
 /** A short message my partner's action left for me. Only I can read it; dismissing it removes it. */
 export type Notice = {
   id: string;
-  kind: 'match_goal_changed' | 'couple_ended' | 'partner_left';
+  kind: 'match_goal_changed' | 'couple_ended' | 'partner_left' | 'swipe_again_started';
   from_value: number | null;
   to_value: number | null;
-  /** The partner's name, for notices about them leaving. */
+  /** The partner's name, for notices about them leaving or starting another round. */
   from_name: string | null;
   created_at: string;
 };

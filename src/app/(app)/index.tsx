@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { SwipeAgainNotice } from '@/components/notice-card';
 import { HomeMenu, type MenuPath } from '@/components/home/home-menu';
 import { RevealedCard } from '@/components/home/revealed-card';
 import { TonightCard } from '@/components/home/tonight-card';
@@ -133,6 +134,10 @@ export default function Home() {
             <Button title="Got it" variant="secondary" onPress={() => dismissNotice.mutate(notice.id)} />
           </Card>
         </Animated.View>
+      ))}
+
+      {notices.data?.filter((n) => n.kind === 'swipe_again_started').map((notice) => (
+        <SwipeAgainNotice key={notice.id} notice={notice} />
       ))}
 
       {revealed ? (
