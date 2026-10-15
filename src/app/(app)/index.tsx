@@ -1,14 +1,14 @@
-import Constants from 'expo-constants';
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
-import { RevealNowButton } from '@/components/reveal-now-button';
-import { Accent, Avatar, Button, Card, MenuButton, MenuItem, MenuLabel, Pill, Screen, SideMenu, Text } from '@/components/ui';
-import { Fonts, Radius, Spacing } from '@/constants/theme';
+import { HomeMenu, type MenuPath } from '@/components/home/home-menu';
+import { RevealedCard } from '@/components/home/revealed-card';
+import { TonightCard } from '@/components/home/tonight-card';
+import { Accent, Avatar, Button, Card, MenuButton, Pill, Screen, Text } from '@/components/ui';
+import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
-import { DishImage } from '@/components/dish/dish-image';
 import { useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useDismissNotice, useNotices } from '@/hooks/use-notices';
 import { useProfile } from '@/hooks/use-profile';
@@ -62,16 +62,15 @@ export default function Home() {
 
   // The reveal opens by itself: wait for the reveal moment (the timer is capped, so long waits re-check hourly),
   // then fetch the result and tomorrow's queue.
-  const refetchFeedNow = feed.refetch;
   useEffect(() => {
     if (!revealAt || reveal.data?.status !== 'pending') return;
     const wait = Math.min(Math.max(new Date(revealAt).getTime() - Date.now(), 0) + 1000, 3_600_000);
     const id = setTimeout(() => {
       refetchReveal();
-      refetchFeedNow();
+      refetchFeed();
     }, wait);
     return () => clearTimeout(id);
-  }, [revealAt, reveal.data?.status, refetchReveal, refetchFeedNow]);
+  }, [revealAt, reveal.data?.status, refetchReveal, refetchFeed]);
 
   // Coming back to the app after the reveal time: check straight away.
   useFocusEffect(
@@ -80,7 +79,7 @@ export default function Home() {
     }, [bothReady, refetchReveal]),
   );
 
-  function go(path: '/preferences' | '/settings' | '/recipes' | '/add-recipe' | '/legal/terms' | '/legal/privacy') {
+  function go(path: MenuPath) {
     setMenuOpen(false);
     router.push(path);
   }
@@ -97,9 +96,6 @@ export default function Home() {
   const me = profile?.display_name ?? 'You';
   const partner = couple?.partner?.display_name ?? 'Your partner';
   const instant = couple?.reveal_mode === 'instant';
-  // After "swipe again" the second round reveals the instant way, whatever the couple's mode.
-  const instantRound = instant || (feed.data?.round ?? 1) > 1;
-  const findOut = instantRound ? 'as soon as you match' : `what matched at ${couple?.reveal_time ?? 'the reveal'}`;
 
   return (
     <Screen
@@ -140,120 +136,12 @@ export default function Home() {
 
       {revealed ? (
         <Animated.View entering={FadeInDown.delay(60).duration(500)}>
-          <Card
-            padding="lg"
-            onPress={() => router.push('/reveal')}
-            accessibilityLabel={revealed.seen ? "Open tonight's recipe" : "Open tonight's dinner"}
-            style={{ borderColor: theme.primary, borderWidth: 1.5 }}>
-            <View style={styles.revealRowCard}>
-              {revealed.seen && revealed.dishes[0] ? (
-                <DishImage url={revealed.dishes[0].image_url} label={revealed.dishes[0].title} style={styles.revealThumb} />
-              ) : (
-                <View style={[styles.revealThumb, styles.revealMystery, { backgroundColor: theme.primarySoft }]}>
-                  <Text style={styles.soonEmoji}>🎁</Text>
-                </View>
-              )}
-              <View style={styles.soonText}>
-                <Text variant="overline" tone="primary">
-                  {revealed.seen ? "Tonight's dinner" : 'New'}
-                </Text>
-                <Text variant="heading" numberOfLines={2}>
-                  {revealed.seen ? (revealed.dishes[0]?.title ?? "Tonight's dinner") : "It's time to find out"}
-                </Text>
-                <Text variant="label" tone="primary">
-                  {!revealed.seen
-                    ? 'Reveal dinner'
-                    : revealed.dishes.length > 1
-                      ? `See all ${revealed.dishes.length} dishes`
-                      : 'See the recipe'}
-                </Text>
-              </View>
-              <View style={[styles.chevron, { backgroundColor: theme.primary }]}>
-                <Text style={[styles.chevronText, { color: theme.onPrimary }]}>›</Text>
-              </View>
-            </View>
-          </Card>
+          <RevealedCard revealed={revealed} onPress={() => router.push('/reveal')} />
         </Animated.View>
       ) : null}
 
       <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-        {feed.data && feed.data.status === 'ready' ? (
-          <Card tone="accent" padding="lg">
-            <Text variant="overline" tone="tertiary">
-              Tonight
-            </Text>
-            <View style={styles.thumbs}>
-              {feed.data.dishes.slice(0, 5).map((dish, i) => (
-                <DishImage
-                  key={dish.id}
-                  url={dish.image_url}
-                  label={dish.title}
-                  style={[
-                    styles.thumb,
-                    { borderColor: theme.surface },
-                    i > 0 && styles.thumbOverlap,
-                  ]}
-                />
-              ))}
-            </View>
-            <Text variant="bodyStrong">Find tonight&apos;s dinner</Text>
-            <Text variant="caption" tone="secondary">
-              Swipe a few dishes whenever you have a minute, as often as you like. You&apos;ll both find out {findOut}.
-            </Text>
-            {instantRound && feed.data.has_swiped ? (
-              <RevealNowButton partner={partner} onKeepSwiping={() => router.push('/swipe')} />
-            ) : null}
-          </Card>
-        ) : feed.data?.status === 'closed' ? (
-          <Card tone="accent" padding="lg">
-            <Pill label="Dinner is sorted" tone="success" dot={false} />
-            <Text variant="bodyStrong" style={styles.sortedTitle}>
-              Swiping is closed for today
-            </Text>
-            <Text variant="caption" tone="secondary">
-              Today&apos;s dinner has been revealed. New dishes open tomorrow.
-            </Text>
-          </Card>
-        ) : feed.data ? (
-          <Card tone="accent" padding="lg">
-            <Pill
-              label={feed.data.status === 'goal_reached' ? 'Dinner is sorted' : 'All swiped for now'}
-              tone={feed.data.status === 'goal_reached' ? 'success' : 'neutral'}
-              dot={false}
-            />
-            <Text variant="bodyStrong" style={styles.sortedTitle}>
-              {feed.data.status === 'goal_reached' ? 'You found your match' : "You've seen everything for now"}
-            </Text>
-            <Text variant="caption" tone="secondary">
-              {feed.data.status === 'goal_reached'
-                ? instantRound
-                  ? 'Nothing more to swipe today. New dishes tomorrow.'
-                  : `Nothing more to swipe. You'll both find out what matched at ${couple?.reveal_time}.`
-                : instantRound
-                  ? `Once ${couple?.partner?.display_name ?? 'your partner'} is through too, you'll both see tonight's dinner. Or reveal it now.`
-                  : `We'll work with what you liked and reveal at ${couple?.reveal_time}.`}
-            </Text>
-            {instantRound && feed.data.status === 'exhausted' ? <RevealNowButton partner={partner} /> : null}
-          </Card>
-        ) : (
-          <Card tone="accent" padding="lg">
-            <View style={styles.soonRow}>
-              <Text style={styles.soonEmoji}>🍽️</Text>
-              <View style={styles.soonText}>
-                <Text variant="bodyStrong">
-                  {partnerReady ? "Picking tonight's dishes…" : "Tonight's options are on their way"}
-                </Text>
-                <Text variant="caption" tone="secondary">
-                  {feed.isError
-                    ? "We couldn't load your dishes. Check your connection and reopen the app."
-                    : partnerReady
-                      ? 'Hang on a second.'
-                      : `We'll start as soon as ${partner} chooses their food preferences.`}
-                </Text>
-              </View>
-            </View>
-          </Card>
-        )}
+        <TonightCard feed={feed.data} isError={feed.isError} couple={couple} />
       </Animated.View>
 
       {/* Only useful while we wait for the partner; once you're both set there is nothing to say. */}
@@ -319,114 +207,22 @@ export default function Home() {
         </Card>
       </Animated.View>
 
-      <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)}>
-        <View style={styles.menuHeader}>
-          <View style={styles.avatars}>
-            <Avatar name={me} size={60} colorIndex={0} />
-            <View style={styles.second}>
-              <Avatar name={partner} size={60} colorIndex={1} />
-            </View>
-          </View>
-          <Text variant="heading" style={styles.menuNames}>
-            {me} & {partner}
-          </Text>
-          <Text variant="caption" tone="secondary">
-            Dinner for two
-          </Text>
-        </View>
-
-        <View style={[styles.menuStats, { backgroundColor: theme.surfaceMuted }]}>
-          <View style={styles.menuStat}>
-            <Text variant="overline" tone="tertiary">
-              Matches
-            </Text>
-            <Text variant="bodyStrong">{couple?.match_goal ?? 2} a day</Text>
-          </View>
-          <View style={[styles.menuStatDivider, { backgroundColor: theme.border }]} />
-          <View style={styles.menuStat}>
-            <Text variant="overline" tone="tertiary">
-              Reveal
-            </Text>
-            <Text variant="bodyStrong">{instant ? 'When you match' : `At ${couple?.reveal_time ?? '17:00'}`}</Text>
-          </View>
-        </View>
-
-        <MenuLabel>Your dinners</MenuLabel>
-        <View style={styles.menuItems}>
-          <MenuItem
-            icon="nutrition-outline"
-            label="Food preferences"
-            caption="Diet, allergies and tastes"
-            onPress={() => go('/preferences')}
-          />
-          <MenuItem
-            icon="settings-outline"
-            label="Settings"
-            caption="Matches per day and reveal time"
-            onPress={() => go('/settings')}
-          />
-        </View>
-
-        <MenuLabel>Recipes</MenuLabel>
-        <View style={styles.menuItems}>
-          <MenuItem
-            icon="create-outline"
-            label="Add a recipe"
-            caption="Share a dish with everyone"
-            onPress={() => go('/add-recipe')}
-          />
-          <MenuItem
-            icon="book-outline"
-            label="Your recipes"
-            caption="See where each one is in review"
-            onPress={() => go('/recipes')}
-          />
-        </View>
-
-        <View style={styles.menuSpacer} />
-
-        <View style={[styles.menuFooter, { borderTopColor: theme.border }]}>
-          <MenuItem icon="log-out-outline" label="Sign out" onPress={signOut} />
-          <View style={styles.menuLegal}>
-            <Text variant="caption" tone="tertiary" onPress={() => go('/legal/terms')}>
-              Terms
-            </Text>
-            <Text variant="caption" tone="tertiary">
-              ·
-            </Text>
-            <Text variant="caption" tone="tertiary" onPress={() => go('/legal/privacy')}>
-              Privacy
-            </Text>
-            <Text variant="caption" tone="tertiary">
-              ·
-            </Text>
-            <Text variant="caption" tone="tertiary">
-              v{Constants.expoConfig?.version ?? '1.0.0'}
-            </Text>
-          </View>
-        </View>
-      </SideMenu>
+      <HomeMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onNavigate={go}
+        onSignOut={signOut}
+        me={me}
+        partner={partner}
+        matchGoal={couple?.match_goal ?? 2}
+        revealLabel={instant ? 'When you match' : `At ${couple?.reveal_time ?? '17:00'}`}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: { gap: Spacing.sm },
-  menuHeader: { alignItems: 'center', gap: Spacing.xs, paddingBottom: Spacing.lg },
-  menuNames: { marginTop: Spacing.sm, textAlign: 'center' },
-  menuStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  menuStat: { flex: 1, alignItems: 'center', gap: 2 },
-  menuStatDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
-  menuItems: { gap: Spacing.xs },
-  menuSpacer: { flex: 1 },
-  menuFooter: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.md, gap: Spacing.md },
-  menuLegal: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.sm },
   coupleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
   avatars: { flexDirection: 'row', alignItems: 'center' },
   second: { marginLeft: -14 },
@@ -444,22 +240,6 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   tz: { flex: 1, textAlign: 'right', paddingBottom: 6 },
-  soonRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
-  soonEmoji: { fontSize: 30, lineHeight: 36 },
-  soonText: { flex: 1, gap: 2 },
-  thumbs: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.md,
-  },
-  thumb: { width: 56, height: 56, borderRadius: 28, borderWidth: 3 },
-  thumbOverlap: { marginLeft: -14 },
-  more: { alignItems: 'center', justifyContent: 'center' },
-  revealRowCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.lg },
-  revealThumb: { width: 72, height: 72, borderRadius: 20 },
-  revealMystery: { alignItems: 'center', justifyContent: 'center' },
-  chevron: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  chevronText: { fontFamily: Fonts.medium, fontSize: 26, lineHeight: 30, marginTop: -2, marginLeft: 2 },
   remind: { marginTop: Spacing.lg },
   noticeText: { marginTop: Spacing.xs, marginBottom: Spacing.md },
   sortedTitle: { marginTop: Spacing.md },
