@@ -6,6 +6,7 @@ import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, w
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { Radius, Spacing, elevation } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
@@ -106,7 +107,7 @@ type ItemProps = { icon: ComponentProps<typeof Ionicons>['name']; label: string;
 export function MenuItem({ icon, label, caption, onPress }: ItemProps) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.item, pressed && { backgroundColor: theme.surfaceMuted }]}>
@@ -124,7 +125,7 @@ export function MenuItem({ icon, label, caption, onPress }: ItemProps) {
       <Text tone="tertiary" style={styles.chevron}>
         ›
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

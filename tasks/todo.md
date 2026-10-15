@@ -48,7 +48,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
 
 ## Phase 2: Press feedback everywhere
 
-- [ ] **Task 4: Cards and rows**
+- [x] **Task 4: Cards and rows**  _(code done; hand-test pending)_
   - Acceptance: tappable `Card`, `DishRow` and the side-menu `MenuItem` use `PressableScale`; pressed opacity/color kept; no jump on release
   - Verify: tsc, lint, tests; **hand:** home reveal card, recipe rows, menu rows
   - Dependencies: 3

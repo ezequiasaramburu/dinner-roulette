@@ -59,7 +59,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 **Checkpoint 1:** user rebuilds the dev app and taps through buttons on sign-in, name and home.
 
 ### Phase 2: Press feedback everywhere
-- [ ] 4. Cards and rows
+- [x] 4. Cards and rows (hand-test pending)
 - [ ] 5. Selection controls (chip, option card, stepper)
 - [ ] 6. Icon buttons and fields
 - [ ] 7. Screen-level pressables

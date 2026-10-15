@@ -1,6 +1,7 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Pill, Text } from '@/components/ui';
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
 import type { Recipe } from '@/hooks/use-reveal';
@@ -16,7 +17,7 @@ export function DishRow({ recipe, onPress }: { recipe: Recipe; onPress: () => vo
   const { data: couple } = useCouple();
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${recipe.title}. Open recipe`}
       onPress={onPress}
@@ -40,7 +41,7 @@ export function DishRow({ recipe, onPress }: { recipe: Recipe; onPress: () => vo
           </Text>
         </View>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
