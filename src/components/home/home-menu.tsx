@@ -1,11 +1,17 @@
-import Constants from 'expo-constants';
-import { StyleSheet, View } from 'react-native';
+import Constants from "expo-constants";
+import { Platform, StyleSheet, View } from "react-native";
 
-import { Avatar, MenuItem, MenuLabel, SideMenu, Text } from '@/components/ui';
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Avatar, MenuItem, MenuLabel, SideMenu, Text } from "@/components/ui";
+import { Radius, Spacing } from "@/constants/theme";
+import { useTheme } from "@/hooks/use-theme";
 
-export type MenuPath = '/preferences' | '/settings' | '/recipes' | '/add-recipe' | '/legal/terms' | '/legal/privacy';
+export type MenuPath =
+  | "/preferences"
+  | "/settings"
+  | "/recipes"
+  | "/add-recipe"
+  | "/legal/terms"
+  | "/legal/privacy";
 
 type Props = {
   visible: boolean;
@@ -19,7 +25,16 @@ type Props = {
   revealLabel: string;
 };
 
-export function HomeMenu({ visible, onClose, onNavigate, onSignOut, me, partner, matchGoal, revealLabel }: Props) {
+export function HomeMenu({
+  visible,
+  onClose,
+  onNavigate,
+  onSignOut,
+  me,
+  partner,
+  matchGoal,
+  revealLabel,
+}: Props) {
   const theme = useTheme();
 
   return (
@@ -44,14 +59,18 @@ export function HomeMenu({ visible, onClose, onNavigate, onSignOut, me, partner,
           <Text variant="overline" tone="tertiary">
             Matches
           </Text>
-          <Text variant="bodyStrong">{matchGoal} a day</Text>
+          <Text variant="bodyStrong" style={styles.statValue}>
+            {matchGoal} a day
+          </Text>
         </View>
         <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
         <View style={styles.stat}>
           <Text variant="overline" tone="tertiary">
             Reveal
           </Text>
-          <Text variant="bodyStrong">{revealLabel}</Text>
+          <Text variant="bodyStrong" style={styles.statValue}>
+            {revealLabel}
+          </Text>
         </View>
       </View>
 
@@ -61,13 +80,13 @@ export function HomeMenu({ visible, onClose, onNavigate, onSignOut, me, partner,
           icon="nutrition-outline"
           label="Food preferences"
           caption="Diet, allergies and tastes"
-          onPress={() => onNavigate('/preferences')}
+          onPress={() => onNavigate("/preferences")}
         />
         <MenuItem
           icon="settings-outline"
           label="Settings"
           caption="Matches per day and reveal time"
-          onPress={() => onNavigate('/settings')}
+          onPress={() => onNavigate("/settings")}
         />
       </View>
 
@@ -77,13 +96,13 @@ export function HomeMenu({ visible, onClose, onNavigate, onSignOut, me, partner,
           icon="create-outline"
           label="Add a recipe"
           caption="Share a dish with everyone"
-          onPress={() => onNavigate('/add-recipe')}
+          onPress={() => onNavigate("/add-recipe")}
         />
         <MenuItem
           icon="book-outline"
           label="Your recipes"
           caption="See where each one is in review"
-          onPress={() => onNavigate('/recipes')}
+          onPress={() => onNavigate("/recipes")}
         />
       </View>
 
@@ -92,20 +111,28 @@ export function HomeMenu({ visible, onClose, onNavigate, onSignOut, me, partner,
       <View style={[styles.footer, { borderTopColor: theme.border }]}>
         <MenuItem icon="log-out-outline" label="Sign out" onPress={onSignOut} />
         <View style={styles.legal}>
-          <Text variant="caption" tone="tertiary" onPress={() => onNavigate('/legal/terms')}>
+          <Text
+            variant="caption"
+            tone="tertiary"
+            onPress={() => onNavigate("/legal/terms")}
+          >
             Terms
           </Text>
           <Text variant="caption" tone="tertiary">
             ·
           </Text>
-          <Text variant="caption" tone="tertiary" onPress={() => onNavigate('/legal/privacy')}>
+          <Text
+            variant="caption"
+            tone="tertiary"
+            onPress={() => onNavigate("/legal/privacy")}
+          >
             Privacy
           </Text>
           <Text variant="caption" tone="tertiary">
             ·
           </Text>
           <Text variant="caption" tone="tertiary">
-            v{Constants.expoConfig?.version ?? '1.0.0'}
+            v{Constants.expoConfig?.version ?? "1.0.0"}
           </Text>
         </View>
       </View>
@@ -114,21 +141,30 @@ export function HomeMenu({ visible, onClose, onNavigate, onSignOut, me, partner,
 }
 
 const styles = StyleSheet.create({
-  header: { alignItems: 'center', gap: Spacing.xs, paddingBottom: Spacing.lg },
-  avatars: { flexDirection: 'row', alignItems: 'center' },
+  header: { alignItems: "center", gap: Spacing.xs, paddingBottom: Spacing.lg },
+  avatars: { flexDirection: "row", alignItems: "center" },
   second: { marginLeft: -14 },
-  names: { marginTop: Spacing.sm, textAlign: 'center' },
+  names: { marginTop: Spacing.sm, textAlign: "center" },
   stats: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRadius: Radius.lg,
     paddingVertical: Spacing.md,
     marginBottom: Spacing.md,
   },
-  stat: { flex: 1, alignItems: 'center', gap: 2 },
-  statDivider: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
+  stat: { flex: 1, alignItems: "center", gap: 2 },
+  // One point smaller on Android, where this text renders a little wider.
+  statValue: Platform.select({
+    android: { fontSize: 14.5, lineHeight: 22 },
+    default: {},
+  }),
+  statDivider: { width: StyleSheet.hairlineWidth, alignSelf: "stretch" },
   items: { gap: Spacing.xs },
   spacer: { flex: 1 },
-  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.md, gap: Spacing.md },
-  legal: { flexDirection: 'row', justifyContent: 'center', gap: Spacing.sm },
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.md,
+    gap: Spacing.md,
+  },
+  legal: { flexDirection: "row", justifyContent: "center", gap: Spacing.sm },
 });

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
@@ -14,10 +14,13 @@ type Props = TextInputProps & {
   variant?: 'default' | 'code';
 };
 
-export function TextField({ label, error, hideLabel, variant = 'default', style, onFocus, onBlur, ...rest }: Props) {
+export function TextField({ label, error, hideLabel, variant = 'default', placeholder, style, onFocus, onBlur, ...rest }: Props) {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
   const isCode = variant === 'code';
+  // On Android the native hint of a centred, letter-spaced field puts the caret at the end of the hint. Draw the hint
+  // ourselves there, so an empty code field behaves the same on both platforms.
+  const drawnHint = isCode && Platform.OS === 'android' && !!placeholder && !rest.value;
 
   return (
     <View style={styles.wrap}>
@@ -26,31 +29,39 @@ export function TextField({ label, error, hideLabel, variant = 'default', style,
           {label}
         </Text>
       )}
-      <TextInput
-        accessibilityLabel={label}
-        placeholderTextColor={theme.textTertiary}
-        selectionColor={theme.primary}
-        cursorColor={theme.primary}
-        onFocus={(e) => {
-          setFocused(true);
-          onFocus?.(e);
-        }}
-        onBlur={(e) => {
-          setFocused(false);
-          onBlur?.(e);
-        }}
-        style={[
-          styles.input,
-          isCode && styles.code,
-          {
-            color: theme.text,
-            backgroundColor: theme.surface,
-            borderColor: error ? theme.danger : focused ? theme.primary : theme.borderStrong,
-          },
-          style,
-        ]}
-        {...rest}
-      />
+      <View>
+        <TextInput
+          accessibilityLabel={label}
+          placeholder={isCode && Platform.OS === 'android' ? undefined : placeholder}
+          placeholderTextColor={theme.textTertiary}
+          selectionColor={theme.primary}
+          cursorColor={theme.primary}
+          onFocus={(e) => {
+            setFocused(true);
+            onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
+          style={[
+            styles.input,
+            isCode && styles.code,
+            {
+              color: theme.text,
+              backgroundColor: theme.surface,
+              borderColor: error ? theme.danger : focused ? theme.primary : theme.borderStrong,
+            },
+            style,
+          ]}
+          {...rest}
+        />
+        {drawnHint ? (
+          <Text pointerEvents="none" style={[styles.hint, { color: theme.textTertiary }]}>
+            {placeholder}
+          </Text>
+        ) : null}
+      </View>
       {error ? (
         <Text variant="caption" tone="danger">
           {error}
@@ -77,5 +88,14 @@ const styles = StyleSheet.create({
     fontSize: 32,
     letterSpacing: 10,
     paddingLeft: Spacing.lg + 10, // balance the trailing letter-spacing
+  },
+  hint: {
+    ...StyleSheet.absoluteFill,
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    fontFamily: Fonts.display,
+    fontSize: 32,
+    letterSpacing: 10,
+    paddingLeft: Spacing.lg + 10,
   },
 });
