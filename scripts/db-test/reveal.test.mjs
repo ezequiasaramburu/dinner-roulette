@@ -462,11 +462,11 @@ describe('swipe again', () => {
   });
 
   // The whole queue swiped N days ago, then today's queue is built: how many of those dishes are back?
-  async function overlapAfter(days) {
+  async function overlapAfter(days, liked = false) {
     const { a, deck } = await makeCouple({ mode: 'instant' }).then(async (c) => ({ ...c, deck: (await feed(c.a)).deck_id }));
     await db.query(
-      'insert into swipes (deck_id, user_id, recipe_id, liked) select $1, $2, rid, false from daily_decks d, unnest(d.recipe_ids) rid where d.id = $1',
-      [deck, a],
+      'insert into swipes (deck_id, user_id, recipe_id, liked) select $1, $2, rid, $3 from daily_decks d, unnest(d.recipe_ids) rid where d.id = $1',
+      [deck, a, liked],
     );
     await db.query('update daily_decks set deck_date = deck_date - $2::int where id = $1', [deck, days]);
     const old = (await db.query('select recipe_ids from daily_decks where id = $1', [deck])).rows[0].recipe_ids;
@@ -475,9 +475,14 @@ describe('swipe again', () => {
     return fresh.filter((id) => old.includes(id)).length;
   }
 
-  test('dishes the couple swiped come back after 7 days, not before', async () => {
-    assert.equal(await overlapAfter(3), 0, 'a dish swiped 3 days ago is held back');
-    assert.ok((await overlapAfter(10)) > 0, 'a dish swiped 10 days ago can be served again');
+  test('a dish passed on comes back after 3 days, not before', async () => {
+    assert.equal(await overlapAfter(2), 0, 'a dish passed on 2 days ago is still held back');
+    assert.ok((await overlapAfter(3)) > 0, 'a dish passed on 3 days ago can be served again');
+  });
+
+  test('a dish someone liked stays out for 7 days', async () => {
+    assert.equal(await overlapAfter(6, true), 0, 'a dish liked 6 days ago is held back');
+    assert.ok((await overlapAfter(7, true)) > 0, 'a dish liked 7 days ago can be served again');
   });
 });
 
