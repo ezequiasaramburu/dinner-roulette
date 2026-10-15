@@ -154,12 +154,24 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/app/(app)/recipes.tsx`, `recipe/[id].tsx`, `add-recipe.tsx`, `reveal.tsx`
   - Scope: M (4 files)
 
-- [ ] **Task 15: Transitions audit**
+- [x] **Task 15: Transitions audit**  _(code done; hand-test pending)_
   - Acceptance: every route is listed with its animation; fade only for auth to app and the reveal, push for drill-down, slide up for swipe, add-recipe and any sheet-like screen, slide in for legal; fix only what does not match; Back always reverses the entry
   - Verify: tsc, lint, tests; **hand:** go through every screen and back
   - Dependencies: none
   - Files: `src/app/_layout.tsx`, `src/app/(app)/_layout.tsx`, `src/app/(auth)/_layout.tsx`
   - Scope: S (3 files; may need none)
+  - Audit (2026-10-15):
+
+    | Route | Animation | Matches spec |
+    |---|---|---|
+    | `(auth)` ↔ `(app)` (sign in / out) | fade | yes |
+    | `legal/[doc]` | slide in from right | yes |
+    | sign-in → email, onboarding (name, couple-setup, join, invite) | native push | yes |
+    | preferences, settings, recipes, recipe/[id] | native push | yes |
+    | swipe, add-recipe | slide up from bottom | yes |
+    | reveal | fade | yes |
+    | `replace()` back to home (preferences) and to recipes (add-recipe) | arrived with a push although they close a screen | **fixed**: `animationTypeForReplace: 'pop'` on `index` and `recipes` |
+  - Noticed, not touched: `preferences.tsx` saves with `router.replace('/')` and `add-recipe.tsx` with `router.replace('/recipes')`. If home or recipes is already in the stack below, replace may leave a second copy there (Back would show it again). Worth a hand-test; the fix would be `router.dismissTo`.
 
 ### Checkpoint 5: motion
 - [ ] Full walkthrough with Reduce Motion off, then on (nothing slides or scales)

@@ -67,13 +67,14 @@ export default function AppLayout() {
         <Stack.Screen name="invite" />
       </Stack.Protected>
       <Stack.Protected guard={hasName && isPaired}>
-        <Stack.Screen name="index" />
+        {/* Arriving by replace() ("save and go home") should feel like going back, not forward. */}
+        <Stack.Screen name="index" options={{ animationTypeForReplace: 'pop' }} />
         <Stack.Screen name="preferences" />
         <Stack.Screen name="swipe" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="settings" />
         <Stack.Screen name="reveal" options={{ animation: 'fade' }} />
         <Stack.Screen name="recipe/[id]" />
-        <Stack.Screen name="recipes" />
+        <Stack.Screen name="recipes" options={{ animationTypeForReplace: 'pop' }} />
         <Stack.Screen name="add-recipe" options={{ animation: 'slide_from_bottom' }} />
       </Stack.Protected>
     </Stack>

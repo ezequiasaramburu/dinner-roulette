@@ -82,7 +82,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 - [x] 12. Onboarding screens (couple setup, join, invite) (hand-test pending)
 - [x] 13. Home, settings and smooth reflow of notices (hand-test pending)
 - [x] 14. Recipes, recipe page, add recipe and reveal (hand-test pending)
-- [ ] 15. Transitions audit
+- [x] 15. Transitions audit (hand-test pending)
 
 **Checkpoint 5:** full walkthrough with Reduce Motion off, then on.
 
