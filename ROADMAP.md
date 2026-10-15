@@ -12,6 +12,9 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 
 ## Blocking a real launch
 - [ ] 1. RevenueCat paywall (the "paid" part of the app; was planned right after the MVP)
+  - Decisions so far: 7-day free trial; keep the single "Continue with email" sign-in as it is (no separate login and signup, first screen unchanged); the payer sees the paywall at couple setup; the invited partner joins on the payer's subscription and never sees it
+  - The paywall shows the trial length, the price after the trial, how to cancel, and a "Restore purchases" button
+  - [ ] **Open product decision:** what happens to the couple when the trial ends and the payer doesn't subscribe (or later cancels)? Cover the payer and the partner: read-only? locked out of swiping? data kept for how long? Decide before building the paywall; it also changes the account-deletion text (cancel in the App Store / Google Play)
 - [ ] 2. Server push notifications (blocked on Apple and FCM credentials; today only a local reminder fires)
 - [ ] 3. Legal placeholders: operator and contact values in `src/constants/legal.ts`
 - [ ] 4. App icon and splash screen (still the defaults)
