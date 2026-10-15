@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
+import { FlatList, Modal, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { TextField } from '@/components/ui/text-field';
 import { COUNTRY_NAMES, countryFlag } from '@/constants/countries';
@@ -31,7 +32,7 @@ export function CountryField({ label, value, onChange, error }: Props) {
       <Text variant="label" tone="secondary">
         {label}
       </Text>
-      <Pressable
+      <PressableScale
         accessibilityRole="button"
         accessibilityLabel={value ? `${label}: ${value}` : `${label}: choose`}
         onPress={() => setOpen(true)}
@@ -43,7 +44,7 @@ export function CountryField({ label, value, onChange, error }: Props) {
           {value ? `${countryFlag(value)}  ${value}` : 'Choose a country'}
         </Text>
         <Text tone="tertiary">›</Text>
-      </Pressable>
+      </PressableScale>
       {error ? (
         <Text variant="caption" tone="danger">
           {error}
@@ -54,11 +55,11 @@ export function CountryField({ label, value, onChange, error }: Props) {
         <SafeAreaView style={[styles.modal, { backgroundColor: theme.background }]}>
           <View style={styles.modalHeader}>
             <Text variant="heading">Country</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel="Close" hitSlop={12} onPress={close}>
+            <PressableScale accessibilityRole="button" accessibilityLabel="Close" hitSlop={12} onPress={close}>
               <Text tone="primary" variant="bodyStrong">
                 Close
               </Text>
-            </Pressable>
+            </PressableScale>
           </View>
           <View style={styles.search}>
             <TextField
@@ -83,7 +84,7 @@ export function CountryField({ label, value, onChange, error }: Props) {
               </Text>
             }
             renderItem={({ item }) => (
-              <Pressable
+              <PressableScale
                 accessibilityRole="button"
                 onPress={() => {
                   onChange(item);
@@ -99,7 +100,7 @@ export function CountryField({ label, value, onChange, error }: Props) {
                   {item}
                 </Text>
                 {item === value ? <Text tone="primary">✓</Text> : null}
-              </Pressable>
+              </PressableScale>
             )}
           />
         </SafeAreaView>

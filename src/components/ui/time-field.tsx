@@ -1,6 +1,7 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
@@ -49,7 +50,7 @@ export function TimeField({ value, onChange, accessibilityLabel }: Props) {
   }
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${accessibilityLabel}, ${value}. Change`}
       onPress={() =>
@@ -69,7 +70,7 @@ export function TimeField({ value, onChange, accessibilityLabel }: Props) {
       <Text variant="label" tone="primary">
         Change
       </Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

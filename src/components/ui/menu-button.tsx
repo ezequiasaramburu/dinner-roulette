@@ -1,12 +1,13 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { useTheme } from '@/hooks/use-theme';
 
 /** Round burger button that opens the side menu. Sits where the back button sits on other screens. */
 export function MenuButton({ onPress }: { onPress: () => void }) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel="Open menu"
       hitSlop={8}
@@ -21,7 +22,7 @@ export function MenuButton({ onPress }: { onPress: () => void }) {
         <View style={[styles.bar, styles.barShort, { backgroundColor: theme.text }]} />
         <View style={[styles.bar, { backgroundColor: theme.text }]} />
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

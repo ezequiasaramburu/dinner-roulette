@@ -62,7 +62,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/components/ui/chip.tsx`, `src/components/ui/option-card.tsx`, `src/components/ui/stepper.tsx`
   - Scope: S (3 files)
 
-- [ ] **Task 6: Icon buttons and fields**
+- [x] **Task 6: Icon buttons and fields**  _(code done; hand-test pending)_
   - Acceptance: `MenuButton`, `BackButton`, `TimeField` and `CountryField` (trigger, close, rows) use `PressableScale`; no haptic on back or close; hit slop kept
   - Verify: tsc, lint, tests; **hand:** burger, back, reveal-time picker, country list
   - Dependencies: 3

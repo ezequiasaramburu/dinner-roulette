@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -10,7 +11,7 @@ export function BackButton({ onPress }: { onPress?: () => void }) {
   const router = useRouter();
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel="Go back"
       hitSlop={8}
@@ -21,7 +22,7 @@ export function BackButton({ onPress }: { onPress?: () => void }) {
         pressed && { backgroundColor: theme.surfaceMuted },
       ]}>
       <Text style={{ fontFamily: Fonts.medium, fontSize: 26, lineHeight: 28, marginTop: -2 }}>‹</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

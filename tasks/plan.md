@@ -61,7 +61,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 ### Phase 2: Press feedback everywhere
 - [x] 4. Cards and rows (hand-test pending)
 - [x] 5. Selection controls (chip, option card, stepper) (hand-test pending)
-- [ ] 6. Icon buttons and fields
+- [x] 6. Icon buttons and fields (hand-test pending)
 - [ ] 7. Screen-level pressables
 
 **Checkpoint 2:** every touchable thing answers back; guards show no raw `Pressable` outside the allowed list.
