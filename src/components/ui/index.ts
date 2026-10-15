@@ -14,6 +14,7 @@ export { PressableScale } from './pressable-scale';
 export { RouletteWheel } from './roulette-wheel';
 export { Screen } from './screen';
 export { Section } from './section';
+export { Skeleton } from './skeleton';
 export { MenuItem, MenuLabel, SideMenu } from './side-menu';
 export { Stepper } from './stepper';
 export { TimeField } from './time-field';

@@ -104,12 +104,12 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
 
 ## Phase 4: Loading
 
-- [ ] **Task 9: Skeleton component and the swipe screen**
+- [x] **Task 9: Skeleton component and the swipe screen**  _(code done; hand-test pending)_
   - Acceptance: a `Skeleton` block pulses quietly (opacity only, off under Reduce Motion); swipe first load and the "next batch" wait show a card-shaped skeleton, same size as a real card, so there is no jump
   - Verify: tsc, lint, tests; `check:ui` swipe spinner count is zero; **hand:** open swipe on a slow connection
   - Dependencies: 1
-  - Files: `src/components/ui/skeleton.tsx`, `src/components/ui/index.ts`, `src/app/(app)/swipe.tsx`
-  - Scope: S (3 files)
+  - Files: `src/components/ui/skeleton.tsx`, `src/components/dish/dish-card-skeleton.tsx`, `src/components/ui/index.ts`, `src/constants/motion.ts`, `src/app/(app)/swipe.tsx`
+  - Scope: M (5 files)
 
 - [ ] **Task 10: Skeletons for Your recipes and Preferences**
   - Acceptance: recipes shows three skeleton rows; preferences shows skeleton chips; real content replaces them without a jump; error and empty states unchanged

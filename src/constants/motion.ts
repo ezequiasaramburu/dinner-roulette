@@ -13,6 +13,8 @@ export const Motion = {
     base: 220,
     /** Entrances (what the screens use today). */
     slow: 500,
+    /** One breath of a loading skeleton. */
+    pulse: 900,
   },
   /** Delay between siblings entering one after another. */
   stagger: 80,

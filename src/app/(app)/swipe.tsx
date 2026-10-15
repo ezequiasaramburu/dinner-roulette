@@ -2,9 +2,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { DishCardSkeleton } from '@/components/dish/dish-card-skeleton';
 import { SwipeDeck, type SwipeDeckHandle } from '@/components/dish/swipe-deck';
 import { RevealNowButton } from '@/components/reveal-now-button';
 import { Accent, BackButton, Button, PressableScale, Screen, Text } from '@/components/ui';
@@ -23,7 +24,6 @@ import { timeInZoneToLocal } from '@/lib/zoned-time';
 
 export default function Swipe() {
   const router = useRouter();
-  const theme = useTheme();
   const { data: couple } = useCouple();
   const feed = useSwipeFeed(true);
   const record = useRecordSwipe();
@@ -77,15 +77,7 @@ export default function Swipe() {
     undo.mutate(data.deck_id, { onError: () => Alert.alert("Couldn't undo", 'Please try again.') });
   }
 
-  if (feed.isPending) {
-    return (
-      <Screen scroll={false} contentStyle={styles.center}>
-        <ActivityIndicator color={theme.primary} />
-      </Screen>
-    );
-  }
-
-  if (feed.isError || !data) {
+  if (feed.isError) {
     return (
       <Screen
         scroll={false}
@@ -106,7 +98,8 @@ export default function Swipe() {
       })()
     : 'the reveal';
 
-  if (data.status !== 'ready') {
+  // While the first batch loads there is no data yet: the screen shows its normal layout with a skeleton card.
+  if (data && data.status !== 'ready') {
     const sorted = data.status === 'goal_reached';
     const closed = data.status === 'closed';
     return (
@@ -169,9 +162,7 @@ export default function Swipe() {
         {dishes.length ? (
           <SwipeDeck ref={deckRef} recipes={dishes} onSwipe={onSwipe} />
         ) : (
-          <View style={styles.center}>
-            <ActivityIndicator color={theme.primary} />
-          </View>
+          <DishCardSkeleton />
         )}
       </View>
 

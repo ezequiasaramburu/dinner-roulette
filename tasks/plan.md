@@ -72,7 +72,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 **Checkpoint 3:** light and dark both reviewed on a real phone.
 
 ### Phase 4: Loading
-- [ ] 9. Skeleton component and the swipe screen
+- [x] 9. Skeleton component and the swipe screen (hand-test pending)
 - [ ] 10. Skeletons for Your recipes and Preferences
 
 **Checkpoint 4:** user throttles the network (airplane mode toggle) and checks the three loading screens.
