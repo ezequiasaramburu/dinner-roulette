@@ -3,11 +3,12 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import type { z } from 'zod';
 
 import { Accent, BackButton, Button, Screen, Text, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { supabase } from '@/lib/supabase';
 import { codeSchema, emailSchema } from '@/lib/validation';
 
@@ -46,7 +47,7 @@ function EmailStep({ onSent, onBack }: { onSent: (email: string) => void; onBack
   return (
     <Screen footer={<Button title="Send code" onPress={submit} loading={isSubmitting} />}>
       <BackButton onPress={onBack} />
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="title">
           What&apos;s your <Accent>email?</Accent>
         </Text>
@@ -109,7 +110,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
         </>
       }>
       <BackButton onPress={onBack} />
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="title">
           Check your <Accent>inbox</Accent>
         </Text>

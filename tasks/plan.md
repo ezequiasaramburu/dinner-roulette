@@ -78,7 +78,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 **Checkpoint 4:** user throttles the network (airplane mode toggle) and checks the three loading screens.
 
 ### Phase 5: Motion and transitions
-- [ ] 11. Entrance helper, sign-in screens and name
+- [x] 11. Entrance helper, sign-in screens and name (hand-test pending)
 - [ ] 12. Onboarding screens (couple setup, join, invite)
 - [ ] 13. Home, settings and smooth reflow of notices
 - [ ] 14. Recipes, recipe page, add recipe and reveal

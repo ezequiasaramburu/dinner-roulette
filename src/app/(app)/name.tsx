@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import type { z } from 'zod';
 
 import { Accent, Button, Screen, Text, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { enter } from '@/hooks/use-motion';
 import { useUpdateDisplayName } from '@/hooks/use-profile';
 import { nameSchema } from '@/lib/validation';
 
@@ -31,7 +32,7 @@ export default function Name() {
 
   return (
     <Screen footer={<Button title="Continue" onPress={submit} loading={isSubmitting} />}>
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="overline" tone="primary">
           Welcome
         </Text>

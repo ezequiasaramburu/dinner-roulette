@@ -126,7 +126,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
 
 ## Phase 5: Motion and transitions
 
-- [ ] **Task 11: Entrance helper, sign-in screens and name**
+- [x] **Task 11: Entrance helper, sign-in screens and name**  _(code done; hand-test pending)_
   - Acceptance: one `enter(index)` helper returns the shared entrance (duration and stagger from `Motion`, plain fade under Reduce Motion); `(auth)/index`, `(auth)/email` and `name` use it; the look matches today's, with even timing
   - Verify: tsc, lint, tests; **hand:** sign-in, email, name
   - Dependencies: 1

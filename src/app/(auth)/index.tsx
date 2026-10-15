@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router";
 import { StyleSheet, useWindowDimensions } from "react-native";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 import { Accent, Button, RouletteWheel, Screen, Text } from "@/components/ui";
 import { Spacing } from "@/constants/theme";
+import { enter } from "@/hooks/use-motion";
 
 export default function Welcome() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function Welcome() {
       </Animated.View>
 
       <Animated.View
-        entering={FadeInDown.delay(250).duration(650)}
+        entering={enter(3)}
         style={styles.copy}
       >
         <Text variant="overline" tone="primary">
