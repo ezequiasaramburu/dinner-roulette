@@ -46,8 +46,8 @@ export function DishRow({ recipe, onPress }: { recipe: Recipe; onPress: () => vo
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: Radius.xl, borderWidth: 1, overflow: 'hidden' },
-  image: { width: '100%', height: 200 },
+  card: { borderRadius: Radius.xl, borderWidth: 1 },
+  image: { width: '100%', height: 200, borderTopLeftRadius: Radius.xl - 1, borderTopRightRadius: Radius.xl - 1 },
   body: { padding: Spacing.lg, gap: Spacing.sm },
   meta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.xs },
 });

@@ -66,8 +66,8 @@ export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<Vi
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, borderRadius: Radius.xl, borderWidth: 1, overflow: 'hidden' },
-  image: { flex: 1, minHeight: 200 },
+  card: { flex: 1, borderRadius: Radius.xl, borderWidth: 1 },
+  image: { flex: 1, minHeight: 200, borderTopLeftRadius: Radius.xl - 1, borderTopRightRadius: Radius.xl - 1 },
   body: { padding: Spacing.lg, gap: Spacing.sm },
   title: { minHeight: 56 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },

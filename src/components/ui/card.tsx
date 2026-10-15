@@ -25,7 +25,7 @@ export function Card({ children, tone = 'default', padding = 'xl', onPress, acce
     backgroundColor: tone === 'muted' ? theme.surfaceMuted : tone === 'accent' ? theme.primarySoft : theme.surface,
     borderWidth: tone === 'muted' ? 0 : 1,
     borderColor: theme.border,
-    ...(tone === 'default' ? elevation(scheme) : null),
+    ...elevation(scheme, 2),
   };
 
   // The accent tone gets a faint top-light; it sits just inside the 1px border.

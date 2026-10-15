@@ -87,11 +87,11 @@ export function elevation(scheme: 'light' | 'dark', level: 1 | 2 = 1) {
   return Platform.select({
     ios: {
       shadowColor: '#3B2A1A',
-      shadowOpacity: level === 1 ? 0.07 : 0.12,
-      shadowRadius: level === 1 ? 14 : 24,
-      shadowOffset: { width: 0, height: level === 1 ? 4 : 10 },
+      shadowOpacity: level === 1 ? 0.16 : 0.22,
+      shadowRadius: level === 1 ? 18 : 28,
+      shadowOffset: { width: 0, height: level === 1 ? 8 : 14 },
     },
-    default: { elevation: level === 1 ? 2 : 5 },
+    default: { elevation: level === 1 ? 5 : 9 },
   });
 }
 

@@ -31,8 +31,8 @@ export function DishCardSkeleton() {
 
 // Mirrors the frame of DishCard (card, image, body spacing).
 const styles = StyleSheet.create({
-  card: { flex: 1, borderRadius: Radius.xl, borderWidth: 1, overflow: 'hidden' },
-  image: { flex: 1, minHeight: 200, borderRadius: 0 },
+  card: { flex: 1, borderRadius: Radius.xl, borderWidth: 1 },
+  image: { flex: 1, minHeight: 200, borderRadius: 0, borderTopLeftRadius: Radius.xl - 1, borderTopRightRadius: Radius.xl - 1 },
   body: { padding: Spacing.lg, gap: Spacing.sm },
   title: { minHeight: 56, gap: Spacing.sm, justifyContent: 'center' },
   line: { borderRadius: 7 },
