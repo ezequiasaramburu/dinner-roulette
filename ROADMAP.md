@@ -31,7 +31,7 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 - [ ] Form field heights: add-recipe form, Preferences allergy and dislike fields next to Add, Android time picker
 
 ## Small features (only if wanted)
-- [ ] 9. Ingredient share button
+- [x] 9. Ingredient share button (shares the unticked ingredients as a shopping list; unverified on a device)
 - [ ] 10. Notice to the partner when swipe again starts
 - [ ] 11. Admin dashboard
 

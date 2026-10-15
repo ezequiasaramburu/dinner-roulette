@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
+import { Linking, Share, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { BackButton, Button, Card, Pill, PressableScale, Screen, Text } from '@/components/ui';
@@ -13,6 +13,7 @@ import { CommunityBadge } from '@/components/dish/community-badge';
 import { DishImage } from '@/components/dish/dish-image';
 import { useCouple } from '@/hooks/use-couple';
 import { useTheme } from '@/hooks/use-theme';
+import { shoppingList } from '@/lib/shopping-list';
 
 /** The full recipe for one revealed dish: ingredients to tick off, numbered steps, and the source's video. */
 export default function RecipeScreen() {
@@ -44,6 +45,9 @@ export default function RecipeScreen() {
       return next;
     });
   }
+
+  // Share only what is still missing: the ticked ones are already in the kitchen.
+  const missing = recipe.ingredients.filter((_, i) => !have.has(i));
 
   return (
     <Screen>
@@ -129,6 +133,12 @@ export default function RecipeScreen() {
               );
             })}
           </View>
+          <Button
+            title="Share shopping list"
+            variant="secondary"
+            disabled={!missing.length}
+            onPress={() => Share.share({ message: shoppingList(recipe.title, missing) })}
+          />
         </View>
 
         <View style={styles.section}>

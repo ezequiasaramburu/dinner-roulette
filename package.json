@@ -66,7 +66,7 @@
     "db:status": "supabase status",
     "db:reset": "supabase db reset",
     "db:migration": "supabase migration new",
-    "test": "node --test scripts/mealdb/normalize.test.mjs src/lib/zoned-time.test.mjs src/lib/main-ingredients.test.mjs src/lib/haptics.test.mjs src/lib/color.test.mjs scripts/check-ui.test.mjs",
+    "test": "node --test scripts/mealdb/normalize.test.mjs src/lib/zoned-time.test.mjs src/lib/main-ingredients.test.mjs src/lib/haptics.test.mjs src/lib/color.test.mjs src/lib/shopping-list.test.mjs scripts/check-ui.test.mjs",
     "recipes:import": "node scripts/mealdb/import.mjs",
     "check:ui": "node scripts/check-ui.mjs",
     "dev:reset": "node scripts/dev-reset.mjs",
