@@ -29,7 +29,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Note: Reanimated already follows the phone's Reduce Motion setting by default for springs, timings and entering, exiting and layout animations, so "animated files without the hook" would have flagged 14 correct files. The guard checks for opt-outs instead.
   - **Baseline (2026-10-15):** raw Pressable 18 · spinners on the three screens 4 · hex colors in components 1 (button shadow) · Reduce Motion opt-outs 0
 
-- [ ] **Task 3: `PressableScale` and the Button**
+- [x] **Task 3: `PressableScale` and the Button**  _(code done; hand-test at Checkpoint 1 pending)_
   - Acceptance:
     - New `PressableScale` animates the Pressable itself, supports the `style` callback and the `haptic` prop, and skips movement under Reduce Motion
     - Button uses it: eases down, springs back, light tap on primary; layout identical to today (stretch, rows)

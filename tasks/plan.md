@@ -54,7 +54,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 ### Phase 1: Foundation and first visible slice
 - [x] 1. Packages, motion tokens, Reduce Motion hook, safe haptics
 - [x] 2. `check:ui` guard script
-- [ ] 3. `PressableScale` and the Button (every button eases and ticks)
+- [x] 3. `PressableScale` and the Button (hand-test pending) (every button eases and ticks)
 
 **Checkpoint 1:** user rebuilds the dev app and taps through buttons on sign-in, name and home.
 

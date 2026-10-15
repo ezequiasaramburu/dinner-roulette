@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
+import { PressableScale } from '@/components/ui/pressable-scale';
 import { Text } from '@/components/ui/text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
@@ -22,7 +23,8 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
   const textColor = variant === 'primary' ? theme.onPrimary : variant === 'ghost' ? theme.textSecondary : theme.text;
 
   return (
-    <Pressable
+    <PressableScale
+      haptic={variant === 'primary' ? 'tap' : 'none'}
       accessibilityRole="button"
       accessibilityState={{ disabled: inactive, busy: !!loading }}
       disabled={inactive}
@@ -39,7 +41,6 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
         },
         variant === 'ghost' && { backgroundColor: pressed ? theme.surfaceMuted : 'transparent', minHeight: 48 },
         inactive && styles.inactive,
-        pressed && styles.pressed,
         style,
       ]}
       {...rest}>
@@ -53,7 +54,7 @@ export function Button({ title, variant = 'primary', loading, disabled, leading,
           </Text>
         </>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -76,5 +77,4 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   inactive: { opacity: 0.5 },
-  pressed: { transform: [{ scale: 0.985 }] },
 });
