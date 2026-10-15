@@ -8,13 +8,16 @@ import type { CoupleState } from '@/hooks/use-couple';
 import { timeInZoneToLocal } from '@/lib/zoned-time';
 
 /**
- * A daily reminder on this phone at the couple's reveal time. It is scheduled on the device, so it needs no server:
+ * A daily reminder on this phone: at the couple's reveal time (scheduled mode), or at a time this person picks to
+ * remind them to swipe (instant mode, which has no reveal time). It is scheduled on the device, so it needs no server:
  * the time is the same every day and is known in advance. (Telling a partner about a match as it happens is
  * different and needs push from the server, which comes later.)
  */
 
 const CHANNEL = 'reveal';
 const ENABLED_KEY = 'reveal-reminder-enabled';
+const SWIPE_TIME_KEY = 'swipe-reminder-time';
+const DEFAULT_SWIPE_TIME = '14:00';
 
 type Permission = 'unknown' | 'undetermined' | 'granted' | 'denied';
 
@@ -22,12 +25,15 @@ type ReminderStore = {
   permission: Permission;
   /** The user's switch for this phone (default on). It only matters once permission is granted. */
   enabled: boolean;
+  /** "HH:MM" on this phone's clock: when instant mode reminds this person to swipe. */
+  swipeTime: string;
   /** Read the saved switch and the current permission. */
   load: () => Promise<void>;
   refreshPermission: () => Promise<void>;
   /** Ask the system for permission (shows the system prompt the first time). */
   request: () => Promise<void>;
   setEnabled: (enabled: boolean) => Promise<void>;
+  setSwipeTime: (time: string) => Promise<void>;
 };
 
 async function readPermission(): Promise<Permission> {
@@ -48,9 +54,11 @@ async function ensureChannel() {
 export const useReminders = create<ReminderStore>((set, get) => ({
   permission: 'unknown',
   enabled: true,
+  swipeTime: DEFAULT_SWIPE_TIME,
   load: async () => {
     const saved = await AsyncStorage.getItem(ENABLED_KEY).catch(() => null);
-    set({ enabled: saved !== 'false' });
+    const time = await AsyncStorage.getItem(SWIPE_TIME_KEY).catch(() => null);
+    set({ enabled: saved !== 'false', swipeTime: time && /^\d{2}:\d{2}$/.test(time) ? time : DEFAULT_SWIPE_TIME });
     await get().refreshPermission();
   },
   refreshPermission: async () => set({ permission: await readPermission() }),
@@ -63,6 +71,10 @@ export const useReminders = create<ReminderStore>((set, get) => ({
     set({ enabled });
     await AsyncStorage.setItem(ENABLED_KEY, String(enabled)).catch(() => {});
   },
+  setSwipeTime: async (swipeTime) => {
+    set({ swipeTime });
+    await AsyncStorage.setItem(SWIPE_TIME_KEY, swipeTime).catch(() => {});
+  },
 }));
 
 /**
@@ -71,7 +83,7 @@ export const useReminders = create<ReminderStore>((set, get) => ({
  * (the phone's timezone or daylight saving may have moved the local time).
  */
 export function useRevealReminderSync(couple: CoupleState | null | undefined) {
-  const { permission, enabled, load, refreshPermission } = useReminders();
+  const { permission, enabled, swipeTime, load, refreshPermission } = useReminders();
   const [foregrounded, setForegrounded] = useState(0);
 
   useEffect(() => {
@@ -95,15 +107,18 @@ export function useRevealReminderSync(couple: CoupleState | null | undefined) {
     (async () => {
       // This is the only scheduled notification the app uses, so clearing all of them is safe.
       await Notifications.cancelAllScheduledNotificationsAsync();
-      if (cancelled || mode !== 'scheduled' || !enabled || permission !== 'granted') return;
+      if (cancelled || !enabled || permission !== 'granted') return;
 
       await ensureChannel();
-      const { hour, minute } = timeInZoneToLocal(time, timeZone);
+      // Instant mode has no reveal time, so the reminder is a nudge to swipe, at the time on this phone's clock.
+      const instant = mode === 'instant';
+      const { hour, minute } = instant
+        ? { hour: Number(swipeTime.slice(0, 2)), minute: Number(swipeTime.slice(3)) }
+        : timeInZoneToLocal(time, timeZone);
       await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Your dinner is revealed 🍽️',
-          body: 'Open Dinner Roulette to see what you matched on.',
-        },
+        content: instant
+          ? { title: "Time to find tonight's dinner 🍽️", body: 'Swipe a few dishes while you have a minute.' }
+          : { title: 'Your dinner is revealed 🍽️', body: 'Open Dinner Roulette to see what you matched on.' },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute, channelId: CHANNEL },
       });
     })().catch(() => {
@@ -113,5 +128,5 @@ export function useRevealReminderSync(couple: CoupleState | null | undefined) {
     return () => {
       cancelled = true;
     };
-  }, [mode, time, timeZone, permission, enabled, foregrounded]);
+  }, [mode, time, timeZone, permission, enabled, swipeTime, foregrounded]);
 }

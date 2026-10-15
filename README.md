@@ -149,7 +149,7 @@ How the dinner is found:
 - `surprise`: nobody liked anything, so the top of the queue (the best fit for both tastes).
 
 Instant mode uses the same ladder. It opens when the match goal is reached, when both partners have been through every
-dish, or when either taps "Reveal with what we have" (`reveal_now()`, migration 0026).
+dish, or when either taps "Reveal with what we have" (`reveal_now()`, migration 0026). That button is not on the swipe screen: Home offers it on its own card only once **both** of you have swiped half of the dishes you can swipe in the round with no match (migration 0031, `reveal_offer_ready()`). Instant couples get a daily swipe reminder on each phone, at a time they choose (default 14:00).
 
 If nobody matched (`closest` or `surprise`), the couple can **swipe again** once (`swipe_again()`, migration 0027): the
 dishes just shown are set aside, the reveal reopens, and a second round with new dishes from the rest of the queue
@@ -260,3 +260,9 @@ walk the whole flow again without new sign-ups or waiting for tomorrow. Add `--d
 `--keep-name` to skip the name screen, `--recipes` to drop their community recipes too. Put
 `DEV_RESET_EMAILS=you@example.com,partner@example.com` in `.env.local` to run it with no arguments. Reopen the app
 afterwards. It refuses to run if their couple includes a third account (override with `--force`).
+
+`npm run dev:reset-day -- you@example.com` (any one member; or no arguments with `DEV_RESET_EMAILS`) puts the couple back
+to "nobody has swiped today" in the **local** database, to replay the reveal cases (match, closest, surprise, swipe
+again). It removes the couple's deck for the current cycle with its swipes and reveal views, plus any "started another
+round" notice, and keeps accounts, couple and preferences. A fresh deck is built the next time they open the app, so
+the dishes may differ. `--dry-run` shows what it would remove. Reopen the app on both phones afterwards.

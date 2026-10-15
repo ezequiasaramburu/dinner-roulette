@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Alert, Linking, StyleSheet, Switch, View } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import Animated from "react-native-reanimated";
 
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/hooks/use-couple";
 import { useAccountActions } from "@/hooks/use-account";
 import { useBlockedCount, useClearBlocks } from "@/hooks/use-recipes";
+import { ReminderControls } from "@/components/reminder-controls";
 import { useReminders } from "@/hooks/use-reveal-reminder";
 import { useTheme } from "@/hooks/use-theme";
 import { timeInZoneToLocal } from "@/lib/zoned-time";
@@ -30,7 +31,7 @@ import { timeInZoneToLocal } from "@/lib/zoned-time";
 export default function Settings() {
   const { data: couple } = useCouple();
   const theme = useTheme();
-  const { permission, enabled, request, setEnabled } = useReminders();
+  const { swipeTime, setSwipeTime } = useReminders();
   const update = useUpdateCoupleSettings();
   const router = useRouter();
   const blocked = useBlockedCount();
@@ -138,59 +139,34 @@ export default function Settings() {
 
             <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
-            {permission === "granted" ? (
-              <View style={styles.switchRow}>
-                <View style={styles.switchText}>
-                  <Text variant="bodyStrong">Remind me on this phone</Text>
-                  <Text variant="caption" tone="secondary">
-                    A notification when the reveal is ready.
-                  </Text>
-                </View>
-                <Switch
-                  accessibilityLabel="Remind me on this phone"
-                  value={enabled}
-                  onValueChange={setEnabled}
-                  trackColor={{
-                    true: theme.primary,
-                    false: theme.borderStrong,
-                  }}
-                />
-              </View>
-            ) : permission === "denied" ? (
-              <>
-                <Text variant="bodyStrong">Reminders are off</Text>
-                <Text
-                  variant="caption"
-                  tone="secondary"
-                  style={styles.localNote}
-                >
-                  Notifications are blocked for Dinner Roulette. Allow them in
-                  your phone&apos;s settings to get a reminder.
-                </Text>
-                <Button
-                  title="Open settings"
-                  variant="secondary"
-                  onPress={() => Linking.openSettings()}
-                />
-              </>
-            ) : permission === "undetermined" ? (
-              <>
-                <Text variant="bodyStrong">Get a reminder</Text>
-                <Text
-                  variant="caption"
-                  tone="secondary"
-                  style={styles.localNote}
-                >
-                  We&apos;ll send one notification at the reveal time, nothing
-                  else.
-                </Text>
-                <Button
-                  title="Turn on reminders"
-                  variant="secondary"
-                  onPress={request}
-                />
-              </>
-            ) : null}
+            <ReminderControls
+              switchCaption="A notification when the reveal is ready."
+              askCaption="We'll send one notification at the reveal time, nothing else."
+            />
+          </Card>
+        ) : null}
+
+        {instant ? (
+          <Card>
+            <Text variant="overline" tone="tertiary">
+              Swipe reminder
+            </Text>
+            <Text variant="heading" style={styles.cardTitle}>
+              When should we nudge you to swipe?
+            </Text>
+            <Text variant="caption" tone="secondary">
+              You find out as soon as you match, so there is no set time. This is a daily reminder on this phone only.
+            </Text>
+            <View style={styles.stepper}>
+              <TimeField accessibilityLabel="Swipe reminder time" value={swipeTime} onChange={setSwipeTime} />
+            </View>
+
+            <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+            <ReminderControls
+              switchCaption="A notification at this time, every day."
+              askCaption="We'll send one notification a day at this time, nothing else."
+            />
           </Card>
         ) : null}
 

@@ -10,6 +10,7 @@ const MESSAGES: Record<string, string> = {
   swipe_again_used: 'You already used your extra round today.',
   nothing_left: 'There are no new dishes left to swipe today.',
   nothing_swiped: 'Swipe a few dishes first, then you can reveal.',
+  swipe_more: 'Swipe a few more dishes first, then you can reveal.',
   invalid_title: 'Give your recipe a title of 3 to 80 characters.',
   invalid_country: 'Choose a country from the list.',
   invalid_ingredients: 'Add 3 to 30 ingredients, each with a name.',

@@ -7,7 +7,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { DishCardSkeleton } from '@/components/dish/dish-card-skeleton';
 import { SwipeDeck, type SwipeDeckHandle } from '@/components/dish/swipe-deck';
-import { RevealNowButton } from '@/components/reveal-now-button';
 import { Accent, BackButton, Button, PressableScale, Screen, Text } from '@/components/ui';
 import { Fonts, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
@@ -113,12 +112,7 @@ export default function Swipe() {
       <Screen
         scroll={false}
         contentStyle={styles.screen}
-        footer={
-          <>
-            {!sorted && !closed && instant ? <RevealNowButton partner={partnerName} /> : null}
-            <Button title="Back home" onPress={() => router.back()} />
-          </>
-        }>
+        footer={<Button title="Back home" onPress={() => router.back()} />}>
         <View style={styles.header}>
           <BackButton />
         </View>
@@ -147,7 +141,7 @@ export default function Swipe() {
               : closed
                 ? "Today's dinner has been revealed. New dishes open tomorrow."
                 : instant
-                  ? `You've been through every dish that fits you both. Once ${partnerName} is through too, you'll both see tonight's dinner. Or reveal it now with what you have.`
+                  ? `You've been through every dish that fits you both. Once ${partnerName} is through too, you'll both see tonight's dinner.`
                   : `You've been through every dish that fits you both. We'll work with what you liked and reveal at ${revealTime}.`}
           </Text>
         </Animated.View>

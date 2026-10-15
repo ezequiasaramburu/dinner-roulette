@@ -14,6 +14,29 @@ const reveal = (u) => call(u, 'select public.get_reveal() as r');
 const swipe = (u, deck, recipe, liked) => call(u, 'select public.record_swipe($1, $2, $3) as r', [deck, recipe, liked]);
 const seen = (u, deck) => call(u, 'select public.mark_reveal_seen($1) as r', [deck]);
 
+// Passes on enough dishes for this person to have swiped half of the ones they can swipe in this round: the point
+// where "Reveal with what we have" is offered (when the partner is there too).
+async function half(user, deck) {
+  const { rows } = await db.query(
+    `select
+       (select count(*) from swipes s join daily_decks d on d.id = s.deck_id
+        where d.id = $1 and s.user_id = $2 and s.swiped_at >= coalesce(d.round_started_at, '-infinity'))::int as done,
+       (select count(*) from daily_decks d, unnest(d.recipe_ids) rid
+        where d.id = $1 and rid <> all (d.first_reveal_ids)
+          and not exists (select 1 from swipes s where s.deck_id = d.id and s.user_id = $2 and s.recipe_id = rid))::int as waiting`,
+    [deck, user],
+  );
+  const k = Math.max(1, Math.ceil((rows[0].waiting - rows[0].done) / 2));
+  await db.query(
+    `insert into swipes (deck_id, user_id, recipe_id, liked)
+     select d.id, $2, t.rid, false from daily_decks d, unnest(d.recipe_ids) with ordinality t(rid, ord)
+     where d.id = $1 and t.rid <> all (d.first_reveal_ids)
+       and not exists (select 1 from swipes s where s.deck_id = d.id and s.user_id = $2 and s.recipe_id = t.rid)
+     order by t.ord limit $3`,
+    [deck, user, k],
+  );
+}
+
 let n = 0;
 // reveal '23:59:59' = still ahead today (pending); '00:00' = already passed today (revealed).
 async function makeCouple({ reveal = '23:59:59', goal = 2, mode = 'scheduled' } = {}) {
@@ -215,6 +238,8 @@ describe('instant reveal', () => {
     const [d1, d2] = f.dishes.map((d) => d.id);
     await swipe(a, f.deck_id, d1, true);
     await swipe(b, f.deck_id, d2, false);
+    await half(a, f.deck_id);
+    await half(b, f.deck_id);
     await revealNow(b);
     for (const u of [a, b]) {
       const r = await reveal(u);
@@ -229,6 +254,8 @@ describe('instant reveal', () => {
     const { a, b } = await makeCouple({ mode: 'instant' });
     const f = await feed(a);
     await swipe(a, f.deck_id, f.dishes[0].id, false);
+    await half(a, f.deck_id);
+    await half(b, f.deck_id);
     await revealNow(a);
     const r = await reveal(b);
     assert.equal(r.kind, 'surprise');
@@ -240,12 +267,51 @@ describe('instant reveal', () => {
     await assert.rejects(revealNow(a), /nothing_swiped/);
     const f = await feed(a);
     await swipe(a, f.deck_id, f.dishes[0].id, true);
+    await half(a, f.deck_id);
+    await half(b, f.deck_id);
     await revealNow(a);
     const first = (await reveal(a)).reveal_at;
     await revealNow(b).catch(() => {});
     assert.equal((await reveal(a)).reveal_at, first);
     const sched = await makeCouple();
     await assert.rejects(revealNow(sched.a), /not_instant/);
+  });
+
+  test('the early reveal is offered only when BOTH have swiped half of what they can swipe', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant' });
+    const f = await feed(a);
+    await swipe(a, f.deck_id, f.dishes[0].id, true);
+    assert.equal((await feed(a)).can_reveal_now, false, 'one swipe is nowhere near half');
+    await assert.rejects(revealNow(a), /swipe_more/);
+
+    await half(a, f.deck_id);
+    for (const u of [a, b]) assert.equal((await feed(u)).can_reveal_now, false, 'one of us at half is not enough');
+    await assert.rejects(revealNow(a), /swipe_more/);
+
+    await swipe(b, f.deck_id, f.dishes[1].id, true);
+    await half(b, f.deck_id);
+    for (const u of [a, b]) assert.equal((await feed(u)).can_reveal_now, true);
+    await revealNow(a);
+    assert.equal((await reveal(b)).status, 'revealed');
+  });
+
+  test('a tiny deck is not stuck: half of what exists is what counts', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant' });
+    const f = await feed(a);
+    await db.query('update daily_decks set recipe_ids = recipe_ids[1:3] where id = $1', [f.deck_id]);
+    await swipe(a, f.deck_id, f.dishes[0].id, true);
+    await swipe(a, f.deck_id, f.dishes[1].id, false);
+    await swipe(b, f.deck_id, f.dishes[2].id, true);
+    await swipe(b, f.deck_id, f.dishes[0].id, false);
+    for (const u of [a, b]) assert.equal((await feed(u)).can_reveal_now, true);
+  });
+
+  test('a match before half never needs the offer', async () => {
+    const { a, b } = await makeCouple({ mode: 'instant', goal: 1 });
+    const f = await feed(a);
+    await swipe(a, f.deck_id, f.dishes[0].id, true);
+    assert.equal((await swipe(b, f.deck_id, f.dishes[0].id, true)).status, 'goal_reached');
+    assert.equal((await reveal(a)).kind, 'match');
   });
 
   test('when both have been through every dish, the reveal opens by itself', async () => {
@@ -273,7 +339,11 @@ describe('swipe again', () => {
     await swipe(c.a, f.deck_id, d1, true);
     await swipe(c.b, f.deck_id, d2, false);
     if (opts.mode === 'scheduled') await openReveal(c.couple);
-    else await revealNow(c.b);
+    else {
+      await half(c.a, f.deck_id);
+      await half(c.b, f.deck_id);
+      await revealNow(c.b);
+    }
     return { ...c, deck: f.deck_id, d1, d2 };
   }
 
@@ -315,6 +385,18 @@ describe('swipe again', () => {
     assert.deepEqual(await notices(a), [{ kind: 'swipe_again_started', from_name: 'Quinn' }]);
   });
 
+  test('in the second round the offer is half of the leftover dishes, not half of the first deck', async () => {
+    const { a, b, deck } = await noMatch();
+    await again(a);
+    for (const u of [a, b]) assert.equal((await feed(u)).can_reveal_now, false, 'round two starts with nothing swiped');
+    await half(a, deck);
+    await half(b, deck);
+    for (const u of [a, b]) assert.equal((await feed(u)).can_reveal_now, true);
+    const swiped = (await db.query('select count(*)::int n from swipes where deck_id = $1 and user_id = $2 and swiped_at >= (select round_started_at from daily_decks where id = $1)', [deck, a])).rows[0].n;
+    const total = (await db.query('select array_length(recipe_ids, 1) n from daily_decks where id = $1', [deck])).rows[0].n;
+    assert.ok(swiped < total / 2, 'it asked for half of what was left, not half of the whole deck');
+  });
+
   test('a second round that still has no match gets the fallback ladder, not another round', async () => {
     const { a, b } = await noMatch();
     const first = await reveal(a);
@@ -322,6 +404,8 @@ describe('swipe again', () => {
     const f = await feed(b);
     await swipe(b, f.deck_id, f.dishes[0].id, true);
     await assert.rejects(revealNow(a), /nothing_swiped/, 'a has not swiped in this round');
+    await half(a, f.deck_id);
+    await half(b, f.deck_id);
     await revealNow(b);
     const second = await reveal(b);
     assert.equal(second.kind, 'closest');

@@ -1,8 +1,6 @@
-import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { DishImage } from '@/components/dish/dish-image';
-import { RevealNowButton } from '@/components/reveal-now-button';
 import { Card, Pill, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import type { CoupleState } from '@/hooks/use-couple';
@@ -24,7 +22,6 @@ const revealsInstantly = (feed: SwipeFeed, couple: CoupleState | null | undefine
   couple?.reveal_mode === 'instant' || feed.round > 1;
 
 function ReadyCard({ feed, couple }: { feed: SwipeFeed; couple: CoupleState | null | undefined }) {
-  const router = useRouter();
   const theme = useTheme();
   const instant = revealsInstantly(feed, couple);
   const findOut = instant ? 'as soon as you match' : `what matched at ${couple?.reveal_time ?? 'the reveal'}`;
@@ -48,12 +45,6 @@ function ReadyCard({ feed, couple }: { feed: SwipeFeed; couple: CoupleState | nu
       <Text variant="caption" tone="secondary">
         Swipe a few dishes whenever you have a minute, as often as you like. You&apos;ll both find out {findOut}.
       </Text>
-      {instant && feed.has_swiped ? (
-        <RevealNowButton
-          partner={couple?.partner?.display_name ?? 'Your partner'}
-          onKeepSwiping={() => router.push('/swipe')}
-        />
-      ) : null}
     </Card>
   );
 }
@@ -85,7 +76,7 @@ function DoneCard({ feed, couple }: { feed: SwipeFeed; couple: CoupleState | nul
       : `Nothing more to swipe. You'll both find out what matched at ${couple?.reveal_time}.`;
   } else {
     caption = instant
-      ? `Once ${partner} is through too, you'll both see tonight's dinner. Or reveal it now.`
+      ? `Once ${partner} is through too, you'll both see tonight's dinner.`
       : `We'll work with what you liked and reveal at ${couple?.reveal_time}.`;
   }
 
@@ -98,9 +89,6 @@ function DoneCard({ feed, couple }: { feed: SwipeFeed; couple: CoupleState | nul
       <Text variant="caption" tone="secondary">
         {caption}
       </Text>
-      {instant && feed.status === 'exhausted' ? (
-        <RevealNowButton partner={couple?.partner?.display_name ?? 'Your partner'} />
-      ) : null}
     </Card>
   );
 }

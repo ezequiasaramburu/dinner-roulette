@@ -5,6 +5,7 @@ import Animated from 'react-native-reanimated';
 
 import { SwipeAgainNotice } from '@/components/notice-card';
 import { HomeMenu, type MenuPath } from '@/components/home/home-menu';
+import { RevealOfferCard } from '@/components/home/reveal-offer-card';
 import { RevealedCard } from '@/components/home/revealed-card';
 import { TonightCard } from '@/components/home/tonight-card';
 import { Accent, Avatar, Button, Card, MenuButton, Pill, Screen, Text } from '@/components/ui';
@@ -38,7 +39,7 @@ export default function Home() {
   const feed = useSwipeFeed(bothReady);
   const reveal = useReveal(bothReady);
   const notices = useNotices(bothReady);
-  const { permission, request: requestReminders } = useReminders();
+  const { permission, swipeTime, request: requestReminders } = useReminders();
   const dismissNotice = useDismissNotice();
   const refetchReveal = reveal.refetch;
   const revealAt = reveal.data?.reveal_at;
@@ -78,7 +79,9 @@ export default function Home() {
   useFocusEffect(
     useCallback(() => {
       if (bothReady) refetchReveal();
-    }, [bothReady, refetchReveal]),
+      // Coming back from swiping: the early-reveal button depends on how many dishes were swiped.
+      if (status === 'ready') refetchFeed();
+    }, [bothReady, refetchReveal, status, refetchFeed]),
   );
 
   function go(path: MenuPath) {
@@ -150,6 +153,12 @@ export default function Home() {
         <TonightCard feed={feed.data} isError={feed.isError} couple={couple} />
       </Animated.View>
 
+      {(instant || (feed.data?.round ?? 1) > 1) && feed.data?.can_reveal_now && (status === 'ready' || status === 'exhausted') ? (
+        <Animated.View entering={enter(2)} layout={reflow}>
+          <RevealOfferCard partner={partner} />
+        </Animated.View>
+      ) : null}
+
       {/* Only useful while we wait for the partner; once you're both set there is nothing to say. */}
       {!partnerReady ? (
         <Animated.View entering={enter(3)} layout={reflow}>
@@ -202,9 +211,9 @@ export default function Home() {
               </Text>
             </View>
           )}
-          {!instant && permission === 'undetermined' ? (
+          {permission === 'undetermined' ? (
             <Button
-              title={`Remind me at ${couple?.reveal_time}`}
+              title={instant ? `Remind me to swipe at ${swipeTime}` : `Remind me at ${couple?.reveal_time}`}
               variant="secondary"
               onPress={requestReminders}
               style={styles.remind}

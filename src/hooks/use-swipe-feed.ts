@@ -39,6 +39,8 @@ export type SwipeFeed = {
   cycle_date: string;
   status: 'ready' | 'goal_reached' | 'closed' | 'exhausted';
   has_swiped: boolean;
+  /** "Reveal with what we have" may show: enough swiped in this round, or nothing left to swipe. */
+  can_reveal_now: boolean;
   /** 2 after the couple used their one "swipe again". */
   round: number;
   dishes: Dish[];

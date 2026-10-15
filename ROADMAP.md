@@ -8,6 +8,7 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 - [x] Swipe again (one extra round, only after closest or surprise)
 - [x] Premium UI polish (16 tasks, code-complete; hand-test pending, see below)
 - [x] `npm run dev:reset` (dry run only so far)
+- [x] `npm run dev:reset-day` (reset today's swipes and matches for a couple; dry run only so far)
 - [x] Buttons and form fields share one height (`ControlHeight` 50), unverified on a device
 
 ## Blocking a real launch
@@ -34,6 +35,12 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 - [x] 9. Ingredient share button (shares the unticked ingredients as a shopping list; unverified on a device)
 - [x] 10. Notice to the partner when swipe again starts (unverified on a device)
 - [ ] 11. Admin dashboard
+
+## Instant mode rework (built, hand-test pending)
+Plan in [docs/instant-mode-plan.md](docs/instant-mode-plan.md).
+- [x] Remove the early "Reveal with what we have" shortcut; offer it on a separate Home card once both have swiped half the deck with no match
+- [x] Swipe reminder for instant mode (local notification at a time the person chooses)
+- [x] Confirm the open points in the plan (reminder time, card wording, where the offer shows)
 
 ## Parked on purpose
 - Sign in with Apple (becomes an App Store requirement if other social logins are offered, so it may come back)
