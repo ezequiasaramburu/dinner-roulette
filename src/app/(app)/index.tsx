@@ -139,9 +139,13 @@ export default function Home() {
         </Animated.View>
       ))}
 
-      {notices.data?.filter((n) => n.kind === 'swipe_again_started').map((notice) => (
-        <SwipeAgainNotice key={notice.id} notice={notice} />
-      ))}
+      {/* Only while the extra round is on: once its dinner is revealed (or on a later day) the card is just noise. */}
+      {(feed.data?.round ?? 1) > 1 && !revealed
+        ? notices.data
+            ?.filter((n) => n.kind === 'swipe_again_started')
+            .slice(-1)
+            .map((notice) => <SwipeAgainNotice key={notice.id} notice={notice} />)
+        : null}
 
       {revealed ? (
         <Animated.View entering={enter(1)} layout={reflow}>

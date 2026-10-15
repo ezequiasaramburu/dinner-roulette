@@ -397,6 +397,16 @@ describe('swipe again', () => {
     assert.ok(swiped < total / 2, 'it asked for half of what was left, not half of the whole deck');
   });
 
+  test('leftover notices are cleared: the one starting never sees one, the partner sees exactly one', async () => {
+    const { a, b } = await noMatch();
+    const notices = (u) => asUser(db, u, async () => (await db.query('select from_name from public.notices where kind = $1', ['swipe_again_started'])).rows);
+    await db.query("insert into public.notices (recipient_id, kind, from_name) values ($1, 'swipe_again_started', 'Old'), ($2, 'swipe_again_started', 'Older')", [a, b]);
+    await db.query("update public.profiles set display_name = 'Quinn' where id = $1", [b]);
+    await again(b);
+    assert.deepEqual(await notices(b), []);
+    assert.deepEqual(await notices(a), [{ from_name: 'Quinn' }]);
+  });
+
   test('a second round that still has no match gets the fallback ladder, not another round', async () => {
     const { a, b } = await noMatch();
     const first = await reveal(a);
