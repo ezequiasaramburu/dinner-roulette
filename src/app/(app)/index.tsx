@@ -1,13 +1,14 @@
 import { Redirect, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { HomeMenu, type MenuPath } from '@/components/home/home-menu';
 import { RevealedCard } from '@/components/home/revealed-card';
 import { TonightCard } from '@/components/home/tonight-card';
 import { Accent, Avatar, Button, Card, MenuButton, Pill, Screen, Text } from '@/components/ui';
 import { Fonts, Spacing } from '@/constants/theme';
+import { enter, exit, reflow } from '@/hooks/use-motion';
 import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
 import { useSwipeFeed } from '@/hooks/use-swipe-feed';
 import { useDismissNotice, useNotices } from '@/hooks/use-notices';
@@ -109,7 +110,7 @@ export default function Home() {
       }>
       <MenuButton onPress={() => setMenuOpen(true)} />
 
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.header}>
+      <Animated.View entering={enter()} style={styles.header}>
         <Text variant="overline" tone="primary">
           {greeting(new Date().getHours())}
         </Text>
@@ -119,7 +120,7 @@ export default function Home() {
       </Animated.View>
 
       {notices.data?.filter((n) => n.kind === 'match_goal_changed').map((notice) => (
-        <Animated.View key={notice.id} entering={FadeInDown.duration(400)}>
+        <Animated.View key={notice.id} entering={enter()} exiting={exit}>
           <Card tone="muted" padding="lg">
             <Text variant="bodyStrong">
               {partner} changed matches per day from {notice.from_value} to {notice.to_value}
@@ -135,18 +136,18 @@ export default function Home() {
       ))}
 
       {revealed ? (
-        <Animated.View entering={FadeInDown.delay(60).duration(500)}>
+        <Animated.View entering={enter(1)} layout={reflow}>
           <RevealedCard revealed={revealed} onPress={() => router.push('/reveal')} />
         </Animated.View>
       ) : null}
 
-      <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+      <Animated.View entering={enter(2)} layout={reflow}>
         <TonightCard feed={feed.data} isError={feed.isError} couple={couple} />
       </Animated.View>
 
       {/* Only useful while we wait for the partner; once you're both set there is nothing to say. */}
       {!partnerReady ? (
-        <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+        <Animated.View entering={enter(3)} layout={reflow}>
           <Card>
             <View style={styles.coupleRow}>
               <View style={styles.avatars}>
@@ -166,7 +167,7 @@ export default function Home() {
         </Animated.View>
       ) : null}
 
-      <Animated.View entering={FadeInDown.delay(300).duration(500)}>
+      <Animated.View entering={enter(4)} layout={reflow}>
         <Card tone="muted" padding="lg">
           {instant ? (
             <>

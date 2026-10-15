@@ -1,8 +1,9 @@
 import { StyleSheet } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 
 import { Button, Card, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
+import { enter, exit } from '@/hooks/use-motion';
 import { useDismissNotice, type Notice } from '@/hooks/use-notices';
 
 /** What happened when a partner deleted their account. */
@@ -12,7 +13,7 @@ export function PartnerLeftNotice({ notice }: { notice: Notice }) {
   const ended = notice.kind === 'couple_ended';
 
   return (
-    <Animated.View entering={FadeInDown.duration(400)}>
+    <Animated.View entering={enter()} exiting={exit}>
       <Card tone="muted" padding="lg">
         <Text variant="bodyStrong">{ended ? `${who} deleted their account` : `${who} left`}</Text>
         <Text variant="caption" tone="secondary" style={styles.text}>

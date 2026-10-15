@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { Alert, Linking, StyleSheet, Switch, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 
 import {
   Accent,
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui";
 import { DEFAULT_MATCH_GOAL } from "@/constants/food";
 import { Spacing } from "@/constants/theme";
+import { enter } from "@/hooks/use-motion";
 import {
   useCouple,
   useUpdateCoupleSettings,
@@ -58,7 +59,7 @@ export default function Settings() {
   return (
     <Screen>
       <BackButton />
-      <Animated.View entering={FadeInDown.duration(500)} style={styles.stack}>
+      <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="title">
           Your <Accent>settings</Accent>
         </Text>

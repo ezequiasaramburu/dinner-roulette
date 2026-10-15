@@ -80,7 +80,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 ### Phase 5: Motion and transitions
 - [x] 11. Entrance helper, sign-in screens and name (hand-test pending)
 - [x] 12. Onboarding screens (couple setup, join, invite) (hand-test pending)
-- [ ] 13. Home, settings and smooth reflow of notices
+- [x] 13. Home, settings and smooth reflow of notices (hand-test pending)
 - [ ] 14. Recipes, recipe page, add recipe and reveal
 - [ ] 15. Transitions audit
 

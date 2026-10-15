@@ -140,12 +140,12 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/app/(app)/couple-setup.tsx`, `join.tsx`, `invite.tsx`
   - Scope: S (3 files)
 
-- [ ] **Task 13: Home, settings and smooth reflow**
+- [x] **Task 13: Home, settings and smooth reflow**  _(code done; hand-test pending)_
   - Acceptance: home and settings use the helper; dismissing a notice slides it out and the cards below close the gap smoothly (`LinearTransition`); the new components (`TonightCard`, `RevealedCard`) are untouched
   - Verify: tsc, lint, tests; **hand:** change the match goal on one phone, dismiss the notice on the other
   - Dependencies: 11
-  - Files: `src/app/(app)/index.tsx`, `src/app/(app)/settings.tsx`, `src/components/notice-card.tsx`
-  - Scope: S (3 files)
+  - Files: `src/app/(app)/index.tsx`, `src/app/(app)/settings.tsx`, `src/components/notice-card.tsx`, `src/hooks/use-motion.ts` (new `exit` and `reflow`), `src/app/(app)/invite.tsx` (its blocks glide up when the partner-left notice above them is dismissed)
+  - Scope: M (5 files)
 
 - [ ] **Task 14: Recipes, recipe page, add recipe and reveal**
   - Acceptance: the four screens use the helper; deleting a recipe row slides it out and the list closes up; the reveal keeps its wheel and flow
