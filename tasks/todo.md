@@ -111,7 +111,7 @@ Every task: run `npx tsc --noEmit`, `npm run lint`, `npm test` (and `npm run che
   - Files: `src/components/ui/skeleton.tsx`, `src/components/dish/dish-card-skeleton.tsx`, `src/components/ui/index.ts`, `src/constants/motion.ts`, `src/app/(app)/swipe.tsx`
   - Scope: M (5 files)
 
-- [ ] **Task 10: Skeletons for Your recipes and Preferences**
+- [x] **Task 10: Skeletons for Your recipes and Preferences**  _(code done; hand-test pending)_
   - Acceptance: recipes shows three skeleton rows; preferences shows skeleton chips; real content replaces them without a jump; error and empty states unchanged
   - Verify: tsc, lint, tests; `check:ui` spinner count is zero on all three screens; **hand:** both screens on a slow connection
   - Dependencies: 9

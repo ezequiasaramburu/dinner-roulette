@@ -1,10 +1,10 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
 
-import { Accent, Button, Chip, Screen, Section, TermsField, Text } from '@/components/ui';
+import { Accent, Button, Chip, Screen, Section, Skeleton, TermsField, Text } from '@/components/ui';
 import { ALLERGENS, DIETS, DISLIKES, countryFlag } from '@/constants/food';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useCouple } from '@/hooks/use-couple';
 import {
   EMPTY_PREFERENCES,
@@ -13,20 +13,12 @@ import {
   useSavePreferences,
   type Preferences,
 } from '@/hooks/use-preferences';
-import { useTheme } from '@/hooks/use-theme';
 
 export default function PreferencesScreen() {
-  const theme = useTheme();
   const prefs = usePreferences();
   const cuisines = useCuisineOptions();
 
-  if (prefs.isPending || cuisines.isPending) {
-    return (
-      <Screen scroll={false} contentStyle={styles.center}>
-        <ActivityIndicator color={theme.primary} />
-      </Screen>
-    );
-  }
+  if (prefs.isPending || cuisines.isPending) return <PreferencesSkeleton />;
   if (prefs.isError || cuisines.isError) {
     return (
       <Screen
@@ -53,6 +45,57 @@ export default function PreferencesScreen() {
       initial={prefs.data ?? EMPTY_PREFERENCES}
       cuisineOptions={cuisines.data.map((c) => c.country)}
     />
+  );
+}
+
+const CHIP_WIDTHS = [88, 108, 96, 120, 100, 84];
+
+/** The sections of the form with their real titles and hints, and placeholder chips where the choices will be. */
+function PreferencesSkeleton() {
+  const { data: couple } = useCouple();
+  const chips = (count: number) =>
+    Array.from({ length: count }, (_, i) => <Skeleton key={i} style={[styles.chip, { width: CHIP_WIDTHS[i % CHIP_WIDTHS.length] }]} />);
+
+  return (
+    <Screen footer={<Button title={!couple?.me_ready ? 'Save and continue' : 'Save changes'} disabled onPress={() => {}} />}>
+      <PreferencesHeader isOnboarding={!couple?.me_ready} />
+      <Section title="Diet">{chips(DIETS.length)}</Section>
+      <Section title="Allergies" hint="We never show dishes with these. Always double-check the ingredient list.">
+        {chips(ALLERGENS.length)}
+      </Section>
+      <Section
+        title="Favourite cuisines"
+        hint="We show dishes from these first. Others can still appear, so pick none to be open to everything.">
+        {chips(12)}
+      </Section>
+      <Section title="Not for me" hint="Things you'd rather avoid.">
+        {chips(DISLIKES.length)}
+      </Section>
+    </Screen>
+  );
+}
+
+function PreferencesHeader({ isOnboarding }: { isOnboarding: boolean }) {
+  return (
+    <>
+      <Text variant="overline" tone="primary" style={styles.top}>
+        Your taste
+      </Text>
+      <Text variant="title">
+        {isOnboarding ? (
+          <>
+            What do you like <Accent>to eat?</Accent>
+          </>
+        ) : (
+          <>
+            Your <Accent>preferences</Accent>
+          </>
+        )}
+      </Text>
+      <Text tone="secondary">
+        Only you set these. We combine them with your partner&apos;s to find dinners you&apos;ll both enjoy.
+      </Text>
+    </>
   );
 }
 
@@ -84,23 +127,7 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
           {!isOnboarding ? <Button title="Cancel" variant="ghost" onPress={() => router.back()} /> : null}
         </>
       }>
-      <Text variant="overline" tone="primary" style={styles.top}>
-        Your taste
-      </Text>
-      <Text variant="title">
-        {isOnboarding ? (
-          <>
-            What do you like <Accent>to eat?</Accent>
-          </>
-        ) : (
-          <>
-            Your <Accent>preferences</Accent>
-          </>
-        )}
-      </Text>
-      <Text tone="secondary">
-        Only you set these. We combine them with your partner&apos;s to find dinners you&apos;ll both enjoy.
-      </Text>
+      <PreferencesHeader isOnboarding={isOnboarding} />
 
       <Section title="Diet">
         {DIETS.map((o) => (
@@ -177,4 +204,5 @@ function PreferencesForm({ initial, cuisineOptions }: { initial: Preferences; cu
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md },
   top: { marginTop: Spacing.lg },
+  chip: { height: 40, borderRadius: Radius.pill },
 });

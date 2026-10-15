@@ -73,7 +73,7 @@ Tasks 4 to 7 are independent of each other; 9 and 11 are independent of the pres
 
 ### Phase 4: Loading
 - [x] 9. Skeleton component and the swipe screen (hand-test pending)
-- [ ] 10. Skeletons for Your recipes and Preferences
+- [x] 10. Skeletons for Your recipes and Preferences (hand-test pending)
 
 **Checkpoint 4:** user throttles the network (airplane mode toggle) and checks the three loading screens.
 

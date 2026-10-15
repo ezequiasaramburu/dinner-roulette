@@ -1,13 +1,12 @@
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { DishImage } from '@/components/dish/dish-image';
-import { Accent, BackButton, Button, Card, Pill, Screen, Text } from '@/components/ui';
+import { Accent, BackButton, Button, Card, Pill, Screen, Skeleton, Text } from '@/components/ui';
 import { countryFlag } from '@/constants/countries';
 import { Radius, Spacing } from '@/constants/theme';
 import { useDeleteRecipe, useMyRecipes, type MyRecipe } from '@/hooks/use-recipes';
-import { useTheme } from '@/hooks/use-theme';
 import { friendlyError } from '@/lib/errors';
 
 const STATUS: Record<MyRecipe['status'], { label: string; tone: 'success' | 'warning' | 'neutral'; note: string }> = {
@@ -18,7 +17,6 @@ const STATUS: Record<MyRecipe['status'], { label: string; tone: 'success' | 'war
 
 export default function Recipes() {
   const router = useRouter();
-  const theme = useTheme();
   const recipes = useMyRecipes();
   const remove = useDeleteRecipe();
 
@@ -45,7 +43,7 @@ export default function Recipes() {
         </Text>
 
         {recipes.isPending ? (
-          <ActivityIndicator color={theme.primary} style={styles.loading} />
+          <RecipeCardsSkeleton />
         ) : recipes.isError ? (
           <Card tone="muted">
             <Text tone="secondary">We couldn&apos;t load your recipes.</Text>
@@ -89,9 +87,33 @@ export default function Recipes() {
   );
 }
 
+/** Three recipe cards' worth of placeholders, the same proportions as the real ones. */
+function RecipeCardsSkeleton() {
+  return (
+    <View accessible accessibilityLabel="Loading your recipes" style={styles.stack}>
+      {[0, 1, 2].map((i) => (
+        <Card key={i} padding="lg">
+          <Skeleton style={styles.photo} />
+          <Skeleton style={[styles.line, { width: '30%', height: 14 }]} />
+          <Skeleton style={[styles.line, styles.title, { width: '70%', height: 24 }]} />
+          <View style={styles.statusRow}>
+            <Skeleton style={styles.pill} />
+          </View>
+          <Skeleton style={[styles.line, { width: '85%', height: 14 }]} />
+          <View style={styles.deleteSlot}>
+            <Skeleton style={[styles.line, { width: 64, height: 16 }]} />
+          </View>
+        </Card>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   stack: { gap: Spacing.lg, marginTop: Spacing.md },
-  loading: { marginTop: Spacing.xl },
+  line: { borderRadius: 7 },
+  pill: { width: 84, height: 26, borderRadius: Radius.pill },
+  deleteSlot: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
   empty: { marginTop: Spacing.sm },
   title: { marginTop: Spacing.xs },
   photo: { width: '100%', height: 160, borderRadius: Radius.lg, marginBottom: Spacing.md },
