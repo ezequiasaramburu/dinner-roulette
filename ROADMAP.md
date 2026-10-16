@@ -24,6 +24,7 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 - [x] Partner-left notices now sit below the page title (couple setup, invite)
 - [ ] Per-product subscription expiry (migration 0037) after buying a second plan
 - [ ] Weak-connection and error fixes (docs/connection-review.md): airplane-mode hand-test list is at the end of that file
+- [ ] Accessibility fixes (docs/accessibility-review.md): VoiceOver or TalkBack run, largest text size, and a look at the two slightly changed greys (tertiary text, soft tomato) in both modes
 - [x] Sign-in codes now last 10 minutes (restart local Supabase to load it)
 
 
@@ -47,7 +48,6 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 
 - [ ] Release setup: `eas.json` build profiles, versions and bundle ids in `app.json`, a short "how to ship a build" note
 - [ ] Privacy declarations draft for Apple's privacy labels and Google's data safety form (include the anonymous deletion log and purchase data)
-- [ ] Accessibility pass: screen-reader labels, text size, contrast (including the paywall buttons and the Paused card)
 
 
 
@@ -55,6 +55,7 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 
 - [ ] Admin dashboard: recipe review (show the photo link's host), trial and conversion numbers, subscription expiries per product (`couple_subscriptions`), and the trial-abuse queries in docs/trial-abuse.md. RevenueCat shows 0 trials because the trial is our own
 - [ ] Switch to a store free trial if abuse turns out to be common (trigger described in docs/trial-abuse.md)
+- [ ] Optional: a darker border for inputs (WCAG 3:1) and screen-reader announcements for live changes (docs/accessibility-review.md)
 - [ ] Known low risks from the security review: photo link host not pinned, report abuse, no photo count limit
 
 

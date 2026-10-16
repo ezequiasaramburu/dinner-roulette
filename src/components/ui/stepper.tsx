@@ -31,12 +31,23 @@ export function Stepper({ value, min, max, onChange, label }: Props) {
         disabled && { opacity: 0.35 },
         pressed && { backgroundColor: theme.surfaceMuted },
       ]}>
-      <Text style={{ fontFamily: Fonts.medium, fontSize: 24, lineHeight: 28 }}>{glyph}</Text>
+      <Text maxFontSizeMultiplier={1.3} style={{ fontFamily: Fonts.medium, fontSize: 24, lineHeight: 28 }}>{glyph}</Text>
     </PressableScale>
   );
 
   return (
-    <View accessible accessibilityRole="adjustable" accessibilityLabel={label} accessibilityValue={{ min, max, now: value }} style={styles.row}>
+    <View
+      accessible
+      accessibilityRole="adjustable"
+      accessibilityLabel={label}
+      accessibilityValue={{ min, max, now: value }}
+      // The row is one element for a screen reader, so the +/- buttons are reached by swiping up and down on it.
+      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      onAccessibilityAction={(event) => {
+        if (event.nativeEvent.actionName === 'increment' && value < max) onChange(value + 1);
+        if (event.nativeEvent.actionName === 'decrement' && value > min) onChange(value - 1);
+      }}
+      style={styles.row}>
       {step('−', -1, value <= min, `Decrease ${label}`)}
       <Text style={styles.value}>{value}</Text>
       {step('+', 1, value >= max, `Increase ${label}`)}

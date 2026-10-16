@@ -51,8 +51,11 @@ export type TextProps = RNTextProps & {
 
 export function Text({ variant = 'body', tone = 'default', align, style, ...rest }: TextProps) {
   const theme = useTheme();
+  // Big serif text is a heading for a screen reader, so people can jump between sections.
+  const role = variant === 'display' || variant === 'title' || variant === 'heading' ? 'header' : undefined;
   return (
     <RNText
+      accessibilityRole={role}
       style={[
         VARIANTS[variant],
         { color: theme[TONE_COLOR[tone]] },

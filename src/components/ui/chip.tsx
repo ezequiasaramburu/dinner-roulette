@@ -13,7 +13,10 @@ export function Chip({ label, emoji, selected, onPress }: Props) {
     <PressableScale
       haptic="select"
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ selected }}
+      // 40 tall to look right, 44 to touch.
+      hitSlop={{ top: 2, bottom: 2 }}
       onPress={onPress}
       style={[
         styles.chip,

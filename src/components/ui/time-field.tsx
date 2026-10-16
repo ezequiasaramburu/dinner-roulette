@@ -36,8 +36,9 @@ export function TimeField({ value, onChange, accessibilityLabel }: Props) {
 
   if (Platform.OS === 'ios') {
     return (
-      <View style={styles.row} accessible accessibilityLabel={accessibilityLabel}>
+      <View style={styles.row}>
         <DateTimePicker
+          accessibilityLabel={accessibilityLabel}
           mode="time"
           display="compact"
           value={toDate(value)}

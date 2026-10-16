@@ -32,6 +32,7 @@ export function TextField({ label, error, hideLabel, variant = 'default', placeh
       <View>
         <TextInput
           accessibilityLabel={label}
+          accessibilityHint={error}
           placeholder={isCode && Platform.OS === 'android' ? undefined : placeholder}
           placeholderTextColor={theme.textTertiary}
           selectionColor={theme.primary}
@@ -63,7 +64,7 @@ export function TextField({ label, error, hideLabel, variant = 'default', placeh
         ) : null}
       </View>
       {error ? (
-        <Text variant="caption" tone="danger">
+        <Text variant="caption" tone="danger" accessibilityRole="alert" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : null}

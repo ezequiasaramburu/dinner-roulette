@@ -14,10 +14,10 @@ export const Colors = {
     surfaceMuted: '#F2EADB', // quiet panels, wheel disc
     text: '#1F1A17', // ink
     textSecondary: '#6B5F55',
-    textTertiary: '#8F8174', // decorative/hint only (3.5:1)
+    textTertiary: '#74685E', // small labels and hints: at least 4.5:1 on every light surface (was #8F8174, 3.2 to 3.7)
     primary: '#B93D26', // tomato
     primaryPressed: '#9F321E',
-    primarySoft: '#F6E1D9',
+    primarySoft: '#F8E7DF', // lightened a hair so tomato text on it reaches 4.5:1 (was #F6E1D9, 4.44)
     onPrimary: '#FFF8EF',
     border: '#E7DDCC',
     borderStrong: '#CFC2AD',
@@ -34,7 +34,7 @@ export const Colors = {
     surfaceMuted: '#2B221D',
     text: '#F6EEE3',
     textSecondary: '#B9AB9B',
-    textTertiary: '#8F8274',
+    textTertiary: '#998D7F', // at least 4.5:1 on the muted card too (was #8F8274, 4.16)
     primary: '#E8684A',
     primaryPressed: '#F07F63',
     primarySoft: '#3A221B',

@@ -10,7 +10,8 @@ export function CodeTiles({ code, length = 6 }: { code?: string; length?: number
   const chars = (code ?? '').padEnd(length, ' ').slice(0, length).split('');
 
   return (
-    <View accessibilityLabel={code ? `Invite code ${code.split('').join(' ')}` : 'Loading invite code'} style={styles.row}>
+    // One element for a screen reader ("Invite code A B C…") instead of six single letters.
+    <View accessible accessibilityRole="text" accessibilityLabel={code ? `Invite code ${code.split('').join(' ')}` : 'Loading invite code'} style={styles.row}>
       {chars.map((ch, i) => (
         <View
           key={i}
@@ -18,7 +19,7 @@ export function CodeTiles({ code, length = 6 }: { code?: string; length?: number
             styles.tile,
             { backgroundColor: code ? theme.surface : theme.surfaceMuted, borderColor: theme.borderStrong },
           ]}>
-          <Text variant="title" style={{ fontSize: 30, lineHeight: 36 }} selectable>
+          <Text variant="title" maxFontSizeMultiplier={1.3} style={{ fontSize: 30, lineHeight: 36 }} selectable>
             {ch.trim()}
           </Text>
         </View>

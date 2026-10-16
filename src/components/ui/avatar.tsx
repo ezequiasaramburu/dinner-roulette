@@ -24,12 +24,14 @@ export function Avatar({ name, size = 56, colorIndex }: { name: string; size?: n
   const [bg, fg] = colorIndex === undefined ? pairFor(name) : PAIRS[colorIndex % PAIRS.length];
   return (
     <View
-      accessibilityLabel={name}
+      // The name is always written next to the avatar.
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
       style={[
         styles.avatar,
         { width: size, height: size, borderRadius: size / 2, backgroundColor: bg, borderColor: theme.surface, borderWidth: 3 },
       ]}>
-      <Text style={{ color: fg, fontFamily: Fonts.display, fontSize: size * 0.42, lineHeight: size * 0.5 }}>
+      <Text maxFontSizeMultiplier={1.2} style={{ color: fg, fontFamily: Fonts.display, fontSize: size * 0.42, lineHeight: size * 0.5 }}>
         {name.trim().charAt(0).toUpperCase() || '?'}
       </Text>
     </View>

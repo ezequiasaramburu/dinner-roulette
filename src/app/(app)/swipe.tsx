@@ -180,14 +180,14 @@ export default function Swipe() {
         </View>
         <View style={styles.actionMain}>
           <RoundButton
-            label="Pass"
+            label={dishes[0] ? `Pass on ${dishes[0].title}` : "Pass"}
             glyph="✕"
             size={76}
             disabled={!dishes.length}
             onPress={() => deckRef.current?.swipe(false)}
           />
           <RoundButton
-            label="Yum"
+            label={dishes[0] ? `Yum, ${dishes[0].title}` : "Yum"}
             glyph="♥"
             size={76}
             filled
@@ -235,6 +235,7 @@ function RoundButton({
         disabled && { opacity: 0.35 },
       ]}>
       <Text
+        maxFontSizeMultiplier={1.2}
         style={{
           fontFamily: Fonts.medium,
           fontSize: size * 0.4,

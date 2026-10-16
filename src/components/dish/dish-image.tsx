@@ -16,13 +16,13 @@ type Props = {
 type Shared = StyleProp<ImageStyle>;
 
 /** A dish photo, or a plate on a quiet background for recipes shared without one. */
-export function DishImage({ url, size = 'medium', label, style }: Props) {
+export function DishImage({ url, size = 'medium', style }: Props) {
   const theme = useTheme();
   const source = thumbnail(url, size);
 
   if (!source) {
     return (
-      <View accessibilityLabel={label} style={[styles.placeholder, { backgroundColor: theme.surfaceMuted }, style]}>
+      <View accessible={false} importantForAccessibility="no-hide-descendants" style={[styles.placeholder, { backgroundColor: theme.surfaceMuted }, style]}>
         <Text style={styles.plate}>🍽️</Text>
       </View>
     );
@@ -30,7 +30,9 @@ export function DishImage({ url, size = 'medium', label, style }: Props) {
   return (
     <Image
       source={source}
-      accessibilityLabel={label}
+      // The dish name is always next to its photo, so reading it twice would only be noise.
+      accessible={false}
+      importantForAccessibility="no"
       contentFit="cover"
       transition={250}
       style={[{ backgroundColor: theme.surfaceMuted }, style as Shared]}
