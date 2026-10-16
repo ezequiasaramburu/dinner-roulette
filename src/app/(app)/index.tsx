@@ -5,6 +5,7 @@ import Animated from 'react-native-reanimated';
 
 import { SwipeAgainNotice } from '@/components/notice-card';
 import { HomeMenu, type MenuPath } from '@/components/home/home-menu';
+import { LockedCard } from '@/components/home/locked-card';
 import { RevealOfferCard } from '@/components/home/reveal-offer-card';
 import { RevealedCard } from '@/components/home/revealed-card';
 import { TonightCard } from '@/components/home/tonight-card';
@@ -36,14 +37,16 @@ export default function Home() {
   const partnerReady = !!couple?.partner?.ready;
   useDinnerRealtime(couple?.couple_id);
   const bothReady = partnerReady && !!couple?.me_ready;
-  const feed = useSwipeFeed(bothReady);
-  const reveal = useReveal(bothReady);
+  // Once the trial or paid period is over there is nothing to fetch: the server refuses it anyway.
+  const locked = couple?.has_access === false;
+  const feed = useSwipeFeed(bothReady && !locked);
+  const reveal = useReveal(bothReady && !locked);
   const notices = useNotices(bothReady);
   const { permission, swipeTime, request: requestReminders } = useReminders();
   const dismissNotice = useDismissNotice();
   const refetchReveal = reveal.refetch;
-  const revealAt = reveal.data?.reveal_at;
-  const revealed = reveal.data?.status === 'revealed' ? reveal.data : undefined;
+  const revealAt = locked ? undefined : reveal.data?.reveal_at;
+  const revealed = !locked && reveal.data?.status === 'revealed' ? reveal.data : undefined;
 
   // We can't see the partner's preferences (by design), so poll for their "ready" flag.
   useEffect(() => {
@@ -54,7 +57,7 @@ export default function Home() {
 
   // While the home screen is showing, check now and then whether the couple has reached its match goal.
   const refetchFeed = feed.refetch;
-  const status = feed.data?.status;
+  const status = locked ? undefined : feed.data?.status;
   useFocusEffect(
     useCallback(() => {
       if (status !== 'ready') return;
@@ -78,10 +81,10 @@ export default function Home() {
   // Coming back to the app after the reveal time: check straight away.
   useFocusEffect(
     useCallback(() => {
-      if (bothReady) refetchReveal();
+      if (bothReady && !locked) refetchReveal();
       // Coming back from swiping: the early-reveal button depends on how many dishes were swiped.
       if (status === 'ready') refetchFeed();
-    }, [bothReady, refetchReveal, status, refetchFeed]),
+    }, [bothReady, locked, refetchReveal, status, refetchFeed]),
   );
 
   function go(path: MenuPath) {
@@ -105,7 +108,7 @@ export default function Home() {
   return (
     <Screen
       footer={
-        status === 'ready' ? (
+        status === 'ready' && !locked ? (
           <Button
             title={feed.data?.has_swiped ? 'Keep swiping' : 'Start swiping'}
             onPress={() => router.push('/swipe')}
@@ -154,10 +157,14 @@ export default function Home() {
       ) : null}
 
       <Animated.View entering={enter(2)} layout={reflow}>
-        <TonightCard feed={feed.data} isError={feed.isError} couple={couple} />
+        {locked && couple ? (
+          <LockedCard couple={couple} />
+        ) : (
+          <TonightCard feed={feed.data} isError={feed.isError} couple={couple} />
+        )}
       </Animated.View>
 
-      {(instant || (feed.data?.round ?? 1) > 1) && feed.data?.can_reveal_now && (status === 'ready' || status === 'exhausted') ? (
+      {!locked && (instant || (feed.data?.round ?? 1) > 1) && feed.data?.can_reveal_now && (status === 'ready' || status === 'exhausted') ? (
         <Animated.View entering={enter(2)} layout={reflow}>
           <RevealOfferCard partner={partner} />
         </Animated.View>

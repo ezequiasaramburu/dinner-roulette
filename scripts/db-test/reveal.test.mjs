@@ -486,6 +486,52 @@ describe('swipe again', () => {
   });
 });
 
+describe('access (trial and paid period)', () => {
+  const state = (u) => call(u, 'select public.get_couple_state() as r');
+  const expire = (couple, trial = "now() - interval '1 day'", paid = 'null') =>
+    db.query(`update couples set trial_ends_at = ${trial}, paid_until = ${paid} where id = $1`, [couple]);
+
+  test('a new couple has a 7-day trial and full access', async () => {
+    const { a, couple } = await makeCouple({ mode: 'instant' });
+    const st = await state(a);
+    assert.equal(st.has_access, true);
+    const days = (new Date(st.trial_ends_at) - Date.now()) / 86_400_000;
+    assert.ok(days > 6.9 && days <= 7, `about 7 days left, got ${days}`);
+    assert.equal((await feed(a)).status, 'ready');
+    assert.ok(couple);
+  });
+
+  test('when the trial is over, swiping and reveals are refused for both partners; nothing is deleted', async () => {
+    const { a, b, couple } = await makeCouple({ mode: 'instant' });
+    const f = await feed(a);
+    await swipe(a, f.deck_id, f.dishes[0].id, true);
+    await expire(couple);
+    for (const u of [a, b]) {
+      assert.equal((await state(u)).has_access, false);
+      await assert.rejects(feed(u), /subscription_required/);
+      await assert.rejects(call(u, 'select public.reveal_now() as r'), /subscription_required/);
+    }
+    assert.equal((await db.query('select count(*)::int n from swipes where deck_id = $1', [f.deck_id])).rows[0].n, 1, 'the swipe is kept');
+    assert.equal((await db.query('select count(*)::int n from preferences where user_id in ($1, $2)', [a, b])).rows[0].n, 2, 'preferences are kept');
+  });
+
+  test('a paid period restores access, and an expired one does not', async () => {
+    const { a, couple } = await makeCouple({ mode: 'instant' });
+    await expire(couple, "now() - interval '1 day'", "now() + interval '30 days'");
+    assert.equal((await state(a)).has_access, true);
+    assert.equal((await feed(a)).status, 'ready');
+    await expire(couple, "now() - interval '1 day'", "now() - interval '1 hour'");
+    assert.equal((await state(a)).has_access, false);
+  });
+
+  test('the app cannot extend its own access', async () => {
+    const { a, couple } = await makeCouple({ mode: 'instant' });
+    await expire(couple);
+    await asUser(db, a, () => db.query("update public.couples set paid_until = now() + interval '1 year', trial_ends_at = now() + interval '1 year'").catch(() => {}));
+    assert.equal((await state(a)).has_access, false);
+  });
+});
+
 describe('couple settings', () => {
   const settings = (u, ...args) => call(u, 'select public.update_couple_settings($1, $2, $3) as r', args);
   const state = (u) => call(u, 'select public.get_couple_state() as r');

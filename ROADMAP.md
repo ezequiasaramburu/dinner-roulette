@@ -15,7 +15,10 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 - [ ] 1. RevenueCat paywall (the "paid" part of the app; was planned right after the MVP)
   - Decisions so far: 7-day free trial; keep the single "Continue with email" sign-in as it is (no separate login and signup, first screen unchanged); the payer sees the paywall at couple setup; the invited partner joins on the payer's subscription and never sees it
   - The paywall shows the trial length, the price after the trial, how to cancel, and a "Restore purchases" button
-  - [ ] **Open product decision:** what happens to the couple when the trial ends and the payer doesn't subscribe (or later cancels)? Cover the payer and the partner: read-only? locked out of swiping? data kept for how long? Decide before building the paywall; it also changes the account-deletion text (cancel in the App Store / Google Play)
+  - [x] Trial-end rules decided: locked with data kept (payer and partner both paused), data kept until the user deletes the account, only the payer subscribes (no partner take-over for now)
+  - [x] Groundwork built (migration 0034, "Paused" card on Home; see README "Trial and access"): `trial_ends_at`, `paid_until`, `subscription_required`
+  - [ ] Still to do for the paywall: the subscribe screen and RevenueCat (sets `paid_until` from a server webhook), and the account-deletion note about cancelling in the store
+  - [ ] Consider starting the trial when the partner joins instead of when the couple is created, and a "days left" banner
 - [ ] 2. Server push notifications (blocked on Apple and FCM credentials; today only a local reminder fires)
 - [ ] Go-live email: pick an SMTP provider, verify a domain, connect it in Supabase (steps in the README, "Going live: sign-in email")
 - [ ] 3. Legal placeholders: operator and contact values in `src/constants/legal.ts`

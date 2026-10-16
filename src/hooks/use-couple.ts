@@ -15,6 +15,9 @@ export type CoupleState = {
   reveal_mode: 'scheduled' | 'instant';
   /** How many matches the couple wants revealed each day (1 to 5). */
   match_goal: number;
+  /** False once the free trial and any paid period are over: swiping and reveals are paused for both partners. */
+  has_access: boolean;
+  trial_ends_at: string;
   /** The current user has finished choosing their food preferences. */
   me_ready: boolean;
   partner: { id: string; display_name: string | null; ready: boolean } | null;

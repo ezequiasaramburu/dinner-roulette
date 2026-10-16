@@ -221,6 +221,26 @@ editing `couples.reveal_time`, remember a stamped deck stays revealed; use a fre
   signed out too). Fill in the operator name and support email and get it reviewed before submitting to the stores; the
   stores also need the privacy policy at a public URL (the landing page).
 
+## Trial and access (paywall groundwork)
+
+Decided rules: a 7-day free trial, then paid. When it ends without a subscription (or the payer cancels), the couple is
+**locked, with data kept**: nobody can swipe or get new reveals, Home shows a "Paused" card (payer: "Your free trial has
+ended", partner: "<payer>'s free trial has ended"), and preferences, history and recipes stay. Subscribing brings
+everything back. Data is kept until the user deletes their account. Only the payer subscribes; the partner cannot take
+over (if the payer deletes their account the couple dissolves, as before).
+
+How it works (migration 0034): `couples.trial_ends_at` (default 7 days from creation) and `couples.paid_until` (empty until
+a subscription exists). A couple has access while `now()` is before either. `ensure_deck()` raises `subscription_required`
+when it does not, which blocks the feed, swipes, early reveals and new queues for both partners; `get_couple_state()`
+returns `has_access`. The app has no update policy on `couples`, so only a server-side process (the RevenueCat webhook,
+to come) can write `paid_until`.
+
+Not built yet: the subscribe button and RevenueCat itself, the trial start moving to "when your partner joins" (it
+starts when the couple is created, so waiting days for a partner costs trial days), and a "days left" banner.
+
+To test the lock locally: `update couples set trial_ends_at = now() - interval '1 day';` (and
+`update couples set paid_until = now() + interval '30 days';` to pay), then reopen the app.
+
 ## Going live: sign-in email
 
 Sign-in is a 6-digit code sent by email. Locally nothing is sent: the codes land in the Supabase test mailbox
