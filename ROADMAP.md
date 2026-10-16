@@ -39,7 +39,11 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 ## Small features (only if wanted)
 - [x] 9. Ingredient share button (shares the unticked ingredients as a shopping list; unverified on a device)
 - [x] 10. Notice to the partner when swipe again starts (unverified on a device)
-- [ ] 11. Admin dashboard. Include trial numbers (RevenueCat can't show them, our trial is in our database): trials started (`trial_ends_at` set), running, ended without paying, and conversions (`paid_until` / `couple_subscriptions`), plus active subscribers by plan
+- [ ] 11. Admin dashboard. Include trial and conversion tracking (we run our own 7-day trial, so RevenueCat shows 0 trials): couples in trial (`trial_ends_at` in the future), trials ended, paid (`paid_until`), conversion rate, and subscription expiries per product (`couple_subscriptions`)
+
+## Security
+- [x] Database security pass (docs/security-review.md, migration 0038). Left as known low risks: photo URL host not pinned, report abuse, no photo count limit
+- [ ] Check the hosted-project settings listed at the end of docs/security-review.md before launch
 
 ## Instant mode rework (built, hand-test pending)
 Plan in [docs/instant-mode-plan.md](docs/instant-mode-plan.md).

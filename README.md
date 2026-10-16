@@ -135,6 +135,12 @@ Server pieces (`supabase/migrations/0006_swipes.sql`, `0007_match_goal_queue.sql
 - The queue is built once per cycle with `build_deck(..., 100)`: the full ranked list, so the order is stable.
   "Recently seen" means dishes the couple actually swiped, not everything that was queued: 3 days for a dish only passed on, 7 if someone liked it (migration 0033).
 
+Gotcha for new tables and functions (migration 0038): `public` is closed by default, so `anon` and `authenticated` get
+nothing. A new table needs row-level security on, and an explicit `grant select (...) on ... to authenticated` only if the app
+reads it directly; a new function needs `grant execute ... to authenticated` only if the app calls it. The test
+`security.test.mjs` fails if a table has no RLS or an unexpected function becomes callable. The review is in
+`docs/security-review.md`.
+
 Gotcha for SQL changes: the Supabase API role runs with `pg_safeupdate`, which rejects any `UPDATE`/`DELETE` without a
 `WHERE`. `npm run test:db` scans the migrations for that, but always try new functions through the real API too.
 
@@ -288,7 +294,7 @@ get a code.
    "Confirm signup" (new users) and "Magic link" (returning users) to the text in `supabase/templates/otp.html`, which
    shows `{{ .Token }}`. With the default templates users get a link instead of a code, and the app has no screen for it.
 5. **Check the limits.** Raise the project's emails-per-hour limit (Authentication → Rate limits) once custom SMTP is on.
-   The code lifetime is `otp_expiry` (3600 s locally, and the template says "1 hour"): if you shorten it, change the
+   The code lifetime is `otp_expiry` (600 s = 10 minutes, and the template says so): if you change it, change the
    template text to match.
 6. **Test with a real address** before launch: request a code on a real phone, with an address at a different provider
    (Gmail, iCloud, Outlook), and check it arrives quickly and not in spam.

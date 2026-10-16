@@ -1,11 +1,11 @@
 // RevenueCat -> Supabase. Set this URL (and the Authorization header value) in the RevenueCat dashboard:
 // Integrations (left menu) -> Webhooks -> Add new configuration. See the README, "Subscriptions (RevenueCat)".
-import { toSubscriptionUpdate } from './parse.ts';
+import { safeEqual, toSubscriptionUpdate } from './parse.ts';
 
 Deno.serve(async (request) => {
   const secret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET');
   // Without a secret nobody can be trusted, so refuse everything rather than accept anyone.
-  if (!secret || request.headers.get('Authorization') !== secret) return new Response('Unauthorized', { status: 401 });
+  if (!secret || !safeEqual(request.headers.get('Authorization'), secret)) return new Response('Unauthorized', { status: 401 });
   if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
   let body: unknown;

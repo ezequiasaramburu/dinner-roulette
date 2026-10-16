@@ -229,9 +229,8 @@ describe('who can see a recipe', () => {
   test('people cannot write recipes directly', async () => {
     const a = await newUser('A');
     const id = await submit(a);
-    // There is no update policy, so the statement matches no rows instead of failing.
-    await rpc(a, "update public.recipes set status = 'approved' where id = $1", [id]);
-    await rpc(a, "update public.recipes set title = 'Hacked' where id = $1", [id]);
+    await assert.rejects(rpc(a, "update public.recipes set status = 'approved' where id = $1", [id]), /permission denied/);
+    await assert.rejects(rpc(a, "update public.recipes set title = 'Hacked' where id = $1", [id]), /permission denied/);
     await assert.rejects(rpc(a, "insert into public.recipes (author_id, source_id, title, category, country, ingredients, steps, ingredient_names) values (auth.uid(), 'x', 't', 'Beef', 'Kenya', '[]', '[]', '{}')"), /row-level security|permission denied/);
     const r = await recipe(id);
     assert.equal(r.status, 'pending');
@@ -278,8 +277,8 @@ describe('decks and community recipes', () => {
     await rpc(partner, 'select public.block_author($1)', [id]);
     assert.ok(!(await queue(owner)).includes(id), 'the other partner no longer sees it either');
     assert.equal((await db.query('select count(*)::int as n from public.author_blocks where blocked_id = $1', [author])).rows[0].n, 1);
-    // The author can't read blocks: the table has no policies.
-    assert.equal((await rpc(author, 'select * from public.author_blocks')).length, 0);
+    // Nobody can read blocks directly, the author least of all.
+    await assert.rejects(rpc(author, 'select * from public.author_blocks'), /permission denied/);
 
     await rpc(partner, 'select public.clear_blocks()');
     assert.ok((await queue(owner)).includes(id));

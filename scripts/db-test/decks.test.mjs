@@ -230,7 +230,8 @@ describe('swipe feed', () => {
     asUser(db, user, async () => (await db.query('select public.record_swipe($1, $2, $3) as r', [deckId, recipeId, liked])).rows[0].r);
   const undo = (user, deckId) => asUser(db, user, async () => (await db.query('select public.undo_last_swipe($1) as r', [deckId])).rows[0].r);
   const setGoal = (user, n) => asUser(db, user, () => db.query('select public.update_couple_settings($1)', [n]));
-  const mineSwipes = (user) => asUser(db, user, async () => (await db.query('select recipe_id, liked from public.swipes')).rows);
+  // Read as the database owner: the app has no direct access to swipes (see the privacy test).
+  const mineSwipes = async (user) => (await db.query('select recipe_id, liked from public.swipes where user_id = $1', [user])).rows;
 
   let n = 0;
   // reveal '23:59:59' = still ahead today, so these tests do not depend on what time they run.
@@ -434,7 +435,7 @@ describe('swipe feed', () => {
     assert.equal(state.match_goal, 4);
   });
 
-  test('privacy: only my own swipes are readable, nothing writes directly, internals are locked', async () => {
+  test('privacy: nobody can read or write swipes directly, internals are locked', async () => {
     const { a, b } = await makeCouple();
     const outsider = await addUser(db, 'priv-out@test.dev');
     const f = await feed(a);
@@ -445,6 +446,7 @@ describe('swipe feed', () => {
     assert.deepEqual((await mineSwipes(a)).map((r) => r.recipe_id), [d1]);
     assert.deepEqual((await mineSwipes(b)).map((r) => r.recipe_id), [d2]);
     assert.equal((await mineSwipes(outsider)).length, 0);
+    await assert.rejects(asUser(db, a, () => db.query('select * from public.swipes')), /permission denied/, 'not even your own, or your partner\'s');
     // b's feed never says what a chose, or even how many dishes a has swiped.
     const fb = await feed(b);
     for (const key of ['my_swipes', 'partner_swiped', 'partner', 'liked', 'matches', 'match_count']) assert.ok(!(key in fb), key);

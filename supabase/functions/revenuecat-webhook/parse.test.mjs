@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { toSubscriptionUpdate } from './parse.ts';
+import { safeEqual, toSubscriptionUpdate } from './parse.ts';
 
 const USER = '3f2b8c1e-9d4a-4e0b-8a6f-1c2d3e4f5a6b';
 const event = (over = {}) => ({
@@ -38,4 +38,13 @@ test('garbage is ignored, not thrown', () => {
   for (const bad of [null, undefined, 'x', 42, {}, { event: null }, { event: { type: 5 } }]) {
     assert.equal(toSubscriptionUpdate(bad), null);
   }
+});
+
+test('secrets match only when identical', () => {
+  assert.equal(safeEqual('abc123', 'abc123'), true);
+  assert.equal(safeEqual('abc124', 'abc123'), false);
+  assert.equal(safeEqual('abc12', 'abc123'), false);
+  assert.equal(safeEqual('abc1234', 'abc123'), false);
+  assert.equal(safeEqual('', 'abc123'), false);
+  assert.equal(safeEqual(null, 'abc123'), false);
 });

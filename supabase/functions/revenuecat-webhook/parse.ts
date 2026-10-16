@@ -35,3 +35,11 @@ export function toSubscriptionUpdate(body: unknown): SubscriptionUpdate | null {
 
   return { userId, productId, until, eventAt: new Date(stamp).toISOString() };
 }
+
+/** Compares two secrets without stopping at the first difference, so the time taken says nothing about how close a guess was. */
+export function safeEqual(a: string | null, b: string): boolean {
+  if (a === null) return false;
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < b.length; i++) diff |= (a.charCodeAt(i) || 0) ^ b.charCodeAt(i);
+  return diff === 0;
+}

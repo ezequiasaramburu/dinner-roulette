@@ -158,8 +158,7 @@ describe('reveal', () => {
     const outsider = await addUser(db, 'reveal-out@test.dev');
     await assert.rejects(reveal(outsider), /couple_not_ready/);
     await assert.rejects(seen(outsider, f.deck_id), /deck_not_found/);
-    const views = await asUser(db, outsider, () => db.query('select * from public.reveal_views'));
-    assert.equal(views.rows.length, 0);
+    await assert.rejects(asUser(db, outsider, () => db.query('select * from public.reveal_views')), /permission denied/);
   });
 
   test('the helper functions are not callable through the API', async () => {
@@ -589,6 +588,17 @@ describe('access (trial and paid period)', () => {
     // The monthly ends too: locked.
     await apply('monthly', '2020-02-01T00:00:00Z', '2026-10-03T10:00:00Z');
     assert.equal((await state(a)).has_access, false);
+  });
+
+  test('a deck built earlier today cannot be used once access is over', async () => {
+    const { a, b, couple } = await makeCouple({ mode: 'instant', goal: 1 });
+    const f = await feed(a);
+    const [d1] = f.dishes.map((d) => d.id);
+    await swipe(a, f.deck_id, d1, false);
+    await expire(couple);
+    await assert.rejects(swipe(a, f.deck_id, d1, true), /subscription_required/);
+    await assert.rejects(call(a, 'select public.undo_last_swipe($1) as r', [f.deck_id]), /subscription_required/);
+    await assert.rejects(reveal(b), /subscription_required/);
   });
 
   test('the app cannot extend its own access', async () => {
