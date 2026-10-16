@@ -221,6 +221,31 @@ editing `couples.reveal_time`, remember a stamped deck stays revealed; use a fre
   signed out too). Fill in the operator name and support email and get it reviewed before submitting to the stores; the
   stores also need the privacy policy at a public URL (the landing page).
 
+## Going live: sign-in email
+
+Sign-in is a 6-digit code sent by email. Locally nothing is sent: the codes land in the Supabase test mailbox
+(Inbucket, http://127.0.0.1:54324, set in `supabase/config.toml`). A hosted project needs a real sender, or users never
+get a code.
+
+1. **Pick an SMTP provider.** Resend, Postmark, Brevo, Mailgun, SendGrid or Amazon SES all work; most have a free tier
+   that covers an early app. Compare current prices when you choose. Do not use the project's built-in sender in
+   production: it has a very low hourly limit and, as far as we know, only delivers to the Supabase team's own addresses.
+2. **Verify a domain you own** (for example `dinnerroulette.app`) with the provider and add the DNS records it gives you:
+   SPF and DKIM, and DMARC if offered. Without them the codes tend to land in spam. Send from an address on that domain,
+   such as `no-reply@yourdomain`.
+3. **Connect it to the hosted project:** Supabase dashboard → Authentication → SMTP settings → enable custom SMTP, then
+   fill in host, port, user, password, sender address and sender name. (The CLI can also push the commented
+   `[auth.email.smtp]` block of `supabase/config.toml` with `supabase config push`; check the current CLI docs, and keep
+   the password in an env var, never in the file.)
+4. **Use the code template in the hosted project too.** Dashboard → Authentication → Email templates: set both
+   "Confirm signup" (new users) and "Magic link" (returning users) to the text in `supabase/templates/otp.html`, which
+   shows `{{ .Token }}`. With the default templates users get a link instead of a code, and the app has no screen for it.
+5. **Check the limits.** Raise the project's emails-per-hour limit (Authentication → Rate limits) once custom SMTP is on.
+   The code lifetime is `otp_expiry` (3600 s locally, and the template says "1 hour"): if you shorten it, change the
+   template text to match.
+6. **Test with a real address** before launch: request a code on a real phone, with an address at a different provider
+   (Gmail, iCloud, Outlook), and check it arrives quickly and not in spam.
+
 ## Community recipes
 
 Anyone can submit a recipe (`submit_recipe`, migration `0023_community_recipes.sql`). It starts `pending` and is only

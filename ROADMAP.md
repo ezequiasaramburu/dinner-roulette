@@ -17,6 +17,7 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
   - The paywall shows the trial length, the price after the trial, how to cancel, and a "Restore purchases" button
   - [ ] **Open product decision:** what happens to the couple when the trial ends and the payer doesn't subscribe (or later cancels)? Cover the payer and the partner: read-only? locked out of swiping? data kept for how long? Decide before building the paywall; it also changes the account-deletion text (cancel in the App Store / Google Play)
 - [ ] 2. Server push notifications (blocked on Apple and FCM credentials; today only a local reminder fires)
+- [ ] Go-live email: pick an SMTP provider, verify a domain, connect it in Supabase (steps in the README, "Going live: sign-in email")
 - [ ] 3. Legal placeholders: operator and contact values in `src/constants/legal.ts`
 - [ ] 4. App icon and splash screen (still the defaults)
 - [ ] 5. Android native rebuild check (`expo run:android` with `expo-haptics` and `expo-linear-gradient`)
