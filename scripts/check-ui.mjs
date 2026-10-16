@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Prints the UI-polish guards from SPEC.md as counts, so each task can show the numbers going down.
+// Prints the UI-polish guards as counts (raw Pressables, spinners, hex colours, Reduce Motion opt-outs), so a change can show the numbers going down.
 // Informational: it always exits 0. Run: npm run check:ui
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
