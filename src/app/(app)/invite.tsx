@@ -73,9 +73,6 @@ export default function Invite() {
           <Button title="Start over" variant="ghost" onPress={onCancel} loading={cancel.isPending} />
         </>
       }>
-      {left.map((n) => (
-        <PartnerLeftNotice key={n.id} notice={n} />
-      ))}
       <Animated.View entering={enter()} layout={reflow} style={styles.header}>
         <Text variant="overline" tone="primary">
           Almost there
@@ -87,6 +84,9 @@ export default function Invite() {
           Send them this code. They sign up for free and you&apos;ll be connected right away.
         </Text>
       </Animated.View>
+      {left.map((n) => (
+        <PartnerLeftNotice key={n.id} notice={n} />
+      ))}
 
       <Animated.View entering={enter(1)} layout={reflow}>
         <Card style={styles.codeCard}>

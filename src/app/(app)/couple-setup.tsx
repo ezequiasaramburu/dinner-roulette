@@ -38,9 +38,6 @@ export default function CoupleSetup() {
 
   return (
     <Screen>
-      {ended.map((n) => (
-        <PartnerLeftNotice key={n.id} notice={n} />
-      ))}
       <Animated.View entering={enter()} style={styles.header}>
         <Text variant="overline" tone="primary">
           Better together
@@ -52,6 +49,9 @@ export default function CoupleSetup() {
           Dinner Roulette is made for two. One of you starts the couple and invites the other with a code.
         </Text>
       </Animated.View>
+      {ended.map((n) => (
+        <PartnerLeftNotice key={n.id} notice={n} />
+      ))}
 
       <Animated.View entering={enter(1)} style={styles.options}>
         <Card onPress={onCreate} accessibilityLabel="Start a couple and invite your partner">
