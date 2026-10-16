@@ -229,17 +229,42 @@ ended", partner: "<payer>'s free trial has ended"), and preferences, history and
 everything back. Data is kept until the user deletes their account. Only the payer subscribes; the partner cannot take
 over (if the payer deletes their account the couple dissolves, as before).
 
-How it works (migration 0034): `couples.trial_ends_at` (default 7 days from creation) and `couples.paid_until` (empty until
-a subscription exists). A couple has access while `now()` is before either. `ensure_deck()` raises `subscription_required`
+How it works (migrations 0034 and 0035): `couples.trial_ends_at` and `couples.paid_until` (empty until a subscription
+exists). The trial starts when the **partner joins** (`join_couple()` stamps 7 days from then; a later partner does not
+restart it), and nothing is locked while the couple waits for its partner. A couple has access while `now()` is before either. `ensure_deck()` raises `subscription_required`
 when it does not, which blocks the feed, swipes, early reveals and new queues for both partners; `get_couple_state()`
 returns `has_access`. The app has no update policy on `couples`, so only a server-side process (the RevenueCat webhook,
 to come) can write `paid_until`.
 
-Not built yet: the subscribe button and RevenueCat itself, the trial start moving to "when your partner joins" (it
-starts when the couple is created, so waiting days for a partner costs trial days), and a "days left" banner.
+The payer sees "N days left in your free trial" on Home ("Last day" at the end). Not built yet: the subscribe button
+and RevenueCat itself.
 
 To test the lock locally: `update couples set trial_ends_at = now() - interval '1 day';` (and
 `update couples set paid_until = now() + interval '30 days';` to pay), then reopen the app.
+
+## Subscriptions (RevenueCat)
+
+Plans are sold with RevenueCat; **the server decides who has access**. Flow: the payer taps "See plans" (on the Paused
+card, or Settings → Subscription) → RevenueCat's paywall → after the purchase RevenueCat calls our webhook → the
+function calls `apply_subscription_event()` (migration 0036) → `couples.paid_until` is set → the couple unlocks, partner
+included. The app waits for that for a few seconds after a purchase. Lifetime purchases set `paid_until` to `infinity`.
+
+- **App side:** `src/lib/purchases.ts` (lazy-loaded SDK; does nothing without the key or on a build made before the SDK
+  was added), `src/hooks/use-subscription.ts`. The customer is logged in with the Supabase user id. Entitlement:
+  `dinner_roulette_pro`. Products: `lifetime`, `yearly`, `monthly` (set up in the RevenueCat dashboard).
+- **Key:** `EXPO_PUBLIC_REVENUECAT_API_KEY` in `.env.local` (a `test_` key uses the Test Store). Use the real `appl_` and
+  `goog_` keys for store builds.
+- **The SDK is native:** rebuild the dev app once (`npx expo run:ios`, `npx expo run:android`).
+- **Dashboard (once):** create the entitlement, attach the three products, make an offering with a paywall, enable the
+  Customer Center, then Project settings → Integrations → Webhooks: URL
+  `https://<project>.supabase.co/functions/v1/revenuecat-webhook` and an Authorization header value of your choice.
+- **Server secret:** `supabase secrets set REVENUECAT_WEBHOOK_SECRET=<the same value>` and
+  `supabase functions deploy revenuecat-webhook`. Locally: put `REVENUECAT_WEBHOOK_SECRET=...` in
+  `supabase/functions/.env` and run `supabase functions serve --env-file supabase/functions/.env`, then
+  `curl -X POST http://127.0.0.1:54321/functions/v1/revenuecat-webhook -H 'Authorization: <secret>' -d '{...}'`.
+  RevenueCat's dashboard can also send a test event.
+- **Known limits:** a purchase made before the couple exists is not applied (the paywall only shows to payers with a
+  couple). Events are matched to the user by id, so a purchase by an anonymous customer is ignored.
 
 ## Going live: sign-in email
 

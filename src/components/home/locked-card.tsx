@@ -1,11 +1,14 @@
-import { Card, Pill, Text } from '@/components/ui';
+import { Button, Card, Pill, Text } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import type { CoupleState } from '@/hooks/use-couple';
+import { useSubscribe } from '@/hooks/use-subscription';
+import { purchasesAvailable } from '@/lib/purchases';
 
 /** The free trial or the paid period is over: dinner is paused for both partners, nothing is lost. */
 export function LockedCard({ couple }: { couple: CoupleState }) {
   const isPayer = couple.role === 'owner';
   const payer = couple.partner?.display_name ?? 'Your partner';
+  const { subscribe, busy } = useSubscribe();
 
   return (
     <Card tone="accent" padding="lg">
@@ -18,6 +21,9 @@ export function LockedCard({ couple }: { couple: CoupleState }) {
           ? 'Subscribe to keep finding dinner together. Your preferences and history are saved, and everything comes back as soon as you do.'
           : `Dinner is paused until ${payer} subscribes. Your preferences and history are saved, and everything comes back as soon as they do.`}
       </Text>
+      {isPayer && purchasesAvailable() ? (
+        <Button title="See plans" onPress={subscribe} loading={busy} style={{ marginTop: Spacing.lg }} />
+      ) : null}
     </Card>
   );
 }

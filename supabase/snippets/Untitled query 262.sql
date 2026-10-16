@@ -1,0 +1,1 @@
+update couples set trial_ends_at = now() - interval '1 hour';

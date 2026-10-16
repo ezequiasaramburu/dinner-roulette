@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Notifications from 'expo-notifications';
 import { Alert } from 'react-native';
 
+import { useIsPro } from '@/hooks/use-subscription';
 import { removeAllMyPhotos } from '@/lib/recipe-photo';
 import { supabase } from '@/lib/supabase';
 
@@ -29,6 +30,7 @@ export function useDeleteAccount() {
  */
 export function useAccountActions(partner?: string | null, isOwner?: boolean) {
   const deleteAccount = useDeleteAccount();
+  const isPro = useIsPro();
 
   async function signOut() {
     const { error } = await supabase.auth.signOut();
@@ -39,6 +41,8 @@ export function useAccountActions(partner?: string | null, isOwner?: boolean) {
     Alert.alert(
       'Delete your account?',
       `This permanently deletes your account, food preferences and swipes. It can't be undone.${
+        isPro ? ' Deleting your account does not cancel your subscription: cancel it in the App Store or Google Play first.' : ''
+      }${
         partner
           ? isOwner
             ? ` Your couple with ${partner} ends, and ${partner} will need to start or join a new one.`

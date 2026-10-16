@@ -124,6 +124,14 @@ export default function Home() {
         <Text variant="title">
           {me}, <Accent>dinner awaits.</Accent>
         </Text>
+        {/* Only the person who will pay needs the countdown. */}
+        {couple?.role === 'owner' && couple.trial_days_left ? (
+          <Pill
+            label={couple.trial_days_left === 1 ? 'Last day of your free trial' : `${couple.trial_days_left} days left in your free trial`}
+            tone={couple.trial_days_left === 1 ? 'warning' : 'neutral'}
+            dot={false}
+          />
+        ) : null}
       </Animated.View>
 
       {notices.data?.filter((n) => n.kind === 'match_goal_changed').map((notice) => (

@@ -491,14 +491,41 @@ describe('access (trial and paid period)', () => {
   const expire = (couple, trial = "now() - interval '1 day'", paid = 'null') =>
     db.query(`update couples set trial_ends_at = ${trial}, paid_until = ${paid} where id = $1`, [couple]);
 
-  test('a new couple has a 7-day trial and full access', async () => {
-    const { a, couple } = await makeCouple({ mode: 'instant' });
-    const st = await state(a);
-    assert.equal(st.has_access, true);
+  test('the trial starts when the partner joins, not before, and a later partner does not restart it', async () => {
+    const owner = await addUser(db, 'trial-owner@test.dev');
+    const partner = await addUser(db, 'trial-partner@test.dev');
+    const rpc = (u, sql, params) => asUser(db, u, () => db.query(sql, params));
+    await rpc(owner, 'select public.create_couple($1)', ['UTC']);
+    let st = await state(owner);
+    assert.deepEqual([st.has_access, st.trial_ends_at, st.trial_days_left], [true, null, null], 'waiting for a partner: no clock yet');
+
+    const { rows } = await rpc(owner, 'select public.create_invite() as code');
+    await rpc(partner, 'select public.join_couple($1)', [rows[0].code]);
+    st = await state(owner);
     const days = (new Date(st.trial_ends_at) - Date.now()) / 86_400_000;
     assert.ok(days > 6.9 && days <= 7, `about 7 days left, got ${days}`);
-    assert.equal((await feed(a)).status, 'ready');
-    assert.ok(couple);
+    assert.equal(st.trial_days_left, 7);
+    assert.equal((await state(partner)).trial_days_left, 7);
+
+    // The partner leaves and someone new joins: same end date.
+    const first = st.trial_ends_at;
+    await db.query('delete from couple_members where user_id = $1', [partner]);
+    const third = await addUser(db, 'trial-third@test.dev');
+    const again = await rpc(owner, 'select public.create_invite() as code');
+    await rpc(third, 'select public.join_couple($1)', [again.rows[0].code]);
+    assert.equal(new Date((await state(owner)).trial_ends_at).getTime(), new Date(first).getTime());
+  });
+
+  test('days left count down, and disappear once paid or over', async () => {
+    const { a, couple } = await makeCouple({ mode: 'instant' });
+    await db.query("update couples set trial_ends_at = now() + interval '36 hours' where id = $1", [couple]);
+    assert.equal((await state(a)).trial_days_left, 2);
+    await db.query("update couples set trial_ends_at = now() + interval '2 hours' where id = $1", [couple]);
+    assert.equal((await state(a)).trial_days_left, 1);
+    await db.query("update couples set paid_until = now() + interval '30 days' where id = $1", [couple]);
+    assert.equal((await state(a)).trial_days_left, null, 'paying ends the trial banner');
+    await db.query("update couples set paid_until = null, trial_ends_at = now() - interval '1 hour' where id = $1", [couple]);
+    assert.equal((await state(a)).trial_days_left, null, 'nothing left to count');
   });
 
   test('when the trial is over, swiping and reveals are refused for both partners; nothing is deleted', async () => {
@@ -522,6 +549,25 @@ describe('access (trial and paid period)', () => {
     assert.equal((await feed(a)).status, 'ready');
     await expire(couple, "now() - interval '1 day'", "now() - interval '1 hour'");
     assert.equal((await state(a)).has_access, false);
+  });
+
+  test('a subscription event unlocks the couple, only newer events win, and only the server may send them', async () => {
+    const { a, b, couple } = await makeCouple({ mode: 'instant' });
+    await expire(couple);
+    const apply = (until, at) => db.query('select public.apply_subscription_event($1, $2, $3)', [a, until, at]);
+    await apply("2099-01-01T00:00:00Z", "2026-10-01T00:00:00Z");
+    for (const u of [a, b]) assert.equal((await state(u)).has_access, true, 'the partner is covered too');
+
+    await apply("2020-01-01T00:00:00Z", "2026-09-01T00:00:00Z");
+    assert.equal((await state(a)).has_access, true, 'an older event is ignored');
+    await apply("2020-01-01T00:00:00Z", "2026-11-01T00:00:00Z");
+    assert.equal((await state(a)).has_access, false, 'a newer expiry locks it again');
+    await apply('infinity', "2026-12-01T00:00:00Z");
+    assert.equal((await state(a)).has_access, true, 'a lifetime purchase never ends');
+
+    const stranger = await addUser(db, 'stranger-pay@test.dev');
+    await db.query('select public.apply_subscription_event($1, $2, $3)', [stranger, 'infinity', "2027-01-01T00:00:00Z"]);
+    await assert.rejects(asUser(db, a, () => db.query('select public.apply_subscription_event($1, $2, $3)', [a, 'infinity', "2027-01-01T00:00:00Z"])), /permission denied/);
   });
 
   test('the app cannot extend its own access', async () => {

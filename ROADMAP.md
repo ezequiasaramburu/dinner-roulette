@@ -17,8 +17,9 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
   - The paywall shows the trial length, the price after the trial, how to cancel, and a "Restore purchases" button
   - [x] Trial-end rules decided: locked with data kept (payer and partner both paused), data kept until the user deletes the account, only the payer subscribes (no partner take-over for now)
   - [x] Groundwork built (migration 0034, "Paused" card on Home; see README "Trial and access"): `trial_ends_at`, `paid_until`, `subscription_required`
-  - [ ] Still to do for the paywall: the subscribe screen and RevenueCat (sets `paid_until` from a server webhook), and the account-deletion note about cancelling in the store
-  - [ ] Consider starting the trial when the partner joins instead of when the couple is created, and a "days left" banner
+  - [x] RevenueCat integrated in code (paywall, Customer Center, entitlement `dinner_roulette_pro`, webhook that sets `paid_until`, deletion note): see README "Subscriptions (RevenueCat)". Unverified on a device
+  - [ ] Yours to do: rebuild the dev app (native SDK), set up the entitlement, products, offering and paywall in the RevenueCat dashboard, add the webhook URL and secret, deploy the function. Real store keys (`appl_`, `goog_`) before release
+  - [x] The trial starts when the partner joins (migration 0035), and the payer sees a "days left" line on Home (unverified on a device)
 - [ ] 2. Server push notifications (blocked on Apple and FCM credentials; today only a local reminder fires)
 - [ ] Go-live email: pick an SMTP provider, verify a domain, connect it in Supabase (steps in the README, "Going live: sign-in email")
 - [ ] 3. Legal placeholders: operator and contact values in `src/constants/legal.ts`

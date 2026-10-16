@@ -25,6 +25,8 @@ import { useAccountActions } from "@/hooks/use-account";
 import { useBlockedCount, useClearBlocks } from "@/hooks/use-recipes";
 import { ReminderControls } from "@/components/reminder-controls";
 import { useReminders } from "@/hooks/use-reveal-reminder";
+import { useIsPro, useSubscribe } from "@/hooks/use-subscription";
+import { purchasesAvailable } from "@/lib/purchases";
 import { useTheme } from "@/hooks/use-theme";
 import { timeInZoneToLocal } from "@/lib/zoned-time";
 
@@ -32,6 +34,8 @@ export default function Settings() {
   const { data: couple } = useCouple();
   const theme = useTheme();
   const { swipeTime, setSwipeTime } = useReminders();
+  const isPro = useIsPro();
+  const { subscribe, manage, busy } = useSubscribe();
   const update = useUpdateCoupleSettings();
   const router = useRouter();
   const blocked = useBlockedCount();
@@ -167,6 +171,30 @@ export default function Settings() {
               switchCaption="A notification at this time, every day."
               askCaption="We'll send one notification a day at this time, nothing else."
             />
+          </Card>
+        ) : null}
+
+        {couple?.role === "owner" && purchasesAvailable() ? (
+          <Card>
+            <Text variant="overline" tone="tertiary">
+              Subscription
+            </Text>
+            <Text variant="heading" style={styles.cardTitle}>
+              {isPro ? "You're subscribed" : "Keep finding dinner together"}
+            </Text>
+            <Text variant="caption" tone="secondary">
+              {isPro
+                ? "Your partner is covered too. Change or cancel your plan any time."
+                : "One plan covers both of you. Your partner never needs to pay."}
+            </Text>
+            <View style={styles.stepper}>
+              <Button
+                title={isPro ? "Manage subscription" : "See plans"}
+                variant="secondary"
+                loading={busy}
+                onPress={isPro ? manage : subscribe}
+              />
+            </View>
           </Card>
         ) : null}
 
