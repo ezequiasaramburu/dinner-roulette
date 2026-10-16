@@ -6,6 +6,7 @@
  * The server decides who has access (couples.paid_until, set by the RevenueCat webhook). The SDK only sells the
  * subscription and tells this phone what the store knows.
  */
+import { Platform } from 'react-native';
 import type { CustomerInfo } from 'react-native-purchases';
 
 type Sdk = typeof import('react-native-purchases').default;
@@ -14,7 +15,15 @@ type Ui = typeof import('react-native-purchases-ui').default;
 /** The entitlement the paid products unlock (monthly and yearly both grant it). */
 export const ENTITLEMENT = 'dinner_roulette_pro';
 
-const API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
+// Store builds use one key per store (appl_..., goog_...). The single EXPO_PUBLIC_REVENUECAT_API_KEY is for development
+// (a test_ key works on both).
+const KEY =
+  Platform.select({
+    ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY,
+    android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY,
+  }) ?? process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
+// A Test Store key must never ship in a release build (RevenueCat refuses to run with one): no key, no selling.
+const API_KEY = KEY && (__DEV__ || !KEY.startsWith('test_')) ? KEY : undefined;
 
 let sdk: Sdk | null | undefined;
 let ui: Ui | null | undefined;

@@ -24,6 +24,7 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 - [x] Partner-left notices now sit below the page title (couple setup, invite)
 - [ ] Per-product subscription expiry (migration 0037) after buying a second plan
 - [ ] Weak-connection and error fixes (docs/connection-review.md): airplane-mode hand-test list is at the end of that file
+- [ ] Release setup (docs/release.md): CI and the manual build workflow have not run yet, so expect small fixes on the first run
 - [ ] Accessibility fixes (docs/accessibility-review.md): VoiceOver or TalkBack run, largest text size, and a look at the two slightly changed greys (tertiary text, soft tomato) in both modes
 - [x] Sign-in codes now last 10 minutes (restart local Supabase to load it)
 
@@ -31,6 +32,7 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 
 ## Before launch: needs something from you or an outside account
 
+- [ ] Release accounts and secrets: Expo account and `EXPO_TOKEN` in GitHub, `eas init`, EAS environment variables for the hosted Supabase and the real RevenueCat keys, Apple Developer Program and Google Play Console (docs/release.md); decide the bundle id (`com.ezequias.dinnerroulette`) before the first submission
 - [ ] Paywall in the stores: create `monthly` (4.99) and `yearly` (49.99) in App Store Connect and Google Play, swap the Test Store key for the real `appl_` and `goog_` keys, deploy the webhook function to the hosted project with its secret. Try a purchase on Android (only iOS has been tried)
 - [ ] The paywall's Terms and Privacy links need public web pages
 - [ ] Legal placeholders in `src/constants/legal.ts` (operator name and support email), plus a public page for the terms and privacy text. Have someone qualified read the text
@@ -46,7 +48,6 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 
 ## Before launch: buildable now
 
-- [ ] Release setup: `eas.json` build profiles, versions and bundle ids in `app.json`, a short "how to ship a build" note
 - [ ] Privacy declarations draft for Apple's privacy labels and Google's data safety form (include the anonymous deletion log and purchase data)
 
 

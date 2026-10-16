@@ -1,0 +1,70 @@
+name: Build
+
+# Started by hand: Actions -> Build -> Run workflow.
+#   cloud:   asks EAS (Expo's build service) to build. The file ends up on expo.dev (link printed in the log).
+#   android: builds the APK on this runner and attaches it to the run as a downloadable artifact.
+# Needs the repository secret EXPO_TOKEN (see docs/release.md).
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform for the cloud build
+        type: choice
+        options: [android, ios, all]
+        default: android
+      profile:
+        description: Build profile (preview = installable test build, production = store build)
+        type: choice
+        options: [preview, production]
+        default: preview
+      android_artifact:
+        description: Also build the Android APK here and keep it as a GitHub artifact (preview profile only)
+        type: boolean
+        default: false
+
+jobs:
+  cloud:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      # --no-wait: EAS does the work, this job only has to start it (so it costs almost no runner minutes).
+      - run: eas build --platform ${{ inputs.platform }} --profile ${{ inputs.profile }} --non-interactive --no-wait
+
+  android-artifact:
+    if: inputs.android_artifact && inputs.profile == 'preview'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      - run: npm ci
+      - name: Build the APK on this runner
+        env:
+          EAS_LOCAL_BUILD_ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+        run: |
+          mkdir -p artifacts
+          eas build --platform android --profile preview --local --non-interactive
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dinner-roulette-android-preview
+          path: artifacts/*
+          retention-days: 14
