@@ -246,17 +246,19 @@ To test the lock locally: `update couples set trial_ends_at = now() - interval '
 
 Plans are sold with RevenueCat; **the server decides who has access**. Flow: the payer taps "See plans" (on the Paused
 card, or Settings → Subscription) → RevenueCat's paywall → after the purchase RevenueCat calls our webhook → the
-function calls `apply_subscription_event()` (migration 0036) → `couples.paid_until` is set → the couple unlocks, partner
-included. The app waits for that for a few seconds after a purchase. Lifetime purchases set `paid_until` to `infinity`.
+function calls `apply_subscription_event()` (migrations 0036, 0037) → each product keeps its own expiry in
+`couple_subscriptions` and `couples.paid_until` is the latest of them → the couple unlocks, partner included. Sandbox and
+Test Store periods are shortened (monthly lasts about 5 minutes, yearly about an hour), so a test purchase expires and
+the couple locks again on its own. The app waits for that for a few seconds after a purchase. A purchase with no expiry (not sold today) would set `paid_until` to `infinity`.
 
 - **App side:** `src/lib/purchases.ts` (lazy-loaded SDK; does nothing without the key or on a build made before the SDK
   was added), `src/hooks/use-subscription.ts`. The customer is logged in with the Supabase user id. Entitlement:
-  `dinner_roulette_pro`. Products: `lifetime`, `yearly`, `monthly` (set up in the RevenueCat dashboard).
+  `dinner_roulette_pro`. Products: `monthly` (4.99) and `yearly` (49.99, about two months free), set up in the RevenueCat dashboard. There is no lifetime plan; the webhook still understands one (no expiry means never ends), in case it is added later.
 - **Key:** `EXPO_PUBLIC_REVENUECAT_API_KEY` in `.env.local` (a `test_` key uses the Test Store). Use the real `appl_` and
   `goog_` keys for store builds.
 - **The SDK is native:** rebuild the dev app once (`npx expo run:ios`, `npx expo run:android`).
 - **Dashboard (once):** create the entitlement, attach the three products, make an offering with a paywall, enable the
-  Customer Center, then Project settings → Integrations → Webhooks: URL
+  Customer Center, then Integrations (left menu) → Webhooks → Add new configuration: URL
   `https://<project>.supabase.co/functions/v1/revenuecat-webhook` and an Authorization header value of your choice.
 - **Server secret:** `supabase secrets set REVENUECAT_WEBHOOK_SECRET=<the same value>` and
   `supabase functions deploy revenuecat-webhook`. Locally: put `REVENUECAT_WEBHOOK_SECRET=...` in

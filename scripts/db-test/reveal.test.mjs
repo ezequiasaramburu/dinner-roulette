@@ -554,20 +554,41 @@ describe('access (trial and paid period)', () => {
   test('a subscription event unlocks the couple, only newer events win, and only the server may send them', async () => {
     const { a, b, couple } = await makeCouple({ mode: 'instant' });
     await expire(couple);
-    const apply = (until, at) => db.query('select public.apply_subscription_event($1, $2, $3)', [a, until, at]);
+    const apply = (until, at, product = 'yearly') =>
+      db.query('select public.apply_subscription_event($1, $2, $3, $4)', [a, product, until, at]);
     await apply("2099-01-01T00:00:00Z", "2026-10-01T00:00:00Z");
     for (const u of [a, b]) assert.equal((await state(u)).has_access, true, 'the partner is covered too');
 
     await apply("2020-01-01T00:00:00Z", "2026-09-01T00:00:00Z");
-    assert.equal((await state(a)).has_access, true, 'an older event is ignored');
+    assert.equal((await state(a)).has_access, true, 'an older event for the same product is ignored');
     await apply("2020-01-01T00:00:00Z", "2026-11-01T00:00:00Z");
     assert.equal((await state(a)).has_access, false, 'a newer expiry locks it again');
     await apply('infinity', "2026-12-01T00:00:00Z");
-    assert.equal((await state(a)).has_access, true, 'a lifetime purchase never ends');
+    assert.equal((await state(a)).has_access, true, 'a purchase without an end never ends');
 
     const stranger = await addUser(db, 'stranger-pay@test.dev');
-    await db.query('select public.apply_subscription_event($1, $2, $3)', [stranger, 'infinity', "2027-01-01T00:00:00Z"]);
-    await assert.rejects(asUser(db, a, () => db.query('select public.apply_subscription_event($1, $2, $3)', [a, 'infinity', "2027-01-01T00:00:00Z"])), /permission denied/);
+    await db.query('select public.apply_subscription_event($1, $2, $3, $4)', [stranger, 'yearly', 'infinity', "2027-01-01T00:00:00Z"]);
+    await assert.rejects(asUser(db, a, () => db.query('select public.apply_subscription_event($1, $2, $3, $4)', [a, 'yearly', 'infinity', "2027-01-01T00:00:00Z"])), /permission denied/);
+  });
+
+  test('two products side by side: access lasts until the latest expiry, and one ending leaves the other', async () => {
+    const { a, couple } = await makeCouple({ mode: 'instant' });
+    await expire(couple);
+    const apply = (product, until, at) => db.query('select public.apply_subscription_event($1, $2, $3, $4)', [a, product, until, at]);
+    const paidUntil = async () => (await db.query('select paid_until from couples where id = $1', [couple])).rows[0].paid_until;
+
+    await apply('yearly', '2099-06-01T00:00:00Z', '2026-10-01T10:00:00Z');
+    // A monthly renewal arrives AFTER the yearly purchase: it must not shorten the access.
+    await apply('monthly', '2099-01-01T00:00:00Z', '2026-10-01T10:05:00Z');
+    assert.equal(new Date(await paidUntil()).toISOString(), '2099-06-01T00:00:00.000Z');
+    assert.equal((await state(a)).has_access, true);
+
+    // The yearly is refunded: the monthly still counts.
+    await apply('yearly', '2020-01-01T00:00:00Z', '2026-10-02T10:00:00Z');
+    assert.equal(new Date(await paidUntil()).toISOString(), '2099-01-01T00:00:00.000Z');
+    // The monthly ends too: locked.
+    await apply('monthly', '2020-02-01T00:00:00Z', '2026-10-03T10:00:00Z');
+    assert.equal((await state(a)).has_access, false);
   });
 
   test('the app cannot extend its own access', async () => {

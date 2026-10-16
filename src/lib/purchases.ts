@@ -11,7 +11,7 @@ import type { CustomerInfo } from 'react-native-purchases';
 type Sdk = typeof import('react-native-purchases').default;
 type Ui = typeof import('react-native-purchases-ui').default;
 
-/** The entitlement the paid products unlock (lifetime, yearly and monthly all grant it). */
+/** The entitlement the paid products unlock (monthly and yearly both grant it). */
 export const ENTITLEMENT = 'dinner_roulette_pro';
 
 const API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;

@@ -39,7 +39,7 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
 ## Small features (only if wanted)
 - [x] 9. Ingredient share button (shares the unticked ingredients as a shopping list; unverified on a device)
 - [x] 10. Notice to the partner when swipe again starts (unverified on a device)
-- [ ] 11. Admin dashboard
+- [ ] 11. Admin dashboard. Include trial numbers (RevenueCat can't show them, our trial is in our database): trials started (`trial_ends_at` set), running, ended without paying, and conversions (`paid_until` / `couple_subscriptions`), plus active subscribers by plan
 
 ## Instant mode rework (built, hand-test pending)
 Plan in [docs/instant-mode-plan.md](docs/instant-mode-plan.md).

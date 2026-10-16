@@ -4,7 +4,7 @@
  */
 export const ENTITLEMENT = 'dinner_roulette_pro';
 
-export type SubscriptionUpdate = { userId: string; until: string; eventAt: string };
+export type SubscriptionUpdate = { userId: string; productId: string; until: string; eventAt: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -30,5 +30,8 @@ export function toSubscriptionUpdate(body: unknown): SubscriptionUpdate | null {
   const expires = event.expiration_at_ms;
   const until = typeof expires === 'number' && Number.isFinite(expires) ? new Date(expires).toISOString() : 'infinity';
 
-  return { userId, until, eventAt: new Date(stamp).toISOString() };
+  // Each product keeps its own expiry; the couple is unlocked until the latest of them.
+  const productId = typeof event.product_id === 'string' && event.product_id ? event.product_id : 'unknown';
+
+  return { userId, productId, until, eventAt: new Date(stamp).toISOString() };
 }

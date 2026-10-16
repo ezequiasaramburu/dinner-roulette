@@ -1,5 +1,5 @@
 // RevenueCat -> Supabase. Set this URL (and the Authorization header value) in the RevenueCat dashboard:
-// Project settings -> Integrations -> Webhooks. See the README, "Subscriptions (RevenueCat)".
+// Integrations (left menu) -> Webhooks -> Add new configuration. See the README, "Subscriptions (RevenueCat)".
 import { toSubscriptionUpdate } from './parse.ts';
 
 Deno.serve(async (request) => {
@@ -25,7 +25,7 @@ Deno.serve(async (request) => {
   const result = await fetch(`${url}/rest/v1/rpc/apply_subscription_event`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: key, Authorization: `Bearer ${key}` },
-    body: JSON.stringify({ p_user: update.userId, p_until: update.until, p_event_at: update.eventAt }),
+    body: JSON.stringify({ p_user: update.userId, p_product: update.productId, p_until: update.until, p_event_at: update.eventAt }),
   });
   // A non-2xx makes RevenueCat retry later, which is what we want for a temporary failure.
   return new Response(result.ok ? 'OK' : 'Failed', { status: result.ok ? 200 : 500 });

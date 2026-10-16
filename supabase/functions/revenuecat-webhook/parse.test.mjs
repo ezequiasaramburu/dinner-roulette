@@ -5,12 +5,13 @@ import { toSubscriptionUpdate } from './parse.ts';
 
 const USER = '3f2b8c1e-9d4a-4e0b-8a6f-1c2d3e4f5a6b';
 const event = (over = {}) => ({
-  event: { type: 'INITIAL_PURCHASE', app_user_id: USER, entitlement_ids: ['dinner_roulette_pro'], event_timestamp_ms: 1_760_000_000_000, expiration_at_ms: 1_762_592_000_000, ...over },
+  event: { type: 'INITIAL_PURCHASE', app_user_id: USER, product_id: 'yearly', entitlement_ids: ['dinner_roulette_pro'], event_timestamp_ms: 1_760_000_000_000, expiration_at_ms: 1_762_592_000_000, ...over },
 });
 
 test('a purchase gives access until the expiry date', () => {
   assert.deepEqual(toSubscriptionUpdate(event()), {
     userId: USER,
+    productId: 'yearly',
     until: new Date(1_762_592_000_000).toISOString(),
     eventAt: new Date(1_760_000_000_000).toISOString(),
   });
