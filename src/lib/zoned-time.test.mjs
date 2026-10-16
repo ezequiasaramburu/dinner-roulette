@@ -3,7 +3,7 @@ import { test } from 'node:test';
 
 // The "device" clock for these tests. Set before any Date is formatted.
 process.env.TZ = 'UTC';
-const { timeInZoneToLocal } = await import('./zoned-time.ts');
+const { timeInZoneToLocal, timePassedToday } = await import('./zoned-time.ts');
 
 const at = (iso) => new Date(iso);
 
@@ -37,4 +37,15 @@ test('a device in another zone sees the reveal on its own clock', () => {
   assert.deepEqual(timeInZoneToLocal('17:00', 'Europe/Rome', at('2026-07-01T08:00:00Z')), { hour: 12, minute: 0 });
   assert.deepEqual(timeInZoneToLocal('17:00', 'Europe/Rome', at('2026-12-01T08:00:00Z')), { hour: 13, minute: 0 });
   process.env.TZ = 'UTC';
+});
+
+test('timePassedToday compares with the wall clock of the couple, not the phone', () => {
+  // 15:30 UTC is 16:30 in Rome (winter time) and 12:30 in Buenos Aires.
+  const now = at('2026-01-15T15:30:00Z');
+  assert.equal(timePassedToday('16:00', 'Europe/Rome', now), true);
+  assert.equal(timePassedToday('16:30', 'Europe/Rome', now), true, 'the same minute counts as passed');
+  assert.equal(timePassedToday('17:00', 'Europe/Rome', now), false);
+  assert.equal(timePassedToday('12:00', 'America/Argentina/Buenos_Aires', now), true);
+  assert.equal(timePassedToday('17:00', 'America/Argentina/Buenos_Aires', now), false, 'it is 17:00 in Rome but only 12:30 there');
+  assert.equal(timePassedToday('12:31', 'America/Argentina/Buenos_Aires', now), false);
 });

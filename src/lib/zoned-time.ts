@@ -59,3 +59,10 @@ export function timeInZoneToLocal(
   const local = new Date(instant);
   return { hour: local.getHours(), minute: local.getMinutes() };
 }
+
+/** Has `time` ("HH:MM") already come today on the wall clock of `timeZone`? */
+export function timePassedToday(time: string, timeZone: string, now: Date = new Date()): boolean {
+  const [hour, minute] = time.split(':').map(Number);
+  const w = wallClock(now, timeZone);
+  return w.hour * 60 + w.minute >= hour * 60 + minute;
+}

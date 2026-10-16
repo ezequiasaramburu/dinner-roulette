@@ -211,7 +211,8 @@ reminder). Permission is asked from a button, never on first launch; the on/off 
 
 The reveal is stamped on the day's deck (`daily_decks.revealed_at`, `0015_revealed_stays_revealed.sql`) the first time
 anyone looks after the reveal time, and right before the reveal time or mode is changed. Once stamped it never goes
-back: moving the reveal time later afterwards only affects tomorrow, and swiping stays closed. To test a reveal by
+back: moving the reveal time later afterwards only affects tomorrow, and swiping stays closed. Switching to a set time, or moving it, after that time has already passed today would reveal today's dinner at once, so
+Settings asks first ("It's already past 17:00") and the person can cancel and pick a later time. To test a reveal by
 editing `couples.reveal_time`, remember a stamped deck stays revealed; use a fresh day or clear `revealed_at`.
 
 ## Accounts, invite codes and legal

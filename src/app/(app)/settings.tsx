@@ -24,11 +24,12 @@ import {
 import { useAccountActions } from "@/hooks/use-account";
 import { useBlockedCount, useClearBlocks } from "@/hooks/use-recipes";
 import { ReminderControls } from "@/components/reminder-controls";
+import { useReveal } from "@/hooks/use-reveal";
 import { useReminders } from "@/hooks/use-reveal-reminder";
 import { useIsPro, useSubscribe } from "@/hooks/use-subscription";
 import { purchasesAvailable } from "@/lib/purchases";
 import { useTheme } from "@/hooks/use-theme";
-import { timeInZoneToLocal } from "@/lib/zoned-time";
+import { timeInZoneToLocal, timePassedToday } from "@/lib/zoned-time";
 
 export default function Settings() {
   const { data: couple } = useCouple();
@@ -55,10 +56,34 @@ export default function Settings() {
       })()
     : null;
 
+  const reveal = useReveal(!!couple && couple.has_access !== false);
+
   function save(settings: CoupleSettings) {
     update.mutate(settings, {
       onError: () => Alert.alert("Couldn't save that", "Please try again."),
     });
+  }
+
+  // Switching to a set time (or moving it) after that time has already passed today shows today's dinner right away,
+  // from whatever has been swiped so far. Say so first, and let the person pick a later time instead.
+  function saveWithReveal(settings: CoupleSettings) {
+    const mode = settings.revealMode ?? couple?.reveal_mode;
+    const time = settings.revealTime ?? couple?.reveal_time;
+    const revealsNow =
+      !!couple &&
+      mode === "scheduled" &&
+      !!time &&
+      reveal.data?.status !== "revealed" &&
+      timePassedToday(time, couple.timezone);
+    if (!revealsNow) return save(settings);
+    Alert.alert(
+      `It's already past ${time}`,
+      "Today's reveal time has passed, so this shows today's dinner right away, from what you've swiped so far. To keep swiping today, choose a later time instead.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Switch and reveal now", onPress: () => save(settings) },
+      ],
+    );
   }
 
   return (
@@ -111,7 +136,7 @@ export default function Settings() {
               title="At a set time"
               description="Keep swiping whenever you like. You both find out at the same time each day, and swiping reopens after midnight."
               selected={!instant}
-              onPress={() => save({ revealMode: "scheduled" })}
+              onPress={() => saveWithReveal({ revealMode: "scheduled" })}
             />
           </View>
         </Card>
@@ -132,7 +157,7 @@ export default function Settings() {
               <TimeField
                 accessibilityLabel="Reveal time"
                 value={couple.reveal_time}
-                onChange={(revealTime) => save({ revealTime })}
+                onChange={(revealTime) => saveWithReveal({ revealTime })}
               />
             </View>
             {localTime && localTime !== couple.reveal_time ? (
