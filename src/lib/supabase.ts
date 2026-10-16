@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
+import { withTimeout } from '@/lib/fetch-timeout';
+
 const rawUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -25,6 +27,8 @@ export const supabase = createClient(url, anonKey, {
     persistSession: true,
     detectSessionInUrl: false,
   },
+  // Requests give up after 15 s (60 s for photo uploads) instead of hanging on a weak connection.
+  global: { fetch: withTimeout(fetch) },
 });
 
 // Only refresh tokens while the app is in the foreground.

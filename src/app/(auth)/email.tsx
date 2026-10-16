@@ -9,6 +9,7 @@ import type { z } from 'zod';
 import { Accent, BackButton, Button, Screen, Text, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { enter } from '@/hooks/use-motion';
+import { isNetworkError, OFFLINE_MESSAGE } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { codeSchema, emailSchema } from '@/lib/validation';
 
@@ -38,7 +39,7 @@ function EmailStep({ onSent, onBack }: { onSent: (email: string) => void; onBack
   const submit = handleSubmit(async ({ email }) => {
     const { error } = await supabase.auth.signInWithOtp({ email });
     if (error) {
-      setError('email', { message: error.message });
+      setError('email', { message: isNetworkError(error) ? OFFLINE_MESSAGE : error.message });
       return;
     }
     onSent(email);
@@ -92,12 +93,12 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
   // On success the auth listener swaps the navigator, so nothing to do here.
   const submit = handleSubmit(async ({ code }) => {
     const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
-    if (error) setError('code', { message: 'That code is invalid or has expired.' });
+    if (error) setError('code', { message: isNetworkError(error) ? OFFLINE_MESSAGE : 'That code is invalid or has expired.' });
   });
 
   async function resend() {
     const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) setError('code', { message: error.message });
+    if (error) setError('code', { message: isNetworkError(error) ? OFFLINE_MESSAGE : error.message });
     else setResent(true);
   }
 

@@ -26,7 +26,8 @@ export default function AppLayout() {
     );
   }
 
-  if (profile.isError || couple.isError) {
+  // A refresh that fails while we already have the data (a dropped connection) must not throw the screen away.
+  if ((profile.isError && !profile.data) || (couple.isError && couple.data === undefined)) {
     return (
       <Screen
         scroll={false}

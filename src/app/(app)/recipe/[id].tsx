@@ -29,8 +29,18 @@ export default function RecipeScreen() {
     return (
       <Screen>
         <BackButton />
-        <Text variant="heading">{reveal.isPending ? 'Loading…' : 'This recipe is no longer available'}</Text>
-        {!reveal.isPending ? <Text tone="secondary">Recipes are available once the reveal has happened.</Text> : null}
+        {reveal.isError && !reveal.data ? (
+          <>
+            <Text variant="heading">We couldn&apos;t load this recipe</Text>
+            <Text tone="secondary">Check your connection and try again.</Text>
+            <Button title="Try again" variant="secondary" onPress={() => reveal.refetch()} />
+          </>
+        ) : (
+          <>
+            <Text variant="heading">{reveal.isPending ? 'Loading…' : 'This recipe is no longer available'}</Text>
+            {!reveal.isPending ? <Text tone="secondary">Recipes are available once the reveal has happened.</Text> : null}
+          </>
+        )}
       </Screen>
     );
   }

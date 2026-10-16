@@ -19,7 +19,8 @@ export default function PreferencesScreen() {
   const cuisines = useCuisineOptions();
 
   if (prefs.isPending || cuisines.isPending) return <PreferencesSkeleton />;
-  if (prefs.isError || cuisines.isError) {
+  // Only when there is nothing to show: a failed refresh must not wipe a form someone is editing.
+  if ((prefs.isError && !prefs.data) || (cuisines.isError && !cuisines.data)) {
     return (
       <Screen
         scroll={false}

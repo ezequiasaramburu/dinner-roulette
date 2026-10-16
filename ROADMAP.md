@@ -23,6 +23,7 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 - [ ] Database security pass (migration 0038, docs/security-review.md): check especially that saving your name and preferences, notices, your recipes and live updates still work
 - [x] Partner-left notices now sit below the page title (couple setup, invite)
 - [ ] Per-product subscription expiry (migration 0037) after buying a second plan
+- [ ] Weak-connection and error fixes (docs/connection-review.md): airplane-mode hand-test list is at the end of that file
 - [x] Sign-in codes now last 10 minutes (restart local Supabase to load it)
 
 
@@ -36,6 +37,7 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 - [ ] Server push notifications (Apple developer account and FCM credentials; today only the local reminders fire)
 - [ ] Go-live email: SMTP provider and a domain (README "Going live: sign-in email")
 - [ ] Crash reporting (a free Sentry-style account)
+- [ ] A "you're offline" banner (needs the native NetInfo module, so add it with the next native rebuild)
 - [ ] Tappable invite links: the link uses the app's own scheme today; an `https` link needs a domain and store configuration
 - [ ] Check the hosted-project settings listed at the end of docs/security-review.md (rate limits, redirect URLs, backups, two-factor)
 
@@ -43,7 +45,6 @@ Last updated: 2026-10-16. "Hand-test pending" means built and checked by tests, 
 
 ## Before launch: buildable now
 
-- [ ] Weak-connection and error check: what every screen does with no network or a server error (the paywall depends on the network now)
 - [ ] Release setup: `eas.json` build profiles, versions and bundle ids in `app.json`, a short "how to ship a build" note
 - [ ] Privacy declarations draft for Apple's privacy labels and Google's data safety form (include the anonymous deletion log and purchase data)
 - [ ] Accessibility pass: screen-reader labels, text size, contrast (including the paywall buttons and the Paused card)

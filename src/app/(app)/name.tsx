@@ -8,6 +8,7 @@ import { Accent, Button, Screen, Text, TextField } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { enter } from '@/hooks/use-motion';
 import { useUpdateDisplayName } from '@/hooks/use-profile';
+import { isNetworkError, OFFLINE_MESSAGE } from '@/lib/errors';
 import { nameSchema } from '@/lib/validation';
 
 type Values = z.infer<typeof nameSchema>;
@@ -25,8 +26,8 @@ export default function Name() {
   const submit = handleSubmit(async ({ name }) => {
     try {
       await updateName.mutateAsync(name);
-    } catch {
-      setError('name', { message: 'Could not save your name. Please try again.' });
+    } catch (e) {
+      setError('name', { message: isNetworkError(e) ? OFFLINE_MESSAGE : 'Could not save your name. Please try again.' });
     }
   });
 

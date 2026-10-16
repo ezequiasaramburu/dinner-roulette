@@ -83,7 +83,8 @@ export default function Swipe() {
     undo.mutate(data.deck_id, { onError: () => Alert.alert("Couldn't undo", 'Please try again.') });
   }
 
-  if (feed.isError) {
+  // Keep the cards on screen if a refresh fails while some are left.
+  if (feed.isError && !feed.data?.dishes.length) {
     return (
       <Screen
         scroll={false}

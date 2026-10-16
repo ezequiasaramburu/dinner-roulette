@@ -28,8 +28,18 @@ const MESSAGES: Record<string, string> = {
   not_authenticated: 'Please sign in again.',
 };
 
+const NETWORK = /network request (failed|timed out)|failed to fetch|network error|timed out|timeout|internet|offline|aborted/i;
+
+/** The request never got a proper answer: no connection, a dropped one, or one too slow (see fetch-timeout). */
+export function isNetworkError(error: unknown): boolean {
+  return NETWORK.test((error as { message?: string } | null)?.message ?? '');
+}
+
+export const OFFLINE_MESSAGE = "Can't reach Dinner Roulette. Check your connection and try again.";
+
 /** Turn a Supabase/Postgres error into something we can show a person. */
 export function friendlyError(error: unknown): string {
   const message = (error as { message?: string } | null)?.message ?? '';
-  return MESSAGES[message] ?? 'Something went wrong. Please try again.';
+  if (MESSAGES[message]) return MESSAGES[message];
+  return isNetworkError(error) ? OFFLINE_MESSAGE : 'Something went wrong. Please try again.';
 }

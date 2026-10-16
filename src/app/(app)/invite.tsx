@@ -59,7 +59,7 @@ export default function Invite() {
     <Screen
       footer={
         <>
-          {invite.isError ? (
+          {invite.isError && !invite.data ? (
             <Button title="Try again" variant="secondary" onPress={() => invite.refetch()} />
           ) : null}
           <Button title="Share invite" onPress={onShare} disabled={!invite.data} />
@@ -93,7 +93,7 @@ export default function Invite() {
           <Text variant="overline" tone="tertiary" align="center">
             Your invite code
           </Text>
-          {invite.isError ? (
+          {invite.isError && !invite.data ? (
             <Text tone="secondary" align="center">
               Could not create a code.
             </Text>

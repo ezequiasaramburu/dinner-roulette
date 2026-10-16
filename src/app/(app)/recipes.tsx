@@ -45,7 +45,7 @@ export default function Recipes() {
 
         {recipes.isPending ? (
           <RecipeCardsSkeleton />
-        ) : recipes.isError ? (
+        ) : recipes.isError && !recipes.data ? (
           <Card tone="muted">
             <Text tone="secondary">We couldn&apos;t load your recipes.</Text>
             <Button title="Try again" variant="secondary" onPress={() => recipes.refetch()} />

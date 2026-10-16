@@ -35,12 +35,20 @@ export function useSubscribe() {
     if (outcome === 'closed') return;
     // The store knows right away; our server hears about it from RevenueCat a few seconds later.
     setBusy(true);
-    for (let i = 0; i < 10; i++) {
+    let unlocked = false;
+    for (let i = 0; i < 10 && !unlocked; i++) {
       await queryClient.refetchQueries({ queryKey: key });
-      if (queryClient.getQueryData<CoupleState | null>(key)?.has_access) break;
-      await sleep(1500);
+      unlocked = !!queryClient.getQueryData<CoupleState | null>(key)?.has_access;
+      if (!unlocked) await sleep(1500);
     }
     setBusy(false);
+    if (!unlocked) {
+      // The store took the payment; only our server has not heard yet (or the connection is poor). Never leave it silent.
+      Alert.alert(
+        'Your purchase went through',
+        "It can take a minute to unlock. If it still looks paused after that, close and reopen the app.",
+      );
+    }
   }
 
   return { subscribe, busy, manage: showCustomerCenter };
