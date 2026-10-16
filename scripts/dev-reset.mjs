@@ -6,7 +6,8 @@
 //   npm run dev:reset                       (uses DEV_RESET_EMAILS from .env.local, comma separated)
 //
 // Removes: their couple (members, invite codes, daily decks, swipes, reveal views), food preferences, notices,
-// join attempts, blocks, reports, and their display name and accepted terms (so you start at the name screen).
+// join attempts, blocks, reports, their trial history (so a new couple gets a fresh 7 days), and their display name and
+// accepted terms (so you start at the name screen).
 // Options:
 //   --keep-name   keep display name and accepted terms (start at "create a couple")
 //   --recipes     also delete the community recipes they wrote (photos in Storage stay: remove them in Studio)
@@ -101,6 +102,7 @@ const wipe = `
   delete from author_blocks where blocker_id in (${ids}) or blocked_id in (${ids});
   delete from recipe_reports where reporter_id in (${ids});
   ${recipes ? `delete from recipes where author_id in (${ids});` : ''}
+  update profiles set trial_started_at = null where id in (${ids});
   ${keepName ? '' : `update profiles set display_name = null, terms_accepted_at = null, push_token = null where id in (${ids});`}`;
 
 const left = `

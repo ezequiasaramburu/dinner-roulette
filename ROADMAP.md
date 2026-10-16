@@ -19,7 +19,8 @@ Last updated: 2026-10-15. Tick items as they land. "Unverified" means not yet se
   - [x] Groundwork built (migration 0034, "Paused" card on Home; see README "Trial and access"): `trial_ends_at`, `paid_until`, `subscription_required`
   - [x] RevenueCat integrated in code (paywall, Customer Center, entitlement `dinner_roulette_pro`, webhook that sets `paid_until`, deletion note): see README "Subscriptions (RevenueCat)". Unverified on a device
   - [ ] Yours to do: rebuild the dev app (native SDK), set up the entitlement, products, offering and paywall in the RevenueCat dashboard, add the webhook URL and secret, deploy the function. Real store keys (`appl_`, `goog_`) before release
-  - [x] The trial starts when the partner joins (migration 0035), and the payer sees a "days left" line on Home (unverified on a device)
+  - [x] Trial remembered per person, anonymous deletion log (migration 0039); abuse monitoring in the admin dashboard, see docs/trial-abuse.md
+- [x] The trial starts when the partner joins (migration 0035), and the payer sees a "days left" line on Home (unverified on a device)
 - [ ] 2. Server push notifications (blocked on Apple and FCM credentials; today only a local reminder fires)
 - [ ] Go-live email: pick an SMTP provider, verify a domain, connect it in Supabase (steps in the README, "Going live: sign-in email")
 - [ ] 3. Legal placeholders: operator and contact values in `src/constants/legal.ts`

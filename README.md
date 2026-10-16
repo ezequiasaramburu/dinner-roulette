@@ -235,9 +235,12 @@ ended", partner: "<payer>'s free trial has ended"), and preferences, history and
 everything back. Data is kept until the user deletes their account. Only the payer subscribes; the partner cannot take
 over (if the payer deletes their account the couple dissolves, as before).
 
-How it works (migrations 0034 and 0035): `couples.trial_ends_at` and `couples.paid_until` (empty until a subscription
-exists). The trial starts when the **partner joins** (`join_couple()` stamps 7 days from then; a later partner does not
-restart it), and nothing is locked while the couple waits for its partner. A couple has access while `now()` is before either. `ensure_deck()` raises `subscription_required`
+How it works (migrations 0034, 0035, 0039): `couples.trial_ends_at` and `couples.paid_until` (empty until a subscription
+exists). The trial starts when the **partner joins**, and nothing is locked while the couple waits for its partner. It is
+remembered **per person** (`profiles.trial_started_at`, not readable by the app): a new couple's trial ends 7 days after the
+earliest start of its two people, so ending a couple and pairing up again does not give a fresh week, and a later partner
+does not restart a running one. Deleting an account leaves one anonymous row in `account_deletions` so abuse can be
+measured later: see `docs/trial-abuse.md`. A couple has access while `now()` is before either. `ensure_deck()` raises `subscription_required`
 when it does not, which blocks the feed, swipes, early reveals and new queues for both partners; `get_couple_state()`
 returns `has_access`. The app has no update policy on `couples`, so only a server-side process (the RevenueCat webhook,
 to come) can write `paid_until`.

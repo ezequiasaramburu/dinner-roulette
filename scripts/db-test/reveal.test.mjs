@@ -515,6 +515,64 @@ describe('access (trial and paid period)', () => {
     assert.equal(new Date((await state(owner)).trial_ends_at).getTime(), new Date(first).getTime());
   });
 
+  // Real flow: create, invite, join. `ago` backdates a person's trial to simulate an earlier couple.
+  async function formCouple(owner, partner) {
+    const rpc = (u, sql, params) => asUser(db, u, () => db.query(sql, params));
+    await rpc(owner, 'select public.create_couple($1)', ['UTC']);
+    const { rows } = await rpc(owner, 'select public.create_invite() as code');
+    await rpc(partner, 'select public.join_couple($1)', [rows[0].code]);
+  }
+  const daysLeft = async (u) => (await state(u)).trial_days_left;
+  const startedDaysAgo = (u, days) => db.query("update public.profiles set trial_started_at = now() - make_interval(days => $2) where id = $1", [u, days]);
+
+  test('the trial is remembered per person: a new couple carries over what is left, or nothing', async () => {
+    const [b, c, d, e] = await Promise.all(['pp-b', 'pp-c', 'pp-d', 'pp-e'].map((n) => addUser(db, `${n}@test.dev`)));
+    // Both new: a full week, and both are marked as having started it.
+    await formCouple(c, b); // c owns it
+    assert.equal(await daysLeft(b), 7);
+    const marked = (await db.query('select count(*)::int n from public.profiles where id in ($1, $2) and trial_started_at is not null', [b, c])).rows[0].n;
+    assert.equal(marked, 2);
+
+    // c (the owner) deletes their account, which ends the couple. b pairs with d 5 days into that trial: 2 days remain, not 7.
+    await startedDaysAgo(b, 5);
+    await asUser(db, c, () => db.query('select public.delete_account()'));
+    await formCouple(b, d);
+    assert.equal(await daysLeft(b), 2);
+    assert.equal(await daysLeft(d), 2, 'the new partner shares what is left');
+  });
+
+  test('someone whose trial is over gets no new week by starting a new couple', async () => {
+    const [b, f] = await Promise.all(['pp-over-b', 'pp-over-f'].map((n) => addUser(db, `${n}@test.dev`)));
+    await startedDaysAgo(b, 10);
+    await formCouple(b, f);
+    const st = await state(b);
+    assert.equal(st.has_access, false);
+    assert.equal(st.trial_days_left, null);
+  });
+
+  test('a partner joining a couple whose trial is running does not restart it, and is marked too', async () => {
+    const [b, c, d] = await Promise.all(['pp-run-b', 'pp-run-c', 'pp-run-d'].map((n) => addUser(db, `${n}@test.dev`)));
+    await formCouple(b, c);
+    await db.query("update couples set trial_ends_at = now() + interval '3 days' where owner_id = $1", [b]);
+    await db.query('delete from couple_members where user_id = $1', [c]);
+    const rpc = (u, sql, params) => asUser(db, u, () => db.query(sql, params));
+    const { rows } = await rpc(b, 'select public.create_invite() as code');
+    await rpc(d, 'select public.join_couple($1)', [rows[0].code]);
+    assert.equal(await daysLeft(d), 3);
+    assert.equal((await db.query('select trial_started_at is not null as marked from public.profiles where id = $1', [d])).rows[0].marked, true);
+  });
+
+  test('deleting an account leaves an anonymous trace and nothing that identifies the person', async () => {
+    const [b, c] = await Promise.all(['pp-del-b', 'pp-del-c'].map((n) => addUser(db, `${n}@test.dev`)));
+    await formCouple(b, c);
+    await startedDaysAgo(b, 4);
+    await asUser(db, b, () => db.query('select public.delete_account()'));
+    const { rows } = await db.query('select * from public.account_deletions order by id desc limit 1');
+    assert.deepEqual([rows[0].was_owner, rows[0].had_couple, rows[0].trial_day, rows[0].had_paid], [true, true, 4, false]);
+    assert.deepEqual(Object.keys(rows[0]).sort(), ['deleted_at', 'had_couple', 'had_paid', 'id', 'trial_day', 'was_owner']);
+    await assert.rejects(asUser(db, c, () => db.query('select * from public.account_deletions')), /permission denied/);
+  });
+
   test('days left count down, and disappear once paid or over', async () => {
     const { a, couple } = await makeCouple({ mode: 'instant' });
     await db.query("update couples set trial_ends_at = now() + interval '36 hours' where id = $1", [couple]);
