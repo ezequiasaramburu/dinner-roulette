@@ -33,7 +33,8 @@ export function useAccountActions(partner?: string | null, isOwner?: boolean) {
   const isPro = useIsPro();
 
   async function signOut() {
-    const { error } = await supabase.auth.signOut();
+    // Local scope: works offline, and does not sign the person out of their other devices.
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) Alert.alert('Could not sign out', error.message);
   }
 

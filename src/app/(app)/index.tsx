@@ -94,7 +94,7 @@ export default function Home() {
 
   async function signOut() {
     setMenuOpen(false);
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) Alert.alert('Could not sign out', error.message);
   }
 
