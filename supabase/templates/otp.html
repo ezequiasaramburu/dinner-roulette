@@ -1,4 +1,70 @@
-<h2>Your Dinner Roulette code</h2>
-<p>Enter this code in the app to sign in:</p>
-<p style="font-size: 32px; font-weight: 700; letter-spacing: 6px;">{{ .Token }}</p>
-<p>It expires in 10 minutes. If you didn't request it, you can ignore this email.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Your Dinner Roulette code</title>
+</head>
+<body style="margin:0;padding:0;background-color:#FAF5EC;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#FAF5EC;">Your sign-in code is {{ .Token }}. It expires in 10 minutes.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#FAF5EC" style="background-color:#FAF5EC;">
+  <tr>
+    <td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+        <tr>
+          <td align="center" style="padding:0 0 20px 0;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:bold;color:#1F1A17;">
+            Dinner <span style="color:#B93D26;font-style:italic;">Roulette</span>
+          </td>
+        </tr>
+        <tr>
+          <td bgcolor="#FFFDF8" style="background-color:#FFFDF8;border:1px solid #E7DDCC;border-radius:24px;padding:36px 28px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="center" style="font-family:Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;color:#B93D26;padding-bottom:10px;">
+                  Your sign-in code
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:34px;font-weight:bold;color:#1F1A17;padding-bottom:12px;">
+                  Tonight&rsquo;s dinner is almost on the table
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#6B5F55;padding-bottom:24px;">
+                  Enter this code in the app to sign in.
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding-bottom:24px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td align="center" bgcolor="#F8E7DF" style="background-color:#F8E7DF;border-radius:14px;padding:16px 28px;font-family:'Courier New',Courier,monospace;font-size:36px;line-height:40px;font-weight:bold;letter-spacing:8px;color:#B93D26;">
+                        {{ .Token }}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:22px;color:#74685E;">
+                  The code expires in 10 minutes and works once.<br>
+                  If you didn&rsquo;t ask for it, you can ignore this email.
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding:24px 0 0 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:20px;color:#74685E;">
+            Swipe dishes together, match, and decide dinner.<br>
+            <a href="https://dinnerroulette.app" style="color:#B93D26;text-decoration:underline;">dinnerroulette.app</a>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
