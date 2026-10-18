@@ -27,6 +27,7 @@ Last updated: 2026-10-17. "Hand-test pending" means built and checked by tests, 
 - [ ] Anonymous account-deletion log for spotting trial abuse (migration 0039, docs/trial-abuse.md): delete an account in the app and check the one anonymous row
 - [ ] Database security pass (migration 0038, docs/security-review.md): the hosted flow ran on it, but check on purpose that saving your name and preferences, notices, your recipes and live updates all work
 - [ ] Release setup (docs/release.md): CI (runs when a pull request is merged into main, not on a direct push) and the manual build workflow have not run yet, so expect small fixes on the first run
+- [ ] App icon, Android themed icon and splash (tomato with the pizza slice; `node brand-assets/build-icons.mjs` rebuilds them, `brand-assets/play-store-512.png` is for the Play Console). Splash and Android icon were seen on the emulator; check the iOS icon, the themed icon on Android 13+, and the splash in dark mode. The website has its own copies in dinner-roulette-web
 
 ## Before launch: needs something from you or an outside account
 
@@ -37,7 +38,6 @@ Last updated: 2026-10-17. "Hand-test pending" means built and checked by tests, 
 - [ ] Public Terms and Privacy pages on `dinnerroulette.app` (a free static host such as GitHub Pages or Cloudflare Pages is enough); the paywall links need them
 - [ ] Legal placeholders in `src/constants/legal.ts` (operator name and support email). Have someone qualified read the text
 - [ ] A support address on the domain (`support@dinnerroulette.app`): Spacemail mailbox or forwarding to your own inbox. If it goes through Spacemail, keep a single DMARC record and keep Resend's records as shown
-- [ ] App icon and splash screen (still the defaults)
 - [ ] Server push notifications (Apple developer account and FCM credentials; today only the local reminders fire)
 - [ ] Crash reporting (a free Sentry-style account)
 - [ ] A "you're offline" banner (needs the native NetInfo module, so add it with the next native rebuild)
