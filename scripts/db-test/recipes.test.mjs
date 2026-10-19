@@ -21,7 +21,15 @@ async function newUser(name) {
   return id;
 }
 
-async function submit(user, over = {}) {
+/** Sharing a recipe needs a couple with a paid period running; most tests only care about the recipe, so give the author one. */
+async function paid(user) {
+  const coupleOf = async () => (await db.query('select couple_id from public.couple_members where user_id = $1', [user])).rows[0]?.couple_id;
+  if (!(await coupleOf())) await rpc(user, 'select public.create_couple($1)', ['UTC']);
+  await db.query("update public.couples set paid_until = now() + interval '30 days' where id = $1", [await coupleOf()]);
+}
+
+async function submit(user, { paidUp = true, ...over } = {}) {
+  if (paidUp) await paid(user);
   const v = {
     title: 'Garlic rice bowl',
     country: 'Kenya',
@@ -153,6 +161,30 @@ describe('submitting a recipe', () => {
     assert.equal(r.author_id, u);
     assert.ok(r.submitted_at);
     assert.equal(r.source_id, null);
+  });
+
+  test('only a couple with a paid period running can share, not the free trial or an ended plan', async () => {
+    const lonely = await newUser('Lonely');
+    await assert.rejects(submit(lonely, { paidUp: false }), /recipes_need_subscription/);
+
+    const { owner, partner } = await couple();
+    const set = (sql) => db.query(`update public.couples set ${sql}`);
+    const subscribed = async (u) => (await rpc(u, 'select public.get_couple_state() as s'))[0].s.is_subscribed;
+
+    await set("trial_ends_at = now() + interval '5 days', paid_until = null");
+    assert.equal(await subscribed(owner), false);
+    await assert.rejects(submit(owner, { paidUp: false }), /recipes_need_subscription/);
+
+    await set("trial_ends_at = now() - interval '1 day', paid_until = now() - interval '1 hour'");
+    assert.equal(await subscribed(owner), false);
+    await assert.rejects(submit(owner, { paidUp: false }), /recipes_need_subscription/);
+
+    await set("paid_until = now() + interval '30 days'");
+    assert.equal(await subscribed(owner), true);
+    await submit(owner, { paidUp: false });
+    // The couple is the subscriber: the partner who does not pay can share too.
+    assert.equal(await subscribed(partner), true);
+    await submit(partner, { paidUp: false });
   });
 
   test('bad input is refused with a reason', async () => {
@@ -311,7 +343,7 @@ describe('decks and community recipes', () => {
     await rpc(a, 'select public.block_author($1)', [id]);
     assert.equal((await db.query('select count(*)::int as n from public.author_blocks where blocker_id = $1', [a])).rows[0].n, 1);
 
-    await rpc(b, 'select public.create_couple($1)', ['UTC']);
+    // b already has a couple: sharing a recipe needed one (see paid()).
     const code = (await rpc(b, 'select public.create_invite() as code'))[0].code;
     await rpc(a, 'select public.join_couple($1)', [code]);
     assert.equal((await db.query('select count(*)::int as n from public.author_blocks where blocker_id = $1', [a])).rows[0].n, 0);

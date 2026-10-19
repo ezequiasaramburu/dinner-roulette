@@ -6,6 +6,7 @@ import { friendlyError, isNetworkError, OFFLINE_MESSAGE } from './errors.ts';
 test('known server errors keep their own message', () => {
   assert.equal(friendlyError({ message: 'too_many_attempts' }), 'Too many wrong codes. Please wait a few minutes and try again.');
   assert.equal(friendlyError({ message: 'subscription_required' }), 'Dinner is paused until the subscription is renewed.');
+  assert.equal(friendlyError({ message: 'recipes_need_subscription' }), 'Sharing recipes is for subscribers.');
 });
 
 test('connection problems say so, whatever form they arrive in', () => {

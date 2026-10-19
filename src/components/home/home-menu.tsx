@@ -3,6 +3,7 @@ import { Platform, StyleSheet, View } from "react-native";
 
 import { Avatar, MenuItem, MenuLabel, SideMenu, Text } from "@/components/ui";
 import { Radius, Spacing } from "@/constants/theme";
+import { useAddRecipePath } from "@/hooks/use-add-recipe-path";
 import { useTheme } from "@/hooks/use-theme";
 
 export type MenuPath =
@@ -10,6 +11,7 @@ export type MenuPath =
   | "/settings"
   | "/recipes"
   | "/add-recipe"
+  | "/share-locked"
   | "/legal/terms"
   | "/legal/privacy";
 
@@ -36,6 +38,7 @@ export function HomeMenu({
   revealLabel,
 }: Props) {
   const theme = useTheme();
+  const addRecipePath = useAddRecipePath();
 
   return (
     <SideMenu visible={visible} onClose={onClose}>
@@ -96,7 +99,7 @@ export function HomeMenu({
           icon="create-outline"
           label="Add a recipe"
           caption="Share a dish with everyone"
-          onPress={() => onNavigate("/add-recipe")}
+          onPress={() => onNavigate(addRecipePath)}
         />
         <MenuItem
           icon="book-outline"

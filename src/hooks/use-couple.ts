@@ -17,6 +17,8 @@ export type CoupleState = {
   match_goal: number;
   /** False once the free trial and any paid period are over: swiping and reveals are paused for both partners. */
   has_access: boolean;
+  /** A paid period is running (not just the free trial). Sharing recipes is for subscribers only. */
+  is_subscribed: boolean;
   /** Empty until the partner joins: the free trial starts then. */
   trial_ends_at: string | null;
   /** Whole days left in the free trial, or null when there is no trial running to count (not started, paid, or over). */

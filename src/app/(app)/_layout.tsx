@@ -77,6 +77,7 @@ export default function AppLayout() {
         <Stack.Screen name="recipe/[id]" />
         <Stack.Screen name="recipes" options={{ animationTypeForReplace: 'pop' }} />
         <Stack.Screen name="add-recipe" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="share-locked" />
       </Stack.Protected>
     </Stack>
   );

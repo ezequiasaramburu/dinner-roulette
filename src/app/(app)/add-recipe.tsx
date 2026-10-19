@@ -4,9 +4,11 @@ import { Alert, Linking, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { DishImage } from '@/components/dish/dish-image';
+import { RecipesLocked } from '@/components/recipes-locked';
 import { Accent, BackButton, Button, Card, CountryField, PressableScale, Screen, Text, TextField } from '@/components/ui';
 import { ControlHeight, Radius, Spacing } from '@/constants/theme';
 import { enter } from '@/hooks/use-motion';
+import { useCouple } from '@/hooks/use-couple';
 import { useProfile } from '@/hooks/use-profile';
 import { useSubmitRecipe } from '@/hooks/use-recipes';
 import { useTheme } from '@/hooks/use-theme';
@@ -23,7 +25,32 @@ const MAX_INGREDIENTS = 30;
 const MAX_STEPS = 25;
 const LINK = /(https?:|www\.)/i;
 
+/** Only a couple with a paid period running can share recipes; everyone else gets the reason instead of the form. */
 export default function AddRecipe() {
+  const couple = useCouple();
+  if (couple.isPending) {
+    return (
+      <Screen>
+        <BackButton />
+      </Screen>
+    );
+  }
+  if (couple.isError && !couple.data) {
+    return (
+      <Screen>
+        <BackButton />
+        <Card tone="muted">
+          <Text tone="secondary">We couldn&apos;t check your plan. Check your connection and try again.</Text>
+          <Button title="Try again" variant="secondary" onPress={() => couple.refetch()} />
+        </Card>
+      </Screen>
+    );
+  }
+  if (!couple.data?.is_subscribed) return <RecipesLocked couple={couple.data ?? null} />;
+  return <AddRecipeForm />;
+}
+
+function AddRecipeForm() {
   const router = useRouter();
   const theme = useTheme();
   const { data: profile } = useProfile();

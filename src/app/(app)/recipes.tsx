@@ -7,6 +7,7 @@ import { Accent, BackButton, Button, Card, Pill, Screen, Skeleton, Text } from '
 import { countryFlag } from '@/constants/countries';
 import { ControlHeight, Radius, Spacing } from '@/constants/theme';
 import { enter, exit, reflow } from '@/hooks/use-motion';
+import { useAddRecipePath } from '@/hooks/use-add-recipe-path';
 import { useDeleteRecipe, useMyRecipes, type MyRecipe } from '@/hooks/use-recipes';
 import { friendlyError } from '@/lib/errors';
 
@@ -20,6 +21,7 @@ export default function Recipes() {
   const router = useRouter();
   const recipes = useMyRecipes();
   const remove = useDeleteRecipe();
+  const addRecipePath = useAddRecipePath();
 
   function confirmDelete(recipe: MyRecipe) {
     Alert.alert('Delete this recipe?', `"${recipe.title}" will be removed for good.`, [
@@ -33,7 +35,7 @@ export default function Recipes() {
   }
 
   return (
-    <Screen footer={<Button title="Add a recipe" onPress={() => router.push('/add-recipe')} />}>
+    <Screen footer={<Button title="Add a recipe" onPress={() => router.push(addRecipePath)} />}>
       <BackButton />
       <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="overline" tone="primary">

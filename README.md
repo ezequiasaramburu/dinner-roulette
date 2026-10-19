@@ -305,7 +305,10 @@ get a code.
 
 ## Community recipes
 
-Anyone can submit a recipe (`submit_recipe`, migration `0023_community_recipes.sql`). It starts `pending` and is only
+Only subscribers can submit a recipe (`submit_recipe`, migration `0023_community_recipes.sql`; the subscription rule is migration
+`0040_recipes_for_subscribers.sql`): the author's couple needs a paid period running, so the free trial and an ended plan do
+not count, and both partners can share while either one pays. The app explains this on the Add a recipe screen
+(`src/components/recipes-locked.tsx`). A submitted recipe starts `pending` and is only
 published (`approved`) after review: open the `recipes` table in Supabase Studio, filter `status = pending`, read it,
 and change `status` to `approved` or `rejected` (put the reason in `review_note`). A recipe appears in queues built after
 it is approved.
