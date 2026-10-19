@@ -16,7 +16,7 @@ import { pickRecipePhoto, type PickedPhoto } from '@/lib/recipe-photo';
 
 type Ingredient = { id: number; name: string; measure: string };
 type Step = { id: number; text: string };
-type Errors = { title?: string; country?: string; ingredients?: string; steps?: string; terms?: string };
+type Errors = { title?: string; country?: string; ingredients?: string; steps?: string; photo?: string; terms?: string };
 
 const MIN_INGREDIENTS = 3;
 const MAX_INGREDIENTS = 30;
@@ -68,6 +68,7 @@ export default function AddRecipe() {
       found.steps = 'Each step needs a few words, and under 600 characters';
     const everything = [t, ...filledIngredients.flatMap((i) => [i.name, i.measure]), ...filledSteps].join(' ');
     if (LINK.test(everything)) found.steps = found.steps ?? "Links aren't allowed. Write it in your own words";
+    if (!photo) found.photo = 'Add a photo of your dish';
     if (needsTerms && !accepted) found.terms = 'Please confirm to share your recipe';
     return found;
   }
@@ -126,9 +127,12 @@ export default function AddRecipe() {
   const updateStep = (rowId: number, text: string) =>
     setSteps((rows) => rows.map((r) => (r.id === rowId ? { ...r, text } : r)));
 
+  // The button waits until every rule above passes, so the errors only matter if something slips past it.
+  const canSubmit = Object.keys(validate()).length === 0;
+
   return (
     <Screen
-      footer={<Button title="Submit for review" onPress={onSubmit} loading={submit.isPending} />}>
+      footer={<Button title="Submit for review" onPress={onSubmit} loading={submit.isPending} disabled={!canSubmit} />}>
       <BackButton />
 
       <Animated.View entering={enter()} style={styles.stack}>
@@ -260,7 +264,7 @@ export default function AddRecipe() {
         <View style={styles.group}>
           <Text variant="heading">Photo</Text>
           <Text variant="caption" tone="secondary">
-            Optional. A good photo makes people want to cook it. Only share photos you took yourself.
+            Required. A good photo makes people want to cook it. Only share photos you took yourself.
           </Text>
           {photo ? (
             <>
