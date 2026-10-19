@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import type { z } from 'zod';
@@ -35,6 +35,8 @@ function EmailStep({ onSent, onBack }: { onSent: (email: string) => void; onBack
     setError,
     formState: { errors, isSubmitting },
   } = useForm<EmailValues>({ resolver: zodResolver(emailSchema), defaultValues: { email: '' } });
+  // The button waits for a valid address; errors still show only on submit, not while typing.
+  const canSend = emailSchema.safeParse({ email: useWatch({ control, name: 'email' }) }).success;
 
   const submit = handleSubmit(async ({ email }) => {
     const { error } = await supabase.auth.signInWithOtp({ email });
@@ -46,7 +48,7 @@ function EmailStep({ onSent, onBack }: { onSent: (email: string) => void; onBack
   });
 
   return (
-    <Screen footer={<Button title="Send code" onPress={submit} loading={isSubmitting} />}>
+    <Screen footer={<Button title="Send code" onPress={submit} loading={isSubmitting} disabled={!canSend} />}>
       <BackButton onPress={onBack} />
       <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="title">
@@ -89,6 +91,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<CodeValues>({ resolver: zodResolver(codeSchema), defaultValues: { code: '' } });
+  const canVerify = codeSchema.safeParse({ code: useWatch({ control, name: 'code' }) }).success;
 
   // On success the auth listener swaps the navigator, so nothing to do here.
   const submit = handleSubmit(async ({ code }) => {
@@ -106,7 +109,7 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
     <Screen
       footer={
         <>
-          <Button title="Verify" onPress={submit} loading={isSubmitting} />
+          <Button title="Verify" onPress={submit} loading={isSubmitting} disabled={!canVerify} />
           <Button title={resent ? 'Code sent again ✓' : 'Resend code'} variant="ghost" onPress={resend} />
         </>
       }>
