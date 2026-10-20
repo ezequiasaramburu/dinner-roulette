@@ -22,6 +22,8 @@ export type Dish = {
   ingredient_names: string[];
   /** Written by a person in the app rather than imported. */
   community: boolean;
+  /** The recipe has a video (imported recipes only; people's own never do). The link itself comes with the reveal. */
+  has_video: boolean;
   /** For community recipes: written by me, by my partner, or by someone else (null). */
   authored_by: 'me' | 'partner' | null;
 };

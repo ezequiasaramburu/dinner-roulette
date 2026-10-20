@@ -238,6 +238,21 @@ describe('submitting a recipe', () => {
   });
 });
 
+describe('swipe cards say when there is a video', () => {
+  test('imported recipes with a video link say so, people\'s own never do, and the link itself is not sent', async () => {
+    const a = await newUser('A');
+    const own = await submit(a);
+    const withVideo = (await db.query("select id from public.recipes where author_id is null and coalesce(youtube_url, '') <> '' limit 1")).rows[0].id;
+    const without = (await db.query("select id from public.recipes where author_id is null and coalesce(youtube_url, '') = '' limit 1")).rows[0]?.id;
+    // dish_json is internal (not callable by the app), so read it as the database owner.
+    const dish = async (id) => (await db.query('select public.dish_json(array[$1::uuid]) as d', [id])).rows[0].d[0];
+    assert.equal((await dish(withVideo)).has_video, true);
+    assert.equal((await dish(own)).has_video, false);
+    if (without) assert.equal((await dish(without)).has_video, false);
+    assert.equal('youtube_url' in (await dish(withVideo)), false);
+  });
+});
+
 describe('who can see a recipe', () => {
   test('pending recipes are only visible to their author; approved ones to everyone', async () => {
     const a = await newUser('A');

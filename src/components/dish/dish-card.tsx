@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Pill, Text } from '@/components/ui';
@@ -33,9 +34,19 @@ export function DishCard({ recipe, style }: { recipe: Dish; style?: StyleProp<Vi
       ]}>
       <DishImage url={recipe.image_url} size="large" label={recipe.title} style={styles.image} />
       <View style={styles.body}>
-        <Text variant="overline" tone="primary">
-          {countryFlag(recipe.country)}  {recipe.country}
-        </Text>
+        <View style={styles.countryRow}>
+          <Text variant="overline" tone="primary" numberOfLines={1} style={styles.country}>
+            {countryFlag(recipe.country)}  {recipe.country}
+          </Text>
+          {recipe.has_video ? (
+            <View accessible accessibilityLabel="Has a video" style={[styles.video, { backgroundColor: theme.primarySoft }]}>
+              <Ionicons name="play-circle" size={14} color={theme.primary} />
+              <Text variant="overline" tone="primary">
+                Video
+              </Text>
+            </View>
+          ) : null}
+        </View>
         <Text variant="heading" numberOfLines={2} style={styles.title}>
           {recipe.title}
         </Text>
@@ -70,5 +81,8 @@ const styles = StyleSheet.create({
   image: { flex: 1, minHeight: 200, borderTopLeftRadius: Radius.xl - 1, borderTopRightRadius: Radius.xl - 1 },
   body: { padding: Spacing.lg, gap: Spacing.sm },
   title: { minHeight: 56 },
+  countryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.sm },
+  country: { flexShrink: 1 },
+  video: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: Radius.pill },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
 });
