@@ -263,7 +263,7 @@ the couple locks again on its own. The app waits for that for a few seconds afte
 
 - **App side:** `src/lib/purchases.ts` (lazy-loaded SDK; does nothing without the key or on a build made before the SDK
   was added), `src/hooks/use-subscription.ts`. The customer is logged in with the Supabase user id. Entitlement:
-  `dinner_roulette_pro`. Products: `monthly` (4.99) and `yearly` (49.99, about two months free), set up in the RevenueCat dashboard. There is no lifetime plan, and the webhook ignores events without an expiry date; add a lifetime product by its id when it exists.
+  `dinner_roulette_pro`. Products: `monthly` (4.99) and `yearly` (39.99, about four months free), set up in the RevenueCat dashboard. There is no lifetime plan, and the webhook ignores events without an expiry date; add a lifetime product by its id when it exists.
 - **Key:** `EXPO_PUBLIC_REVENUECAT_API_KEY` in `.env.local` (a `test_` key uses the Test Store). Use the real `appl_` and
   `goog_` keys for store builds.
 - **The SDK is native:** rebuild the dev app once (`npx expo run:ios`, `npx expo run:android`).
