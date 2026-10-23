@@ -55,8 +55,13 @@ export async function removeRecipePhoto(url: string | null) {
 /** Every photo this person uploaded, for when they delete their account. */
 export async function removeAllMyPhotos(userId: string) {
   try {
-    const { data } = await supabase.storage.from(BUCKET).list(userId, { limit: 100 });
-    if (data?.length) await supabase.storage.from(BUCKET).remove(data.map((f) => `${userId}/${f.name}`));
+    // Each round removes what it listed, so the next list starts with the rest. Stops on an empty list or an error.
+    for (let round = 0; round < 50; round++) {
+      const { data, error } = await supabase.storage.from(BUCKET).list(userId, { limit: 100 });
+      if (error || !data?.length) return;
+      const { error: removeError } = await supabase.storage.from(BUCKET).remove(data.map((f) => `${userId}/${f.name}`));
+      if (removeError) return;
+    }
   } catch {
     // best effort
   }
