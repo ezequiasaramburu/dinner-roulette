@@ -50,7 +50,7 @@ Last updated: 2026-10-17. "Hand-test pending" means built and checked by tests, 
 
 ## Before launch: buildable now
 
-- [ ] Privacy declarations draft for Apple's privacy labels and Google's data safety form (include the anonymous deletion log, purchase data and the email provider)
+- [x] Privacy declarations draft for Apple's privacy labels and Google's data safety form: docs/privacy-declarations.md. Still yours: read it against the forms, decide the allergy answer, and submit
 
 ## After launch / later
 
