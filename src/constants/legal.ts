@@ -1,7 +1,7 @@
 // DRAFT legal text. Have a lawyer review both documents and fill in the placeholders before the store submission.
 // The same text should be published on the website, because both stores ask for a privacy policy URL.
 
-export const OPERATOR = '[Your name or company]';
+export const OPERATOR = 'Raul Ezequias Aramburu';
 export const CONTACT_EMAIL = 'support@swipefordinner.app'
 export const LAST_UPDATED = '14 October 2026';
 

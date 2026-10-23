@@ -37,5 +37,3 @@ export const haptics = {
   /** A soft tap: swiping a card away, undoing. */
   soft: () => run((h) => h.impactAsync(h.ImpactFeedbackStyle.Soft)),
 };
-
-export type HapticKind = keyof typeof haptics;

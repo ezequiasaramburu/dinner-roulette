@@ -8,6 +8,11 @@ Date: 2026-10-21. Scope: the mobile app in this repo (`dinner-roulette`). The we
 
 Pick items by number ("do 2 and 3").
 
+**Status (2026-10-23):** items 2 to 7 are done. Item 1 is done in the app: the operator is Raul Ezequias Aramburu (the legal name on the Google Play account) and the support email is `support@swipefordinner.app`. The website's legal pages must say the same.
+- 2: the webhook now ignores events without an expiry date (test flipped).
+- 3: the iOS fix is saved in `patches/expo-modules-jsi+57.1.2.patch` and applied by `patch-package` on `npm install`; `npm run ios` sets `EXPO_USE_PRECOMPILED_MODULES=0`. Drop the patch when you move to Expo SDK 58.
+- 4 to 7: removed `reset-project`, `expo-device`, `expo-web-browser`, `react-native-web`, `react-dom`, the `web` script and block, the app favicon, the `@/assets/*` alias and the `HapticKind` export.
+
 ## Must fix
 
 ### 1. Legal text still has placeholders (`src/constants/legal.ts:4-5`)

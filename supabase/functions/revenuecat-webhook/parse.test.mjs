@@ -17,8 +17,9 @@ test('a purchase gives access until the expiry date', () => {
   });
 });
 
-test('no expiry means a lifetime purchase', () => {
-  assert.equal(toSubscriptionUpdate(event({ expiration_at_ms: null }))?.until, 'infinity');
+test('an event with no expiry date is ignored, so nothing unlocks for ever', () => {
+  assert.equal(toSubscriptionUpdate(event({ expiration_at_ms: null })), null);
+  assert.equal(toSubscriptionUpdate(event({ expiration_at_ms: undefined })), null);
 });
 
 test('an expiry or refund in the past is passed on so access ends', () => {

@@ -81,6 +81,4 @@ await sharp({ create: { width: 1024, height: 1024, channels: 4, background: '#00
 const hub = svg(1024, `<circle cx="512" cy="512" r="460" fill="${SURFACE}"/><circle cx="512" cy="512" r="${460 - RING * 920}" fill="${TOMATO}"/>${emojiImage(1024, 0.6)}`);
 await raster(hub, 1024).png().toFile(images('splash-icon.png'));
 
-// Favicon for the app's own web build (app.json "web.favicon").
-await raster(svg(1024, `<circle cx="512" cy="512" r="512" fill="${TOMATO}"/>${emojiImage(1024, 0.72)}`), 48).png().toFile(images('favicon.png'));
 console.log('icons written to assets/images and brand-assets/play-store-512.png');

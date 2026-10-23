@@ -26,9 +26,10 @@ export function toSubscriptionUpdate(body: unknown): SubscriptionUpdate | null {
   const stamp = event.event_timestamp_ms;
   if (typeof stamp !== 'number' || !Number.isFinite(stamp)) return null;
 
-  // No expiry on the event means a lifetime purchase.
+  // shortcut: no lifetime plan is sold, so an event without an expiry is ignored instead of unlocking for ever; handle it by product id if one is added.
   const expires = event.expiration_at_ms;
-  const until = typeof expires === 'number' && Number.isFinite(expires) ? new Date(expires).toISOString() : 'infinity';
+  if (typeof expires !== 'number' || !Number.isFinite(expires)) return null;
+  const until = new Date(expires).toISOString();
 
   // Each product keeps its own expiry; the couple is unlocked until the latest of them.
   const productId = typeof event.product_id === 'string' && event.product_id ? event.product_id : 'unknown';
