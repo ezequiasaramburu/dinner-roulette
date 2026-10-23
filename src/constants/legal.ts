@@ -3,7 +3,7 @@
 
 export const OPERATOR = 'Raul Ezequias Aramburu';
 export const CONTACT_EMAIL = 'support@swipefordinner.app'
-export const LAST_UPDATED = '14 October 2026';
+export const LAST_UPDATED = '23 October 2026';
 
 export type LegalDoc = 'terms' | 'privacy';
 
@@ -102,13 +102,14 @@ export const LEGAL: Record<LegalDoc, { title: string; sections: Section[] }> = {
       {
         heading: 'Who processes it',
         body: [
-          'Our backend and database are provided by Supabase. Recipe data comes from TheMealDB, and recipe photos load directly from their servers, which means their servers can see your device address when a photo loads. If you subscribe, payments are handled by Apple or Google, with RevenueCat managing the subscription status.',
+          'Our backend and database are provided by Supabase. Recipe data comes from TheMealDB, and recipe photos load directly from their servers, which means their servers can see your device address when a photo loads. If you subscribe, payments are handled by Apple or Google, with RevenueCat managing the subscription status. Sign-in codes are sent to your email address by Resend.',
+          'Photos you add to a recipe are stored with Supabase and shown to other people in the app. Their web addresses are public: anyone who has a photo\'s link can open it without signing in.',
         ],
       },
       {
         heading: 'How long we keep it',
         body: [
-          'For as long as you have an account. When you delete your account in Settings, your profile, preferences, swipes, notices and any recipes you wrote are deleted straight away. If you created the couple, it ends and your partner keeps their own account; if you were invited, your partner keeps the couple without your data.',
+          'For as long as you have an account. When you delete your account in Settings, your profile, preferences, swipes, notices and any recipes you wrote are deleted straight away, together with the photos you uploaded. We keep one anonymous record that an account was deleted (the date, whether it was in a couple, and whether it had a trial or a paid plan), with nothing that identifies you, to spot misuse of the free trial. If you created the couple, it ends and your partner keeps their own account; if you were invited, your partner keeps the couple without your data.',
         ],
       },
       {
