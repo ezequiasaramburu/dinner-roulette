@@ -2,7 +2,7 @@
 // The same text should be published on the website, because both stores ask for a privacy policy URL.
 
 export const OPERATOR = '[Your name or company]';
-export const CONTACT_EMAIL = 'support@example.com'; // TODO: a real support address
+export const CONTACT_EMAIL = 'support@swipefordinner.app'
 export const LAST_UPDATED = '14 October 2026';
 
 export type LegalDoc = 'terms' | 'privacy';
@@ -16,7 +16,7 @@ export const LEGAL: Record<LegalDoc, { title: string; sections: Section[] }> = {
       {
         heading: 'The short version',
         body: [
-          `Dinner Roulette is run by ${OPERATOR}. By creating an account you agree to these terms. If you don't agree, please don't use the app.`,
+          `Swipe for Dinner is run by ${OPERATOR}. By creating an account you agree to these terms. If you don't agree, please don't use the app.`,
         ],
       },
       {
@@ -78,7 +78,7 @@ export const LEGAL: Record<LegalDoc, { title: string; sections: Section[] }> = {
       {
         heading: 'Who we are',
         body: [
-          `${OPERATOR} runs Dinner Roulette and is responsible for your data. Contact: ${CONTACT_EMAIL}.`,
+          `${OPERATOR} runs Swipe for Dinner and is responsible for your data. Contact: ${CONTACT_EMAIL}.`,
         ],
       },
       {

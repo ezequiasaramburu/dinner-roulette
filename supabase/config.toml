@@ -247,11 +247,11 @@ otp_expiry = 600
 # Email OTP: new users get the "confirmation" template, returning users get "magic_link".
 # Both show the 6-digit code ({{ .Token }}) instead of a link.
 [auth.email.template.confirmation]
-subject = "Your Dinner Roulette code"
+subject = "Your Swipe for Dinner code"
 content_path = "./supabase/templates/otp.html"
 
 [auth.email.template.magic_link]
-subject = "Your Dinner Roulette code"
+subject = "Your Swipe for Dinner code"
 content_path = "./supabase/templates/otp.html"
 
 # Uncomment to customize email template
@@ -333,7 +333,7 @@ max_frequency = "5s"
 [auth.external.apple]
 enabled = true
 # Native sign in: the id token's audience is the app's bundle id.
-client_id = "com.ezequias.dinnerroulette"
+client_id = "app.swipefordinner"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 # Overrides the default auth callback URL derived from auth.external_url.

@@ -55,7 +55,7 @@ export default function Welcome() {
         style={styles.copy}
       >
         <Text variant="overline" tone="primary">
-          Dinner Roulette
+          Swipe for Dinner
         </Text>
         <Text variant="display">
           Decide dinner,{"\n"}

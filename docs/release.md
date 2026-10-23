@@ -64,7 +64,7 @@ release build on purpose, so purchases stay off instead of crashing.
    and set its secret (README "Subscriptions (RevenueCat)"), custom email sending, and the hosted settings in
    `docs/security-review.md`.
 3. RevenueCat: real store products and keys (above), and the webhook pointing at the hosted function.
-4. **The bundle id is `com.ezequias.dinnerroulette` on both stores.** It cannot be changed after the first submission, so
+4. **The bundle id is `app.swipefordinner` on both stores.** It cannot be changed after the first submission, so
    decide now whether you want it (a company name instead of your own, for example).
 5. Privacy declarations for the App Store and Play (see the roadmap) and store screenshots and text.
 6. Submit with `eas submit --platform ios` / `android` once the store accounts and their keys exist (not set up here).

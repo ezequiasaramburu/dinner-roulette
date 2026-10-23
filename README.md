@@ -1,4 +1,4 @@
-# Dinner Roulette
+# Swipe for Dinner
 
 A couples app: swipe on dinner options together, and at reveal time you both find out what's cooking.
 
@@ -93,7 +93,7 @@ Light and dark palettes follow the phone's setting.
   raw `react-native` `Text`/`Pressable` with ad-hoc styles, and read colours with `useTheme()`, never hard-coded hex values.
 - **Headlines:** `<Text variant="title">Decide <Accent>together.</Accent></Text>`; the italic tomato accent word is the brand's signature.
 - **Layout:** `<Screen footer={...}>` pins the primary action above the keyboard and handles safe areas and scrolling.
-- **Motion** is subtle and respects the system "reduce motion" setting (`FadeInDown` entrances, the slow roulette wheel).
+- **Motion** is subtle and respects the system "reduce motion" setting (`FadeInDown` entrances, the slow reveal wheel).
 
 Splash colours are set in `app.json` and need a native rebuild (`npx expo prebuild --clean`) to take effect.
 The app icon is still the Expo placeholder.
@@ -163,7 +163,7 @@ reveals the instant way, whatever the couple's mode. After that the result is fi
 back from new queues for 3 days if it was only passed on, 7 if someone liked it.
 
 Apart from that, swipes after the reveal belong to tomorrow's queue, so a revealed result never changes. `mark_reveal_seen()` records that a
-partner opened it: the roulette animation plays once, and home shows "New" until then. The recipe screen carries an
+partner opened it: the wheel animation plays once, and home shows "New" until then. The recipe screen carries an
 allergen disclaimer, since allergens are derived from ingredient text.
 
 To try it without waiting for 17:00, set `couples.reveal_time` to `00:00` in the local database, reload the app, and
@@ -287,7 +287,7 @@ get a code.
 1. **Pick an SMTP provider.** Resend, Postmark, Brevo, Mailgun, SendGrid or Amazon SES all work; most have a free tier
    that covers an early app. Compare current prices when you choose. Do not use the project's built-in sender in
    production: it has a very low hourly limit and, as far as we know, only delivers to the Supabase team's own addresses.
-2. **Verify a domain you own** (for example `dinnerroulette.app`) with the provider and add the DNS records it gives you:
+2. **Verify a domain you own** (for example `swipefordinner.app`) with the provider and add the DNS records it gives you:
    SPF and DKIM, and DMARC if offered. Without them the codes tend to land in spam. Send from an address on that domain,
    such as `no-reply@yourdomain`.
 3. **Connect it to the hosted project:** Supabase dashboard → Authentication → SMTP settings → enable custom SMTP, then

@@ -30,7 +30,7 @@ export default function Invite() {
     if (!invite.data) return;
     const link = Linking.createURL(`join/${invite.data}`);
     await Share.share({
-      message: `Let's pick dinner together on Dinner Roulette! Use my invite code ${invite.data}, or open ${link}`,
+      message: `Let's pick dinner together on Swipe for Dinner! Use my invite code ${invite.data}, or open ${link}`,
     });
   }
 

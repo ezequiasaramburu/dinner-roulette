@@ -65,6 +65,6 @@ jobs:
           eas build --platform android --profile preview --local --non-interactive
       - uses: actions/upload-artifact@v4
         with:
-          name: dinner-roulette-android-preview
+          name: swipe-for-dinner-android-preview
           path: artifacts/*
           retention-days: 14

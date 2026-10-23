@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 /**
- * Invite code captured from a deep link (dinnerroulette://join/ABC123) before the
+ * Invite code captured from a deep link (swipefordinner://join/ABC123) before the
  * user is signed in or ready to join. The join screen consumes it.
  */
 type PendingInvite = {

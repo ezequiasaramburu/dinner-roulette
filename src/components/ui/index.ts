@@ -1,4 +1,4 @@
-// Dinner Roulette UI library. Screens import from here, never from react-native primitives for styling.
+// Swipe for Dinner UI library. Screens import from here, never from react-native primitives for styling.
 export { Avatar } from './avatar';
 export { BackButton } from './back-button';
 export { Button } from './button';

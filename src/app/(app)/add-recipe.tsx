@@ -105,7 +105,7 @@ function AddRecipeForm() {
     try {
       const picked = await pickRecipePhoto(source);
       if (picked === 'denied') {
-        Alert.alert('Camera access is off', 'Allow the camera for Dinner Roulette in your phone settings, or choose a photo from your library.', [
+        Alert.alert('Camera access is off', 'Allow the camera for Swipe for Dinner in your phone settings, or choose a photo from your library.', [
           { text: 'Not now', style: 'cancel' },
           { text: 'Open settings', onPress: () => Linking.openSettings() },
         ]);

@@ -13,7 +13,7 @@ Last updated: 2026-10-17. "Hand-test pending" means built and checked by tests, 
 - [x] Ingredient share button (shopping list of the unticked ingredients)
 - [x] Dev tools: `npm run dev:reset`, `npm run dev:reset-day` (local database only)
 - [x] Hosted test project on Supabase: migrations pushed, recipes loaded from `supabase/seed.sql` (the SQL editor works), the app runs against it on iOS and Android
-- [x] Sign-in email on the hosted test project: custom SMTP through Resend with the verified domain `dinnerroulette.app` (DKIM, SPF, DMARC), the code template in "Confirm signup" and "Magic link", code length 6 and lifetime 10 minutes
+- [x] Sign-in email on the hosted test project: custom SMTP through Resend with the verified domain `dinnerroulette.app` (DKIM, SPF, DMARC; to be redone on `swipefordinner.app`, see the rename item below), the code template in "Confirm signup" and "Magic link", code length 6 and lifetime 10 minutes
 - [x] RevenueCat paywall and Customer Center with the Test Store on iOS and Android, against the hosted backend: the purchase reaches the deployed webhook and unlocks the couple (README "Subscriptions (RevenueCat)")
 - [x] Per-product subscription expiry (migration 0037): checked on hosted by sending a yearly event and a late monthly event; the late one is ignored and `paid_until` follows the latest expiry
 - [x] Trial and access: the 7-day trial starts when the partner joins, is remembered per person, the payer sees "days left", locked couples see the Paused card, and the locked state also covers swiping and reading the reveal (migrations 0034, 0035, 0039)
@@ -29,17 +29,18 @@ Last updated: 2026-10-17. "Hand-test pending" means built and checked by tests, 
 - [ ] Sharing recipes only for subscribers (migration 0040, `src/components/recipes-locked.tsx`): apply the migration first (`supabase migration up` locally, `supabase db push` on the hosted test project). Check as the payer and as the partner, on the free trial, with a paid plan, and after it ends: the form only opens with a paid plan, and the other cases explain why
 - [ ] "Video" tag on swipe cards (migration 0041): apply it, then check a catalogue recipe with a video shows the tag at the right of the country row, and a recipe someone wrote never does
 - [ ] Release setup (docs/release.md): CI (runs when a pull request is merged into main, not on a direct push) and the manual build workflow have not run yet, so expect small fixes on the first run
-- [ ] App icon, Android themed icon and splash (tomato with the pizza slice; `node brand-assets/build-icons.mjs` rebuilds them, `brand-assets/play-store-512.png` is for the Play Console). Splash and Android icon were seen on the emulator; check the iOS icon, the themed icon on Android 13+, and the splash in dark mode. The website has its own copies in dinner-roulette-web
+- [ ] App icon, Android themed icon and splash (tomato with the pizza slice; `node brand-assets/build-icons.mjs` rebuilds them, `brand-assets/play-store-512.png` is for the Play Console). Splash and Android icon were seen on the emulator; check the iOS icon, the themed icon on Android 13+, and the splash in dark mode. The website has its own copies in dinner-roulette-web (now the Swipe for Dinner site)
 
 ## Before launch: needs something from you or an outside account
 
 - [ ] Separate launch project on Supabase: the current hosted project is a test project. Repeat for the launch project: link and `db push`, load `supabase/seed.sql`, SMTP and both code templates, code length 6 and 10 minutes, redirect URLs, the webhook function with its secret, and RevenueCat's webhook URL. Do not reuse the test project's data
 - [ ] Release accounts and secrets: Expo account and `EXPO_TOKEN` in GitHub, `eas init`, EAS environment variables for the launch Supabase and the real RevenueCat keys, Apple Developer Program and Google Play Console (docs/release.md)
-- [ ] Decide the bundle id before the first submission. It is `com.ezequias.dinnerroulette` today; with the new domain the conventional form is `app.dinnerroulette`. It cannot change after the first submission
+- [x] Name decided: Swipe for Dinner, domain `swipefordinner.app`, bundle id and Android package `app.swipefordinner` (cannot change after the first submission)
+- [ ] Finish the rename on the outside services: verify `swipefordinner.app` in Resend (DKIM, SPF, DMARC) and set the sender on the hosted Supabase SMTP, paste the new `supabase/templates/otp.html` into "Confirm signup" and "Magic link" with the subject "Your Swipe for Dinner code", rename the RevenueCat and Supabase projects (names only; `dinner_roulette_pro` stays as the entitlement id), and update the Apple Sign in client id if it is ever turned on
 - [ ] Paywall in the stores: create `monthly` (4.99) and `yearly` (49.99) in App Store Connect and Google Play, swap the Test Store key for the real `appl_` and `goog_` keys, then try a real sandbox or internal-testing purchase on both
-- [ ] Public Terms and Privacy pages on `dinnerroulette.app` (a free static host such as GitHub Pages or Cloudflare Pages is enough); the paywall links need them
+- [ ] Public Terms and Privacy pages on `swipefordinner.app` (a free static host such as GitHub Pages or Cloudflare Pages is enough); the paywall links need them
 - [ ] Legal placeholders in `src/constants/legal.ts` (operator name and support email). Have someone qualified read the text
-- [ ] A support address on the domain (`support@dinnerroulette.app`): Spacemail mailbox or forwarding to your own inbox. If it goes through Spacemail, keep a single DMARC record and keep Resend's records as shown
+- [ ] A support address on the domain (`support@swipefordinner.app`; the in-app Terms and Privacy already show it): Spacemail mailbox or forwarding to your own inbox. If it goes through Spacemail, keep a single DMARC record and keep Resend's records as shown
 - [ ] Server push notifications (Apple developer account and FCM credentials; today only the local reminders fire)
 - [ ] Crash reporting (a free Sentry-style account)
 - [ ] A "you're offline" banner (needs the native NetInfo module, so add it with the next native rebuild)

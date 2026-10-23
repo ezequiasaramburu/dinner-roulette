@@ -18,7 +18,7 @@ export function RecipesLocked({ couple }: { couple: CoupleState | null }) {
   const days = couple?.trial_days_left;
 
   let body: string;
-  if (!couple) body = 'Create or join a couple and subscribe to share your own recipes with everyone on Dinner Roulette.';
+  if (!couple) body = 'Create or join a couple and subscribe to share your own recipes with everyone on Swipe for Dinner.';
   else if (days != null)
     body = `You're on your free trial (${days} ${days === 1 ? 'day' : 'days'} left). Everything else is yours to use, but recipes can only be shared with a subscription. ${
       isPayer ? 'Subscribe any time to unlock it.' : `Once ${payer} subscribes, you can both share.`

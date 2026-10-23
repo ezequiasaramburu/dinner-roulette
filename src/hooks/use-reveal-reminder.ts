@@ -118,7 +118,7 @@ export function useRevealReminderSync(couple: CoupleState | null | undefined) {
       await Notifications.scheduleNotificationAsync({
         content: instant
           ? { title: "Time to find tonight's dinner 🍽️", body: 'Swipe a few dishes while you have a minute.' }
-          : { title: 'Your dinner is revealed 🍽️', body: 'Open Dinner Roulette to see what you matched on.' },
+          : { title: 'Your dinner is revealed 🍽️', body: 'Open Swipe for Dinner to see what you matched on.' },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DAILY, hour, minute, channelId: CHANNEL },
       });
     })().catch(() => {

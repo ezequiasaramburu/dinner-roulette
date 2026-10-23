@@ -46,7 +46,7 @@ export default function CoupleSetup() {
           Who&apos;s joining you <Accent>for dinner?</Accent>
         </Text>
         <Text tone="secondary">
-          Dinner Roulette is made for two. One of you starts the couple and invites the other with a code.
+          Swipe for Dinner is made for two. One of you starts the couple and invites the other with a code.
         </Text>
       </Animated.View>
       {ended.map((n) => (

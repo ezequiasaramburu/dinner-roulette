@@ -36,7 +36,7 @@ export function isNetworkError(error: unknown): boolean {
   return NETWORK.test((error as { message?: string } | null)?.message ?? '');
 }
 
-export const OFFLINE_MESSAGE = "Can't reach Dinner Roulette. Check your connection and try again.";
+export const OFFLINE_MESSAGE = "Can't reach Swipe for Dinner. Check your connection and try again.";
 
 /** Turn a Supabase/Postgres error into something we can show a person. */
 export function friendlyError(error: unknown): string {

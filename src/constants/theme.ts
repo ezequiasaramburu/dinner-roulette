@@ -1,5 +1,5 @@
 /**
- * Design tokens for Dinner Roulette: a warm editorial look (paper, ink, tomato).
+ * Design tokens for Swipe for Dinner: a warm editorial look (paper, ink, tomato).
  * Every colour has a light and a dark value; components read them through useTheme().
  * Contrast of the text/background pairs was checked against WCAG AA.
  */

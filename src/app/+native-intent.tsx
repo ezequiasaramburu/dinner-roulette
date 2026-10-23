@@ -1,6 +1,6 @@
 import { usePendingInvite } from '@/lib/pending-invite';
 
-// Invite links look like dinnerroulette://join/ABC123. We stash the code and send the
+// Invite links look like swipefordinner://join/ABC123. We stash the code and send the
 // user to the root, where the auth/onboarding guards decide which screen they see.
 export function redirectSystemPath({ path }: { path: string; initial: boolean }) {
   try {

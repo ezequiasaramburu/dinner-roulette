@@ -2,7 +2,7 @@
 
 Removed from the app for now: free personal Apple teams can't sign the Sign in with Apple capability, and the
 `expo-apple-authentication` package adds that entitlement automatically just by being installed. The Supabase side
-is already configured (`[auth.external.apple]` in `supabase/config.toml`, bundle id `com.ezequias.dinnerroulette`).
+is already configured (`[auth.external.apple]` in `supabase/config.toml`, bundle id `app.swipefordinner`).
 
 ## Steps once you have a paid Apple Developer account
 

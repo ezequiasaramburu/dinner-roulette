@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Dinner Roulette",
-    "slug": "dinner-roulette",
+    "name": "Swipe for Dinner",
+    "slug": "swipe-for-dinner",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "dinnerroulette",
+    "scheme": "swipefordinner",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.ezequias.dinnerroulette",
+      "bundleIdentifier": "app.swipefordinner",
       "config": { "usesNonExemptEncryption": false }
     },
     "android": {
@@ -20,7 +20,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ezequias.dinnerroulette"
+      "package": "app.swipefordinner"
     },
     "web": {
       "output": "static",
@@ -49,8 +49,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Dinner Roulette needs your photos so you can add a picture to a recipe you share.",
-          "cameraPermission": "Dinner Roulette needs the camera so you can photograph a dish you share."
+          "photosPermission": "Swipe for Dinner needs your photos so you can add a picture to a recipe you share.",
+          "cameraPermission": "Swipe for Dinner needs the camera so you can photograph a dish you share."
         }
       ],
       "expo-localization",

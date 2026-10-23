@@ -56,7 +56,7 @@ export default function Recipes() {
           <Card tone="accent">
             <Text variant="heading">Share a dish you love</Text>
             <Text tone="secondary" style={styles.empty}>
-              Recipes you add are checked, then shared with every couple on Dinner Roulette. Yours could be tonight&apos;s
+              Recipes you add are checked, then shared with every couple on Swipe for Dinner. Yours could be tonight&apos;s
               dinner for someone.
             </Text>
           </Card>

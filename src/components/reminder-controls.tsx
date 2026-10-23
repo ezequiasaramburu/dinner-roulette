@@ -33,7 +33,7 @@ export function ReminderControls({ switchCaption, askCaption }: { switchCaption:
       <>
         <Text variant="bodyStrong">Reminders are off</Text>
         <Text variant="caption" tone="secondary" style={styles.note}>
-          Notifications are blocked for Dinner Roulette. Allow them in your phone&apos;s settings to get a reminder.
+          Notifications are blocked for Swipe for Dinner. Allow them in your phone&apos;s settings to get a reminder.
         </Text>
         <Button title="Open settings" variant="secondary" onPress={() => Linking.openSettings()} />
       </>

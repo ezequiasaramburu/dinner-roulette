@@ -15,7 +15,7 @@ puts the card back. The loading states use skeletons, not blank screens.
 | Requests had no time limit | A weak connection could leave a spinner for a minute or more | `src/lib/fetch-timeout.ts`: 15 s (60 s for photo uploads), then it fails like any network error |
 | Three automatic retries per query | About 7 seconds of spinner before an error on a dead connection | One retry, one second apart |
 | React Native never told the data layer the app came back to the foreground | Data that went stale offline stayed stale until a screen refetched by itself | Foreground now triggers a refresh (`focusManager` wired to `AppState`) |
-| Network failures showed "Something went wrong" (or, on sign-in, "That code is invalid") | A dropped connection looked like a wrong code | `friendlyError` and the sign-in screens say "Can't reach Dinner Roulette. Check your connection and try again." |
+| Network failures showed "Something went wrong" (or, on sign-in, "That code is invalid") | A dropped connection looked like a wrong code | `friendlyError` and the sign-in screens say "Can't reach Swipe for Dinner. Check your connection and try again." |
 | A recipe page opened while offline said "This recipe is no longer available" | Looked like the recipe was deleted | It says it couldn't load, with Try again |
 | A crash in any screen gave a blank or red screen | Dead end | A root error screen with Try again (`ErrorBoundary` in `src/app/_layout.tsx`) |
 | After buying a plan, if the server was slow to unlock, the app just stopped waiting | The payer paid and saw nothing | An alert says the purchase went through and may take a minute |
