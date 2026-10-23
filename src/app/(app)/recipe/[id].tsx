@@ -7,7 +7,7 @@ import { BackButton, Button, Card, Pill, PressableScale, Screen, Text } from '@/
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { enter } from '@/hooks/use-motion';
-import { useDinnerHistory } from '@/hooks/use-dinner-history';
+import { useHistoryRecipe } from '@/hooks/use-dinner-history';
 import { useReveal } from '@/hooks/use-reveal';
 import { CommunityActions } from '@/components/dish/community-actions';
 import { CommunityBadge } from '@/components/dish/community-badge';
@@ -26,15 +26,15 @@ export default function RecipeScreen() {
 
   const today = reveal.data?.status === 'revealed' ? reveal.data.dishes.find((d) => d.id === id) : undefined;
   // A dish from an earlier day (opened from the Dinners tab) is not in today's reveal; look in the history then.
-  const history = useDinnerHistory(!reveal.isPending && !today);
-  const recipe = today ?? history.data?.flatMap((day) => day.dishes).find((d) => d.id === id);
-  const loading = reveal.isPending || (!today && history.isPending && history.fetchStatus !== 'idle');
+  const past = useHistoryRecipe(id, !reveal.isPending && !today);
+  const recipe = today ?? past.data;
+  const loading = reveal.isPending || (!today && past.isPending && past.fetchStatus !== 'idle');
 
   if (!recipe) {
     return (
       <Screen>
         <BackButton />
-        {(reveal.isError && !reveal.data) || (history.isError && !history.data) ? (
+        {(reveal.isError && !reveal.data) || (past.isError && !past.data) ? (
           <>
             <Text variant="heading">We couldn&apos;t load this recipe</Text>
             <Text tone="secondary">Check your connection and try again.</Text>
@@ -43,7 +43,7 @@ export default function RecipeScreen() {
               variant="secondary"
               onPress={() => {
                 reveal.refetch();
-                history.refetch();
+                past.refetch();
               }}
             />
           </>

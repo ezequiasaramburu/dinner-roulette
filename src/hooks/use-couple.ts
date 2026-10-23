@@ -214,7 +214,7 @@ export function useDinnerRealtime(coupleId: string | undefined) {
           table: 'daily_decks',
           filter: `couple_id=eq.${coupleId}`,
         },
-        refresh(['reveal', 'feed']),
+        refresh(['reveal', 'feed', 'history']),
       )
       .on(
         'postgres_changes',

@@ -1,4 +1,5 @@
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -25,6 +26,16 @@ export default function Dinners() {
   const locked = couple?.has_access === false;
   const history = useDinnerHistory(!locked);
   const today = todayIn(couple?.timezone ?? 'UTC');
+  const days = history.data?.pages.flatMap((page) => page.days) ?? [];
+
+  // The tabs stay mounted, so coming back to this one would show the old list. Refresh it when it is older than a minute.
+  const refetch = history.refetch;
+  const stale = history.isStale;
+  useFocusEffect(
+    useCallback(() => {
+      if (stale && !locked) refetch();
+    }, [stale, locked, refetch]),
+  );
 
   return (
     <Screen edges={TAB_EDGES}>
@@ -46,7 +57,7 @@ export default function Dinners() {
             <Text tone="secondary">We couldn&apos;t load your dinners.</Text>
             <Button title="Try again" variant="secondary" onPress={() => history.refetch()} />
           </Card>
-        ) : history.data.length === 0 ? (
+        ) : days.length === 0 && !history.hasNextPage ? (
           <Card tone="accent" padding="lg">
             <Text variant="heading">Your first dinner will show up here</Text>
             <Text tone="secondary" style={styles.empty}>
@@ -54,17 +65,27 @@ export default function Dinners() {
             </Text>
           </Card>
         ) : (
-          history.data.map((day) => (
-            <View key={day.deck_id} style={styles.day}>
-              <View style={styles.dayHeader}>
-                <Text variant="bodyStrong">{dayLabel(day.deck_date, today)}</Text>
-                <Pill label={KIND[day.kind].label} tone={KIND[day.kind].tone} dot={false} />
+          <>
+            {days.map((day) => (
+              <View key={day.deck_id} style={styles.day}>
+                <View style={styles.dayHeader}>
+                  <Text variant="bodyStrong">{dayLabel(day.deck_date, today)}</Text>
+                  <Pill label={KIND[day.kind].label} tone={KIND[day.kind].tone} dot={false} />
+                </View>
+                {day.dishes.map((dish) => (
+                  <DishRow key={dish.id} recipe={dish} onPress={() => router.push(`/recipe/${dish.id}`)} />
+                ))}
               </View>
-              {day.dishes.map((dish) => (
-                <DishRow key={dish.id} recipe={dish} onPress={() => router.push(`/recipe/${dish.id}`)} />
-              ))}
-            </View>
-          ))
+            ))}
+            {history.hasNextPage ? (
+              <Button
+                title="Show earlier dinners"
+                variant="secondary"
+                loading={history.isFetchingNextPage}
+                onPress={() => history.fetchNextPage()}
+              />
+            ) : null}
+          </>
         )}
       </Animated.View>
     </Screen>

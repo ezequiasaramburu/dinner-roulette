@@ -4,14 +4,14 @@ import { Pill, Text } from '@/components/ui';
 import { PressableScale } from '@/components/ui/pressable-scale';
 import { countryFlag, dishTypeLabel } from '@/constants/food';
 import { Radius, Spacing, elevation } from '@/constants/theme';
-import type { Recipe } from '@/hooks/use-reveal';
+import type { Dish } from '@/hooks/use-swipe-feed';
 import { CommunityBadge } from '@/components/dish/community-badge';
 import { DishImage } from '@/components/dish/dish-image';
 import { useCouple } from '@/hooks/use-couple';
 import { useScheme, useTheme } from '@/hooks/use-theme';
 
 /** A revealed dish as a tappable card: photo on top, name and cuisine below. Opens the full recipe. */
-export function DishRow({ recipe, onPress }: { recipe: Recipe; onPress: () => void }) {
+export function DishRow({ recipe, onPress }: { recipe: Dish; onPress: () => void }) {
   const theme = useTheme();
   const scheme = useScheme();
   const { data: couple } = useCouple();
