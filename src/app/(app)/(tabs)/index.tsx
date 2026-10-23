@@ -10,6 +10,7 @@ import { RevealOfferCard } from '@/components/home/reveal-offer-card';
 import { RevealedCard } from '@/components/home/revealed-card';
 import { TonightCard } from '@/components/home/tonight-card';
 import { Accent, Avatar, Button, Card, MenuButton, Pill, Screen, Text } from '@/components/ui';
+import { TAB_EDGES } from '@/components/ui/screen';
 import { Fonts, Spacing } from '@/constants/theme';
 import { enter, exit, reflow } from '@/hooks/use-motion';
 import { useCouple, useDinnerRealtime } from '@/hooks/use-couple';
@@ -107,6 +108,7 @@ export default function Home() {
 
   return (
     <Screen
+      edges={TAB_EDGES}
       footer={
         status === 'ready' && !locked ? (
           <Button

@@ -59,7 +59,8 @@ npm run decks:review          # print decks for realistic couples to judge quali
 
 ```
 src/app/(auth)   signed-out screens (welcome, email code sign-in)
-src/app/(app)    signed-in screens (name, couple setup, invite, join, preferences, home)
+src/app/(app)    signed-in screens (name, couple setup, invite, join, preferences, swipe, reveal, recipe, settings)
+src/app/(app)/(tabs)   the tab bar: Tonight (home, with the side menu), Dinners (past reveals) and Recipes (yours, with Add a recipe)
 src/lib          supabase client, zod schemas, errors
 src/providers    auth session provider
 src/hooks        data hooks (profile, couple, preferences, deck + swipes)

@@ -3,7 +3,8 @@ import { Alert, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { DishImage } from '@/components/dish/dish-image';
-import { Accent, BackButton, Button, Card, Pill, Screen, Skeleton, Text } from '@/components/ui';
+import { Accent, Button, Card, Pill, Screen, Skeleton, Text } from '@/components/ui';
+import { TAB_EDGES } from '@/components/ui/screen';
 import { countryFlag } from '@/constants/countries';
 import { ControlHeight, Radius, Spacing } from '@/constants/theme';
 import { enter, exit, reflow } from '@/hooks/use-motion';
@@ -35,8 +36,7 @@ export default function Recipes() {
   }
 
   return (
-    <Screen footer={<Button title="Add a recipe" onPress={() => router.push(addRecipePath)} />}>
-      <BackButton />
+    <Screen edges={TAB_EDGES} footer={<Button title="Add a recipe" onPress={() => router.push(addRecipePath)} />}>
       <Animated.View entering={enter()} style={styles.stack}>
         <Text variant="overline" tone="primary">
           Your kitchen

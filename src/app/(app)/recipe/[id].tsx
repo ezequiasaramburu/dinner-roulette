@@ -7,6 +7,7 @@ import { BackButton, Button, Card, Pill, PressableScale, Screen, Text } from '@/
 import { allergenLabel, countryFlag, dishTypeLabel } from '@/constants/food';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { enter } from '@/hooks/use-motion';
+import { useDinnerHistory } from '@/hooks/use-dinner-history';
 import { useReveal } from '@/hooks/use-reveal';
 import { CommunityActions } from '@/components/dish/community-actions';
 import { CommunityBadge } from '@/components/dish/community-badge';
@@ -23,22 +24,33 @@ export default function RecipeScreen() {
   const { data: couple } = useCouple();
   const [have, setHave] = useState<Set<number>>(new Set());
 
-  const recipe = reveal.data?.status === 'revealed' ? reveal.data.dishes.find((d) => d.id === id) : undefined;
+  const today = reveal.data?.status === 'revealed' ? reveal.data.dishes.find((d) => d.id === id) : undefined;
+  // A dish from an earlier day (opened from the Dinners tab) is not in today's reveal; look in the history then.
+  const history = useDinnerHistory(!reveal.isPending && !today);
+  const recipe = today ?? history.data?.flatMap((day) => day.dishes).find((d) => d.id === id);
+  const loading = reveal.isPending || (!today && history.isPending && history.fetchStatus !== 'idle');
 
   if (!recipe) {
     return (
       <Screen>
         <BackButton />
-        {reveal.isError && !reveal.data ? (
+        {(reveal.isError && !reveal.data) || (history.isError && !history.data) ? (
           <>
             <Text variant="heading">We couldn&apos;t load this recipe</Text>
             <Text tone="secondary">Check your connection and try again.</Text>
-            <Button title="Try again" variant="secondary" onPress={() => reveal.refetch()} />
+            <Button
+              title="Try again"
+              variant="secondary"
+              onPress={() => {
+                reveal.refetch();
+                history.refetch();
+              }}
+            />
           </>
         ) : (
           <>
-            <Text variant="heading">{reveal.isPending ? 'Loading…' : 'This recipe is no longer available'}</Text>
-            {!reveal.isPending ? <Text tone="secondary">Recipes are available once the reveal has happened.</Text> : null}
+            <Text variant="heading">{loading ? 'Loading…' : 'This recipe is no longer available'}</Text>
+            {!loading ? <Text tone="secondary">Recipes are available once the reveal has happened.</Text> : null}
           </>
         )}
       </Screen>

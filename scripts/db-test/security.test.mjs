@@ -126,7 +126,7 @@ describe('rules that keep future changes safe', () => {
       rows.map((r) => r.proname),
       [
         'block_author', 'blocked_authors_count', 'cancel_couple', 'clear_blocks', 'create_couple', 'create_invite',
-        'delete_account', 'delete_recipe', 'dismiss_notice', 'get_couple_state', 'get_reveal', 'get_swipe_feed',
+        'delete_account', 'delete_recipe', 'dismiss_notice', 'get_couple_state', 'get_dinner_history', 'get_reveal', 'get_swipe_feed',
         'is_couple_member', 'join_couple', 'mark_reveal_seen', 'record_swipe', 'regenerate_invite', 'report_recipe',
         'reveal_now', 'shares_couple_with', 'submit_recipe', 'swipe_again', 'undo_last_swipe', 'update_couple_settings',
       ],

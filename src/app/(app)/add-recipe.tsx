@@ -143,7 +143,7 @@ function AddRecipeForm() {
       });
       haptics.success();
       Alert.alert('Thank you!', "Your recipe is in review. We'll publish it once it's checked, and you can follow it in Your recipes.");
-      router.replace('/recipes');
+      router.dismissTo('/recipes');
     } catch (e) {
       Alert.alert("Couldn't share your recipe", friendlyError(e));
     }

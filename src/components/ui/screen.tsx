@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -12,15 +12,20 @@ type Props = {
   /** Set false for screens that never scroll and manage their own layout. */
   scroll?: boolean;
   contentStyle?: ViewStyle;
+  /** Screens that sit above a tab bar leave the bottom edge to the bar. */
+  edges?: readonly Edge[];
 };
 
-export function Screen({ children, footer, scroll = true, contentStyle }: Props) {
+/** The edges a screen above the tab bar keeps for itself: the bar already covers the bottom. */
+export const TAB_EDGES: readonly Edge[] = ['top', 'left', 'right'];
+
+export function Screen({ children, footer, scroll = true, contentStyle, edges }: Props) {
   const theme = useTheme();
 
   const content = [styles.content, contentStyle];
 
   return (
-    <SafeAreaView style={[styles.flex, { backgroundColor: theme.background }]}>
+    <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {scroll ? (
           <ScrollView

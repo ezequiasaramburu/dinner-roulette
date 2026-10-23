@@ -29,13 +29,13 @@ test('raw Pressables are counted everywhere except the allowed files, and Pressa
 test('spinners are only counted on the swipe, recipes and preferences screens', () => {
   const root = project({
     'src/app/(app)/swipe.tsx': '<ActivityIndicator /><ActivityIndicator />',
-    'src/app/(app)/recipes.tsx': '<ActivityIndicator />',
+    'src/app/(app)/(tabs)/recipes.tsx': '<ActivityIndicator />',
     'src/app/(app)/reveal.tsx': '<ActivityIndicator />',
     'src/components/ui/button.tsx': '<ActivityIndicator />',
   });
   const { spinners } = scan(root);
   assert.equal(spinners.total, 3);
-  assert.deepEqual(spinners.files, { 'src/app/(app)/swipe.tsx': 2, 'src/app/(app)/recipes.tsx': 1 });
+  assert.deepEqual(spinners.files, { 'src/app/(app)/swipe.tsx': 2, 'src/app/(app)/(tabs)/recipes.tsx': 1 });
 });
 
 test('hex colours in components are counted, comments, other folders and the avatar palette are not', () => {

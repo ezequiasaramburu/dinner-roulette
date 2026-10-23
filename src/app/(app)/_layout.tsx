@@ -69,13 +69,12 @@ export default function AppLayout() {
       </Stack.Protected>
       <Stack.Protected guard={hasName && isPaired}>
         {/* Arriving by replace() ("save and go home") should feel like going back, not forward. */}
-        <Stack.Screen name="index" options={{ animationTypeForReplace: 'pop' }} />
+        <Stack.Screen name="(tabs)" options={{ animationTypeForReplace: 'pop' }} />
         <Stack.Screen name="preferences" />
         <Stack.Screen name="swipe" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="settings" />
         <Stack.Screen name="reveal" options={{ animation: 'fade' }} />
         <Stack.Screen name="recipe/[id]" />
-        <Stack.Screen name="recipes" options={{ animationTypeForReplace: 'pop' }} />
         <Stack.Screen name="add-recipe" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="share-locked" />
       </Stack.Protected>

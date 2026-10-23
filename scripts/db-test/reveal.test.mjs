@@ -828,3 +828,63 @@ describe('a revealed dinner stays revealed', () => {
     assert.equal((await reveal(a)).seen, true);
   });
 });
+
+describe('dinner history', () => {
+  const history = (u, limit) => call(u, 'select public.get_dinner_history($1) as r', [limit ?? 30]);
+
+  test('only days that were revealed show up, with the same dishes and the full recipe', async () => {
+    const { a, b, couple } = await makeCouple({ goal: 2 });
+    const f = await feed(a);
+    const d1 = f.dishes[0].id;
+    await swipe(a, f.deck_id, d1, true);
+    await swipe(b, f.deck_id, d1, true);
+    assert.deepEqual(await history(a), [], 'nothing before the reveal time');
+
+    await openReveal(couple);
+    const r = await reveal(a);
+    assert.equal(r.status, 'revealed');
+
+    for (const u of [a, b]) {
+      const h = await history(u);
+      assert.equal(h.length, 1);
+      assert.equal(h[0].deck_id, r.deck_id);
+      assert.equal(h[0].kind, 'match');
+      assert.deepEqual(h[0].dishes.map((d) => d.id), r.dishes.map((d) => d.id));
+      assert.ok(h[0].dishes[0].ingredients.length > 0 && h[0].dishes[0].steps.length > 0, 'full recipe');
+    }
+  });
+
+  test('older days come after newer ones, and another couple sees nothing of it', async () => {
+    const one = await makeCouple({ goal: 1 });
+    const f1 = await feed(one.a);
+    await swipe(one.a, f1.deck_id, f1.dishes[0].id, true);
+    await swipe(one.b, f1.deck_id, f1.dishes[0].id, true);
+    await openReveal(one.couple);
+    const first = await reveal(one.a);
+    // Make that day yesterday, then reveal a new day.
+    await db.query("update daily_decks set deck_date = deck_date - 1 where id = $1", [first.deck_id]);
+    await db.query("update couples set reveal_time = '23:59:59' where id = $1", [one.couple]);
+    const f2 = await feed(one.a);
+    await swipe(one.a, f2.deck_id, f2.dishes[0].id, true);
+    await swipe(one.b, f2.deck_id, f2.dishes[0].id, true);
+    await openReveal(one.couple);
+    const second = await reveal(one.a);
+    assert.notEqual(second.deck_id, first.deck_id);
+
+    const h = await history(one.b);
+    assert.deepEqual(h.map((x) => x.deck_id), [second.deck_id, first.deck_id]);
+    assert.equal((await history(one.a, 1)).length, 1, 'the limit is respected');
+
+    const other = await makeCouple();
+    assert.deepEqual(await history(other.a), []);
+  });
+
+  test('it is refused outside a couple and once the trial and paid period are over', async () => {
+    const lone = await addUser(db, 'history-lone@test.dev');
+    await assert.rejects(history(lone), /couple_not_ready/);
+
+    const { a, couple } = await makeCouple();
+    await db.query("update couples set trial_ends_at = now() - interval '1 day', paid_until = null where id = $1", [couple]);
+    await assert.rejects(history(a), /subscription_required/);
+  });
+});

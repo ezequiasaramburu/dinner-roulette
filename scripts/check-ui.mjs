@@ -13,7 +13,12 @@ export const RAW_PRESSABLE_ALLOWED = [
   'src/components/dish/report-sheet.tsx',
 ];
 /** The screens that should show skeletons instead of spinners. */
-export const SKELETON_SCREENS = ['src/app/(app)/swipe.tsx', 'src/app/(app)/recipes.tsx', 'src/app/(app)/preferences.tsx'];
+export const SKELETON_SCREENS = [
+  'src/app/(app)/swipe.tsx',
+  'src/app/(app)/(tabs)/recipes.tsx',
+  'src/app/(app)/(tabs)/dinners.tsx',
+  'src/app/(app)/preferences.tsx',
+];
 
 /** The avatar's fixed colour pairs are a decorative palette, not theme colours. */
 export const HEX_ALLOWED = ['src/components/ui/avatar.tsx'];
