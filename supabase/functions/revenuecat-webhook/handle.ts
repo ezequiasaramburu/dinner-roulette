@@ -2,6 +2,9 @@ import { safeEqual, toSubscriptionUpdate } from './parse.ts';
 
 export type Env = { secret?: string; url?: string; key?: string };
 
+// Long enough for a slow database, short enough to answer before RevenueCat gives up on us; it retries a 500 later.
+export const DB_TIMEOUT_MS = 10_000;
+
 /** The webhook itself, with its settings and `fetch` passed in so the tests can run it under node. */
 export async function handle(request: Request, env: Env, send: typeof fetch = fetch): Promise<Response> {
   // Without a secret nobody can be trusted, so refuse everything rather than accept anyone.
@@ -20,11 +23,16 @@ export async function handle(request: Request, env: Env, send: typeof fetch = fe
 
   if (!env.url || !env.key) return new Response('Server not configured', { status: 500 });
 
-  const result = await send(`${env.url}/rest/v1/rpc/apply_subscription_event`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', apikey: env.key, Authorization: `Bearer ${env.key}` },
-    body: JSON.stringify({ p_user: update.userId, p_product: update.productId, p_until: update.until, p_event_at: update.eventAt }),
-  });
-  // A non-2xx makes RevenueCat retry later, which is what we want for a temporary failure.
-  return new Response(result.ok ? 'OK' : 'Failed', { status: result.ok ? 200 : 500 });
+  // A non-2xx makes RevenueCat retry later, which is what we want for a temporary failure, a timeout included.
+  try {
+    const result = await send(`${env.url}/rest/v1/rpc/apply_subscription_event`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: env.key, Authorization: `Bearer ${env.key}` },
+      body: JSON.stringify({ p_user: update.userId, p_product: update.productId, p_until: update.until, p_event_at: update.eventAt }),
+      signal: AbortSignal.timeout(DB_TIMEOUT_MS),
+    });
+    return new Response(result.ok ? 'OK' : 'Failed', { status: result.ok ? 200 : 500 });
+  } catch {
+    return new Response('Failed', { status: 500 });
+  }
 }

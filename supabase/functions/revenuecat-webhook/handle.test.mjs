@@ -55,3 +55,20 @@ test('a database failure answers 500 so RevenueCat retries; a missing service ke
   assert.equal((await handle(req(), env, recorder(false).send)).status, 500);
   assert.equal((await handle(req(), { ...env, key: undefined }, recorder().send)).status, 500);
 });
+
+test('the database call has a time limit, and a timeout or network error answers 500 so RevenueCat retries', async () => {
+  const { calls, send } = recorder();
+  await handle(req(), env, send);
+  assert.ok(calls[0].init.signal instanceof AbortSignal, 'the call can be cut off');
+
+  // What fetch throws when the signal's time runs out.
+  const timedOut = async () => {
+    throw new DOMException('The operation timed out.', 'TimeoutError');
+  };
+  assert.equal((await handle(req(), env, timedOut)).status, 500);
+
+  const broken = async () => {
+    throw new TypeError('fetch failed');
+  };
+  assert.equal((await handle(req(), env, broken)).status, 500);
+});

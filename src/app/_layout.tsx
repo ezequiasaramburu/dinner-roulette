@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AppState } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { OfflineBanner } from '@/components/offline-banner';
 import { Button, Screen, Text } from '@/components/ui';
 import { Fonts } from '@/constants/theme';
 import { useScheme, useTheme } from '@/hooks/use-theme';
@@ -101,6 +102,7 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <RootNavigator />
+            <OfflineBanner />
           </AuthProvider>
         </QueryClientProvider>
       </ThemeProvider>

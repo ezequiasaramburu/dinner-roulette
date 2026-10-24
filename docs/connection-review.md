@@ -21,8 +21,8 @@ puts the card back. The loading states use skeletons, not blank screens.
 | After buying a plan, if the server was slow to unlock, the app just stopped waiting | The payer paid and saw nothing | An alert says the purchase went through and may take a minute |
 
 ## Left as is (known)
-- **No "you're offline" banner.** It needs the native NetInfo module (a rebuild). Today the app finds out only when a request
-  fails. Worth adding with the next native rebuild.
+- **"You're offline" banner:** added on 2026-10-24 (`src/components/offline-banner.tsx`, NetInfo). Requests still fail and
+  retry as before; the banner only says why.
 - **Offline starts.** Opening the app with no connection keeps the saved session (nothing is signed out), then shows the
   account error screen with Try again, because the account has to be loaded from the server. There is no offline copy of
   the data, on purpose: the swipe queue and the reveal depend on the server.
