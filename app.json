@@ -10,7 +10,9 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "app.swipefordinner",
-      "config": { "usesNonExemptEncryption": false }
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -61,6 +63,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "357bd4f1-324f-45e7-b85c-bee6f65a6ef8"
+      }
+    },
+    "owner": "ezequiasar"
   }
 }
