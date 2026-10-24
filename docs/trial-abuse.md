@@ -1,6 +1,6 @@
 # Spotting free-trial abuse
 
-The trial is our own (7 days, no payment details), so someone can try to get it again. What is stopped today: ending a
+The trial is our own (14 days since migration 0044, 7 before; no payment details), so someone can try to get it again. What is stopped today: ending a
 couple and pairing up again (the trial is remembered per person). What is not: deleting an account and signing up again with
 a new email, with both people new. We accepted that on purpose (the cost is small) and want numbers to know when it is not.
 
@@ -15,12 +15,12 @@ Deletions around the end of a trial, per week. The abuse pattern is delete + sig
 ```sql
 select date_trunc('week', deleted_at) as week,
        count(*) as deletions,
-       count(*) filter (where trial_day between 5 and 9 and not had_paid) as around_trial_end
+       count(*) filter (where trial_day between 12 and 16 and not had_paid) as around_trial_end
 from public.account_deletions group by 1 order by 1 desc;
 ```
 Trials started per week, to compare against (a couple's trial starts when its partner joins):
 ```sql
-select date_trunc('week', trial_ends_at - interval '7 days') as week, count(*) as trials_started
+select date_trunc('week', trial_ends_at - interval '14 days') as week, count(*) as trials_started
 from public.couples where trial_ends_at is not null group by 1 order by 1 desc;
 ```
 Conversion: couples whose trial ended, and how many paid.
@@ -36,7 +36,7 @@ where trial_ends_at is not null and trial_ends_at < created_at + interval '2 day
 ```
 
 ## When to move to a store trial
-Suggested trigger (adjust to your numbers): for two months in a row, deletions on days 5 to 9 are more than about 10% of
+Suggested trigger (adjust to your numbers): for two months in a row, deletions on days 12 to 16 (around the end of the trial) are more than about 10% of
 trials started, or more than 20 a week, and conversion stays low. One caveat: honest people also delete near the end of a
 trial (they did not like it), so look at the trend and compare with `trial_ends_at` conversion before deciding. The signal
 misses people who sign up again without deleting, so a flat deletion count does not prove there is no abuse.

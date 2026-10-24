@@ -231,16 +231,16 @@ editing `couples.reveal_time`, remember a stamped deck stays revealed; use a fre
 
 ## Trial and access (paywall groundwork)
 
-Decided rules: a 7-day free trial, then paid. When it ends without a subscription (or the payer cancels), the couple is
+Decided rules: a 14-day free trial (7 until migration 0044), then paid. When it ends without a subscription (or the payer cancels), the couple is
 **locked, with data kept**: nobody can swipe or get new reveals, Home shows a "Paused" card (payer: "Your free trial has
 ended", partner: "<payer>'s free trial has ended"), and preferences, history and recipes stay. Subscribing brings
 everything back. Data is kept until the user deletes their account. Only the payer subscribes; the partner cannot take
 over (if the payer deletes their account the couple dissolves, as before).
 
-How it works (migrations 0034, 0035, 0039): `couples.trial_ends_at` and `couples.paid_until` (empty until a subscription
+How it works (migrations 0034, 0035, 0039, 0044): `couples.trial_ends_at` and `couples.paid_until` (empty until a subscription
 exists). The trial starts when the **partner joins**, and nothing is locked while the couple waits for its partner. It is
-remembered **per person** (`profiles.trial_started_at`, not readable by the app): a new couple's trial ends 7 days after the
-earliest start of its two people, so ending a couple and pairing up again does not give a fresh week, and a later partner
+remembered **per person** (`profiles.trial_started_at`, not readable by the app): a new couple's trial ends 14 days after the
+earliest start of its two people, so ending a couple and pairing up again does not give a fresh trial, and a later partner
 does not restart a running one. Deleting an account leaves one anonymous row in `account_deletions` so abuse can be
 measured later: see `docs/trial-abuse.md`. A couple has access while `now()` is before either. `ensure_deck()` raises `subscription_required`
 when it does not, which blocks the feed, swipes, early reveals and new queues for both partners; `get_couple_state()`

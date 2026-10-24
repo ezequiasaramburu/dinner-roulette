@@ -502,9 +502,9 @@ describe('access (trial and paid period)', () => {
     await rpc(partner, 'select public.join_couple($1)', [rows[0].code]);
     st = await state(owner);
     const days = (new Date(st.trial_ends_at) - Date.now()) / 86_400_000;
-    assert.ok(days > 6.9 && days <= 7, `about 7 days left, got ${days}`);
-    assert.equal(st.trial_days_left, 7);
-    assert.equal((await state(partner)).trial_days_left, 7);
+    assert.ok(days > 13.9 && days <= 14, `about 14 days left, got ${days}`);
+    assert.equal(st.trial_days_left, 14);
+    assert.equal((await state(partner)).trial_days_left, 14);
 
     // The partner leaves and someone new joins: same end date.
     const first = st.trial_ends_at;
@@ -527,23 +527,23 @@ describe('access (trial and paid period)', () => {
 
   test('the trial is remembered per person: a new couple carries over what is left, or nothing', async () => {
     const [b, c, d, e] = await Promise.all(['pp-b', 'pp-c', 'pp-d', 'pp-e'].map((n) => addUser(db, `${n}@test.dev`)));
-    // Both new: a full week, and both are marked as having started it.
+    // Both new: the full 14 days, and both are marked as having started it.
     await formCouple(c, b); // c owns it
-    assert.equal(await daysLeft(b), 7);
+    assert.equal(await daysLeft(b), 14);
     const marked = (await db.query('select count(*)::int n from public.profiles where id in ($1, $2) and trial_started_at is not null', [b, c])).rows[0].n;
     assert.equal(marked, 2);
 
-    // c (the owner) deletes their account, which ends the couple. b pairs with d 5 days into that trial: 2 days remain, not 7.
-    await startedDaysAgo(b, 5);
+    // c (the owner) deletes their account, which ends the couple. b pairs with d 12 days into that trial: 2 days remain, not 14.
+    await startedDaysAgo(b, 12);
     await asUser(db, c, () => db.query('select public.delete_account()'));
     await formCouple(b, d);
     assert.equal(await daysLeft(b), 2);
     assert.equal(await daysLeft(d), 2, 'the new partner shares what is left');
   });
 
-  test('someone whose trial is over gets no new week by starting a new couple', async () => {
+  test('someone whose trial is over gets no new trial by starting a new couple', async () => {
     const [b, f] = await Promise.all(['pp-over-b', 'pp-over-f'].map((n) => addUser(db, `${n}@test.dev`)));
-    await startedDaysAgo(b, 10);
+    await startedDaysAgo(b, 20);
     await formCouple(b, f);
     const st = await state(b);
     assert.equal(st.has_access, false);

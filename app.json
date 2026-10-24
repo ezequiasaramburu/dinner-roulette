@@ -20,7 +20,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "app.swipefordinner"
+      "package": "app.swipefordinner",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -46,7 +51,8 @@
         "expo-image-picker",
         {
           "photosPermission": "Swipe for Dinner needs your photos so you can add a picture to a recipe you share.",
-          "cameraPermission": "Swipe for Dinner needs the camera so you can photograph a dish you share."
+          "cameraPermission": "Swipe for Dinner needs the camera so you can photograph a dish you share.",
+          "microphonePermission": false
         }
       ],
       "expo-localization",
