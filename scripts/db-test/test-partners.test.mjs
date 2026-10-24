@@ -57,3 +57,37 @@ describe('test partners script', () => {
     assert.equal(await call(again, 'select public.join_couple($1) as r', [code]), null, 'a code works once');
   });
 });
+
+describe('review account script', () => {
+  const review = readFileSync(new URL('../review-account.sql', import.meta.url), 'utf8');
+
+  test('asks for the user to be created first', async () => {
+    await assert.rejects(db.exec(review), /Create review@swipefordinner.app first/);
+  });
+
+  test('pairs the reviewer, pays for a year, adds five past dinners and leaves the queue open, once', async () => {
+    const reviewer = await addUser(db, 'review@swipefordinner.app');
+    await db.exec(review);
+    await db.exec(review);
+
+    const state = await call(reviewer, 'select public.get_couple_state() as r');
+    assert.equal(state.role, 'owner');
+    assert.equal(state.partner.display_name, 'Sam');
+    assert.equal(state.partner.ready, true);
+    assert.equal(state.me_ready, true);
+    assert.equal(state.has_access, true);
+    assert.equal(state.is_subscribed, true);
+
+    const history = await call(reviewer, 'select public.get_dinner_history() as r');
+    assert.equal(history.days.length, 5);
+    assert.ok(history.days.every((d) => d.kind === 'match' && d.dishes.length === 1));
+    const dish = history.days[0].dishes[0].id;
+    assert.ok((await call(reviewer, 'select public.get_history_recipe($1) as r', [dish])).ingredients.length > 0);
+
+    const feed = await call(reviewer, 'select public.get_swipe_feed() as r');
+    assert.equal(feed.status, 'ready', 'the queue is open (the reveal is at 23:59 UTC)');
+    assert.equal(feed.dishes.some((d) => history.days.some((h) => h.dishes[0].id === d.id)), false, 'past matches are not served again right away');
+    const partners = (await db.query("select count(*)::int n from auth.users where email = 'review-partner@swipefordinner.app'")).rows[0].n;
+    assert.equal(partners, 1, 'running it twice made one partner');
+  });
+});

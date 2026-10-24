@@ -53,6 +53,25 @@ Thanks!
 <your name>
 ```
 
+## Reviewer access (Google now, Apple later)
+
+Every closed-test release is reviewed, and the reviewer cannot receive a sign-in code. One address signs in with a
+password instead: `review@swipefordinner.app` (the email screen asks it for a password; see `src/app/(auth)/email.tsx`).
+
+1. Supabase dashboard > Authentication > Users > Add user > Create new user: that email, a long random password,
+   "Auto Confirm User" ticked. Also check Authentication > Sign In / Providers > Email > "Confirm email" is on.
+2. Run `scripts/review-account.sql` in the SQL editor. The reviewer becomes "Alex", paired with "Sam" (never swipes),
+   with a paid year and five past dinners. The reveal is at 23:59 UTC, so the swipe queue is open nearly all day.
+3. Play Console > App content > App access > "All or some functionality is restricted" > add instructions:
+
+```text
+Sign in: tap "Continue with email", enter review@swipefordinner.app, then the password below
+(this account uses a password instead of the emailed code).
+Password: <password>
+The account is already paired with a partner. Swipe dishes from Home (Start swiping), see past dinners and their
+recipes in the Dinners tab, and today's dinner is revealed at the time shown on Home.
+```
+
 ## After the test
 
 Remove the test partners (this also ends the testers' couples), in the same SQL editor:

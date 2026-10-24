@@ -16,15 +16,20 @@ import { codeSchema, emailSchema } from '@/lib/validation';
 type EmailValues = z.infer<typeof emailSchema>;
 type CodeValues = z.infer<typeof codeSchema>;
 
+// The one account that signs in with a password: the App Store and Google Play reviewers have no access to a mailbox.
+// Its password is set in the Supabase dashboard; everyone else gets a code. See docs/closed-test.md.
+const REVIEW_EMAIL = 'review@swipefordinner.app';
+
 /** Two-step passwordless sign in: request a 6-digit code, then verify it. */
 export default function EmailSignIn() {
   const router = useRouter();
   const [email, setEmail] = useState<string | null>(null);
 
-  return email ? (
-    <CodeStep email={email} onBack={() => setEmail(null)} />
+  if (!email) return <EmailStep onSent={setEmail} onBack={() => router.back()} />;
+  return email === REVIEW_EMAIL ? (
+    <PasswordStep email={email} onBack={() => setEmail(null)} />
   ) : (
-    <EmailStep onSent={setEmail} onBack={() => router.back()} />
+    <CodeStep email={email} onBack={() => setEmail(null)} />
   );
 }
 
@@ -39,6 +44,7 @@ function EmailStep({ onSent, onBack }: { onSent: (email: string) => void; onBack
   const canSend = emailSchema.safeParse({ email: useWatch({ control, name: 'email' }) }).success;
 
   const submit = handleSubmit(async ({ email }) => {
+    if (email === REVIEW_EMAIL) return onSent(email);
     const { error } = await supabase.auth.signInWithOtp({ email });
     if (error) {
       setError('email', { message: isNetworkError(error) ? OFFLINE_MESSAGE : error.message });
@@ -143,6 +149,54 @@ function CodeStep({ email, onBack }: { email: string; onBack: () => void }) {
                 onSubmitEditing={submit}
               />
             )}
+          />
+        </View>
+      </Animated.View>
+    </Screen>
+  );
+}
+
+function PasswordStep({ email, onBack }: { email: string; onBack: () => void }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | undefined>();
+  const [busy, setBusy] = useState(false);
+
+  // On success the auth listener swaps the navigator, so nothing to do here.
+  async function submit() {
+    if (!password || busy) return;
+    setBusy(true);
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setBusy(false);
+    if (signInError) setError(isNetworkError(signInError) ? OFFLINE_MESSAGE : 'That password is not right.');
+  }
+
+  return (
+    <Screen footer={<Button title="Sign in" onPress={submit} loading={busy} disabled={!password} />}>
+      <BackButton onPress={onBack} />
+      <Animated.View entering={enter()} style={styles.stack}>
+        <Text variant="title">
+          Enter your <Accent>password</Accent>
+        </Text>
+        <Text tone="secondary">
+          <Text variant="bodyStrong">{email}</Text> signs in with a password.
+        </Text>
+        <View style={styles.field}>
+          <TextField
+            label="Password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              setError(undefined);
+            }}
+            error={error}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="current-password"
+            textContentType="password"
+            autoFocus
+            returnKeyType="go"
+            onSubmitEditing={submit}
           />
         </View>
       </Animated.View>
