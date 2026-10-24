@@ -70,7 +70,7 @@
     "check:ui": "node scripts/check-ui.mjs",
     "dev:reset": "node scripts/dev-reset.mjs",
     "dev:reset-day": "node scripts/dev-reset-day.mjs",
-    "test:db": "node --test scripts/db-test/decks.test.mjs scripts/db-test/reveal.test.mjs scripts/db-test/exclusions.test.mjs scripts/db-test/launch.test.mjs scripts/db-test/recipes.test.mjs scripts/db-test/security.test.mjs",
+    "test:db": "node --test scripts/db-test/decks.test.mjs scripts/db-test/reveal.test.mjs scripts/db-test/exclusions.test.mjs scripts/db-test/launch.test.mjs scripts/db-test/recipes.test.mjs scripts/db-test/security.test.mjs scripts/db-test/test-partners.test.mjs",
     "decks:review": "node scripts/db-test/review-decks.mjs"
   },
   "private": true
