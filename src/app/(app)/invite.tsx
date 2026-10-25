@@ -1,4 +1,3 @@
-import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
 import { Alert, Share, StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -28,9 +27,11 @@ export default function Invite() {
 
   async function onShare() {
     if (!invite.data) return;
-    const link = Linking.createURL(`join/${invite.data}`);
+    // An https link is tappable in every messaging app: it opens the app when installed (Android App Links), otherwise a
+    // page on the website with the code and the store buttons.
+    const link = `https://www.swipefordinner.app/join?code=${invite.data}`;
     await Share.share({
-      message: `Let's pick dinner together on Swipe for Dinner! Use my invite code ${invite.data}, or open ${link}`,
+      message: `Let's pick dinner together on Swipe for Dinner! Tap ${link} or enter my invite code ${invite.data} in the app.`,
     });
   }
 

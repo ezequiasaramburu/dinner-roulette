@@ -53,7 +53,7 @@ Last updated: 2026-10-17. "Hand-test pending" means built and checked by tests, 
 - [ ] App Store later (docs/apple-testing.md): Paid Applications Agreement, Small Business Program, TestFlight, App Review checks
 - [ ] Server push notifications (Apple developer account and FCM credentials; today only the local reminders fire)
 - [ ] Crash reporting (a free Sentry-style account)
-- [ ] Tappable invite links: the link uses the app's own scheme today; an `https` link needs the domain and store configuration
+- [ ] Tappable invite links (Android built 2026-10-25): the app shares `https://www.swipefordinner.app/join?code=…`; the website's `/join` page shows the code, an "Open in the app" button and the store badges. To open the app directly from the link, put the Play app-signing SHA-256 in the website's `public/.well-known/assetlinks.json`, deploy the site, and ship a new build (the intent filter is native). iOS needs the same with an apple-app-site-association file once the Apple account exists
 - [ ] Check the hosted-project settings listed at the end of docs/security-review.md (rate limits including the emails per hour now that SMTP is custom, redirect URLs, backups, two-factor)
 
 ## Before launch: buildable now

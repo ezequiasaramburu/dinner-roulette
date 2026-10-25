@@ -57,7 +57,7 @@ export default function Recipes() {
             <Text variant="heading">Share a dish you love</Text>
             <Text tone="secondary" style={styles.empty}>
               Recipes you add are checked, then shared with every couple on Swipe for Dinner. Yours could be tonight&apos;s
-              dinner for someone.
+              dinner for someone else.
             </Text>
           </Card>
         ) : (
